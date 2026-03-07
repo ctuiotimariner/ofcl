@@ -30,7 +30,9 @@ function App() {
   const [currentPage, setCurrentPage] = useState("inventory")
 
   // Jobs data
-  const [jobs, setJobs] = useState([])
+  const [jobs, setJobs] = useState(() => {
+  const savedJobs = localStorage.getItem("jobs")
+  return savedJobs ? JSON.parse(savedJobs) : []})
 
   const [client, setClient] = useState("")
   const [garment, setGarment] = useState("")
@@ -61,6 +63,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('inventory', JSON.stringify(inventory))
   }, [inventory])
+
+  useEffect(() => {
+  localStorage.setItem("jobs", JSON.stringify(jobs))
+}, [jobs])
 
   // ===== HANDLERS / ACTIONS =====
   function handleAddItem() {
@@ -138,6 +144,15 @@ function App() {
   setPlacement("")
   setMethod("")
   setStatus("Email Received")
+}
+
+function handleStatusChange(indexToUpdate, newStatus) {
+  setJobs(
+    jobs.map((job, index) => {
+      if (index !== indexToUpdate) return job
+      return { ...job, status: newStatus }
+    })
+  )
 }
 
   // ===== ROLE SCREEN =====
@@ -389,7 +404,17 @@ function App() {
               <td>{job.sizes}</td>
               <td>{job.placement}</td>
               <td>{job.method}</td>
-              <td>{job.status}</td>
+              <td>
+                <select
+                  value={job.status}
+                  onChange={(e) => handleStatusChange(index, e.target.value)}>
+                  <option>Email Received</option>
+                  <option>Waiting for Blanks</option>
+                  <option>Printing</option>
+                  <option>Completed</option>
+                  <option>Shipped</option>
+                </select>
+              </td>
             </tr>
           ))}
         </tbody>
