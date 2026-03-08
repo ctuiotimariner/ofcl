@@ -3,6 +3,7 @@ import './App.css'
 
 function App() {
   // ===== STATE =====
+
   // Inventory data
   const [inventory, setInventory] = useState(() => {
     const saved = localStorage.getItem('inventory')
@@ -16,70 +17,91 @@ function App() {
         ]
   })
 
-  // Form inputs
+  // Inventory form inputs
   const [name, setName] = useState('')
   const [size, setSize] = useState('')
   const [qty, setQty] = useState(0)
   const [sku, setSku] = useState('')
 
-  // Search input
+  // Inventory search
   const [search, setSearch] = useState('')
 
-  // Role selection
+  // App navigation / role
   const [role, setRole] = useState('')
-  const [currentPage, setCurrentPage] = useState("inventory")
+  const [currentPage, setCurrentPage] = useState('inventory')
 
   // Jobs data
   const [jobs, setJobs] = useState(() => {
-  const savedJobs = localStorage.getItem("jobs")
-  return savedJobs ? JSON.parse(savedJobs) : []})
+    const savedJobs = localStorage.getItem('jobs')
+    return savedJobs ? JSON.parse(savedJobs) : []
+  })
 
-  const [client, setClient] = useState("")
-  const [garment, setGarment] = useState("")
+  // Job search
+  const [jobSearch, setJobSearch] = useState('')
+
+  // Job form inputs
+  const [client, setClient] = useState('')
+  const [garment, setGarment] = useState('')
   const [jobQty, setJobQty] = useState(0)
-  const [sizes, setSizes] = useState("")
-  const [placement, setPlacement] = useState("")
-  const [method, setMethod] = useState("")
-  const [status, setStatus] = useState("Email Received")
+  const [sizes, setSizes] = useState('')
+  const [placement, setPlacement] = useState('')
+  const [method, setMethod] = useState('')
+  const [status, setStatus] = useState('Email Received')
+  const [dueDate, setDueDate] = useState('')
 
   // ===== REFS =====
-  // Used to move the cursor back to the SKU input after adding an item
   const skuInputRef = useRef(null)
 
   // ===== DERIVED VALUES =====
-  // Search filter
+
+  // Inventory search
   const filteredInventory = inventory.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()) ||
     item.sku.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Dashboard stats
+  // Jobs search
+  const filteredJobs = jobs.filter((job) =>
+    Object.values(job)
+      .join(' ')
+      .toLowerCase()
+      .includes(jobSearch.toLowerCase())
+  )
+
+  // Inventory stats
   const totalSkus = inventory.length
   const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0)
   const lowStockCount = inventory.filter((item) => item.qty <= 5).length
 
+  // Jobs production counters
+  const emailCount = jobs.filter((job) => job.status === 'Email Received').length
+  const blanksCount = jobs.filter((job) => job.status === 'Waiting for Blanks').length
+  const printingCount = jobs.filter((job) => job.status === 'Printing').length
+  const completedCount = jobs.filter((job) => job.status === 'Completed').length
+  const shippedCount = jobs.filter((job) => job.status === 'Shipped').length
+
   // ===== EFFECTS =====
-  // Save inventory to localStorage whenever inventory changes
+
+  // Save inventory whenever it changes
   useEffect(() => {
     localStorage.setItem('inventory', JSON.stringify(inventory))
   }, [inventory])
 
+  // Save jobs whenever they change
   useEffect(() => {
-  localStorage.setItem("jobs", JSON.stringify(jobs))
-}, [jobs])
+    localStorage.setItem('jobs', JSON.stringify(jobs))
+  }, [jobs])
 
-  // ===== HANDLERS / ACTIONS =====
+  // ===== INVENTORY ACTIONS =====
+
   function handleAddItem() {
     const qtyNumber = Number(qty)
 
-    // Stop if required fields are missing or quantity is invalid
     if (!sku || !name || !size || qtyNumber <= 0) return
 
-    // Check if this SKU already exists
     const existingIndex = inventory.findIndex((item) => item.sku === sku)
 
     if (existingIndex !== -1) {
-      // If SKU exists, increase quantity instead of creating a duplicate row
       setInventory(
         inventory.map((item, index) => {
           if (index !== existingIndex) return item
@@ -87,18 +109,23 @@ function App() {
         })
       )
     } else {
-      // If SKU does not exist, create a new inventory item
-      const newItem = { sku, name, size, qty: qtyNumber }
+      const newItem = {
+        sku,
+        name,
+        size,
+        qty: qtyNumber,
+      }
+
       setInventory([...inventory, newItem])
     }
 
-    // Reset form fields
+    // Reset form
     setSku('')
     setName('')
     setSize('')
     setQty(0)
 
-    // Move cursor back to SKU field
+    // Return cursor to SKU field
     setTimeout(() => {
       skuInputRef.current?.focus()
     }, 0)
@@ -119,44 +146,99 @@ function App() {
     )
   }
 
+  // ===== JOB ACTIONS =====
+
   function handleAddJob(e) {
-  e.preventDefault()
+    e.preventDefault()
 
-  if (!client || !garment || jobQty <= 0) return
+    if (!client || !garment || Number(jobQty) <= 0) return
 
-  const newJob = {
-    client,
-    garment,
-    qty: jobQty,
-    sizes,
-    placement,
-    method,
-    status
+    const newJob = {
+      id: Date.now(),
+      client,
+      garment,
+      qty: Number(jobQty),
+      sizes,
+      placement,
+      method,
+      status,
+      dueDate,
+    }
+
+    setJobs([...jobs, newJob])
+
+    // Reset form
+    setClient('')
+    setGarment('')
+    setJobQty(0)
+    setSizes('')
+    setPlacement('')
+    setMethod('')
+    setStatus('Email Received')
+    setDueDate('')
   }
 
-  setJobs([...jobs, newJob])
+  function handleStatusChange(indexToUpdate, newStatus) {
+    setJobs(
+      jobs.map((job, index) => {
+        if (index !== indexToUpdate) return job
+        return { ...job, status: newStatus }
+      })
+    )
+  }
 
-  // reset form
-  setClient("")
-  setGarment("")
-  setJobQty(0)
-  setSizes("")
-  setPlacement("")
-  setMethod("")
-  setStatus("Email Received")
-}
+  function handleDeleteJob(indexToDelete) {
+    const confirmed = window.confirm('Delete this job?')
 
-function handleStatusChange(indexToUpdate, newStatus) {
-  setJobs(
-    jobs.map((job, index) => {
-      if (index !== indexToUpdate) return job
-      return { ...job, status: newStatus }
-    })
-  )
-}
+    if (!confirmed) return
+
+    setJobs(jobs.filter((_, index) => index !== indexToDelete))
+  }
+
+  // ===== JOB STYLE HELPERS =====
+
+  function getJobStatusClass(status) {
+    switch (status) {
+      case 'Email Received':
+        return 'job-email'
+      case 'Waiting for Blanks':
+        return 'job-blanks'
+      case 'Printing':
+        return 'job-printing'
+      case 'Completed':
+        return 'job-completed'
+      case 'Shipped':
+        return 'job-shipped'
+      default:
+        return ''
+    }
+  }
+
+  function getDueDateClass(job) {
+    if (!job.dueDate) return ''
+
+    // Ignore due-date warnings once job is completed or shipped
+    if (job.status === 'Completed' || job.status === 'Shipped') {
+      return ''
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const due = new Date(job.dueDate)
+    due.setHours(0, 0, 0, 0)
+
+    const diffTime = due - today
+    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+
+    if (diffDays < 0) return 'job-overdue'
+    if (diffDays <= 2) return 'job-due-soon'
+
+    return ''
+  }
 
   // ===== ROLE SCREEN =====
-  // If no role is selected yet, show the entry screen
+
   if (!role) {
     return (
       <div className="roleScreen">
@@ -173,25 +255,42 @@ function handleStatusChange(indexToUpdate, newStatus) {
     )
   }
 
-   // ===== MAIN DASHBOARD UI =====
+  // ===== MAIN DASHBOARD UI =====
+
   return (
     <div className="appLayout">
       <aside className="sidebar">
         <h2>OFCL</h2>
 
-        <button type="button" className={currentPage === "inventory" ? "activeTab" : ""} onClick={() => setCurrentPage("inventory")}>
+        <button
+          type="button"
+          className={currentPage === 'inventory' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('inventory')}
+        >
           Inventory
         </button>
 
-        <button type="button" className={currentPage === "jobs" ? "activeTab" : ""} onClick={() => setCurrentPage("jobs")}>
+        <button
+          type="button"
+          className={currentPage === 'jobs' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('jobs')}
+        >
           Jobs
         </button>
 
-        <button type="button" className={currentPage === "vendors" ? "activeTab" : ""} onClick={() => setCurrentPage("vendors")}>
+        <button
+          type="button"
+          className={currentPage === 'vendors' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('vendors')}
+        >
           Vendors
         </button>
 
-        <button type="button" className={currentPage === "settings" ? "activeTab" : ""} onClick={() => setCurrentPage("settings")}>
+        <button
+          type="button"
+          className={currentPage === 'settings' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('settings')}
+        >
           Settings
         </button>
 
@@ -204,9 +303,9 @@ function handleStatusChange(indexToUpdate, newStatus) {
         <h1>OFCL Operations Dashboard</h1>
         <p>Role: {role}</p>
 
+        {/* ===== INVENTORY PAGE ===== */}
         {currentPage === 'inventory' && (
           <>
-            {/* Dashboard stats */}
             <div className="stats">
               <div className="card">
                 <div className="label">Total SKUs</div>
@@ -224,7 +323,6 @@ function handleStatusChange(indexToUpdate, newStatus) {
               </div>
             </div>
 
-            {/* Add inventory form */}
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -260,14 +358,12 @@ function handleStatusChange(indexToUpdate, newStatus) {
               <button type="submit">Add Item</button>
             </form>
 
-            {/* Search inventory */}
             <input
               placeholder="Search inventory..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
 
-            {/* Inventory table */}
             <div className="tableCard">
               <table>
                 <thead>
@@ -282,10 +378,7 @@ function handleStatusChange(indexToUpdate, newStatus) {
 
                 <tbody>
                   {filteredInventory.map((item, index) => (
-                    <tr
-                      key={index}
-                      className={item.qty <= 5 ? 'low-stock' : ''}
-                    >
+                    <tr key={index} className={item.qty <= 5 ? 'low-stock' : ''}>
                       <td>{item.sku}</td>
                       <td>{item.name}</td>
                       <td>{item.size}</td>
@@ -320,108 +413,166 @@ function handleStatusChange(indexToUpdate, newStatus) {
           </>
         )}
 
-        {currentPage === "jobs" && (
-  <>
-    <h2>Jobs</h2>
+        {/* ===== JOBS PAGE ===== */}
+        {currentPage === 'jobs' && (
+          <>
+            <h2>Jobs</h2>
 
-    <form onSubmit={handleAddJob}>
+            <div className="productionBoard">
+              <div className="stageCard email">
+                <div className="stageTitle">Email Received</div>
+                <div className="stageCount">{emailCount}</div>
+              </div>
 
-      <input
-        placeholder="Client"
-        value={client}
-        onChange={(e) => setClient(e.target.value)}
-      />
+              <div className="stageCard blanks">
+                <div className="stageTitle">Waiting for Blanks</div>
+                <div className="stageCount">{blanksCount}</div>
+              </div>
 
-      <input
-        placeholder="Garment"
-        value={garment}
-        onChange={(e) => setGarment(e.target.value)}
-      />
+              <div className="stageCard printing">
+                <div className="stageTitle">Printing</div>
+                <div className="stageCount">{printingCount}</div>
+              </div>
 
-      <input
-        type="number"
-        placeholder="Qty"
-        value={jobQty}
-        onChange={(e) => setJobQty(e.target.value)}
-      />
+              <div className="stageCard completed">
+                <div className="stageTitle">Completed</div>
+                <div className="stageCount">{completedCount}</div>
+              </div>
 
-      <input
-        placeholder="Sizes / Notes"
-        value={sizes}
-        onChange={(e) => setSizes(e.target.value)}
-      />
+              <div className="stageCard shipped">
+                <div className="stageTitle">Shipped</div>
+                <div className="stageCount">{shippedCount}</div>
+              </div>
+            </div>
 
-      <input
-        placeholder="Placement"
-        value={placement}
-        onChange={(e) => setPlacement(e.target.value)}
-      />
+            <form onSubmit={handleAddJob}>
+              <input
+                placeholder="Client"
+                value={client}
+                onChange={(e) => setClient(e.target.value)}
+              />
 
-      <select
-        value={method}
-        onChange={(e) => setMethod(e.target.value)}
-      >
-        <option value="">Print Method</option>
-        <option>Embroidery</option>
-        <option>Heat Transfer</option>
-      </select>
+              <input
+                placeholder="Garment"
+                value={garment}
+                onChange={(e) => setGarment(e.target.value)}
+              />
 
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value)}
-      >
-        <option>Email Received</option>
-        <option>Waiting for Blanks</option>
-        <option>Printing</option>
-        <option>Completed</option>
-        <option>Shipped</option>
-      </select>
+              <input
+                type="number"
+                placeholder="Qty"
+                value={jobQty}
+                onChange={(e) => setJobQty(e.target.value)}
+              />
 
-      <button type="submit">Add Job</button>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
 
-    </form>
+              <input
+                placeholder="Sizes / Notes"
+                value={sizes}
+                onChange={(e) => setSizes(e.target.value)}
+              />
 
-    <div className="tableCard">
-      <table>
-        <thead>
-          <tr>
-            <th>Client</th>
-            <th>Garment</th>
-            <th>Qty</th>
-            <th>Sizes</th>
-            <th>Placement</th>
-            <th>Method</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+              <input
+                placeholder="Placement"
+                value={placement}
+                onChange={(e) => setPlacement(e.target.value)}
+              />
 
-        <tbody>
-          {jobs.map((job, index) => (
-            <tr key={index}>
-              <td>{job.client}</td>
-              <td>{job.garment}</td>
-              <td>{job.qty}</td>
-              <td>{job.sizes}</td>
-              <td>{job.placement}</td>
-              <td>{job.method}</td>
-              <td>
-                <select
-                  value={job.status}
-                  onChange={(e) => handleStatusChange(index, e.target.value)}>
-                  <option>Email Received</option>
-                  <option>Waiting for Blanks</option>
-                  <option>Printing</option>
-                  <option>Completed</option>
-                  <option>Shipped</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </>
-)}
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+              >
+                <option value="">Print Method</option>
+                <option>Embroidery</option>
+                <option>Heat Transfer</option>
+              </select>
+
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option>Email Received</option>
+                <option>Waiting for Blanks</option>
+                <option>Printing</option>
+                <option>Completed</option>
+                <option>Shipped</option>
+              </select>
+
+              <button type="submit">Add Job</button>
+            </form>
+
+            <input
+              placeholder="Search jobs..."
+              value={jobSearch}
+              onChange={(e) => setJobSearch(e.target.value)}
+            />
+
+            <div className="tableCard">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Garment</th>
+                    <th>Qty</th>
+                    <th>Due</th>
+                    <th>Sizes</th>
+                    <th>Placement</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredJobs.map((job, index) => (
+                    <tr
+                      key={index}
+                      className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
+                    >
+                      <td>#{String(job.id).slice(-4)}</td>
+                      <td>{job.client}</td>
+                      <td>{job.garment}</td>
+                      <td>{job.qty}</td>
+                      <td>{job.dueDate}</td>
+                      <td>{job.sizes}</td>
+                      <td>{job.placement}</td>
+                      <td>{job.method}</td>
+                      <td>
+                        <select
+                          value={job.status}
+                          onChange={(e) =>
+                            handleStatusChange(index, e.target.value)
+                          }
+                        >
+                          <option>Email Received</option>
+                          <option>Waiting for Blanks</option>
+                          <option>Printing</option>
+                          <option>Completed</option>
+                          <option>Shipped</option>
+                        </select>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteJob(index)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
         {currentPage === 'vendors' && <h2>Vendors page coming later</h2>}
         {currentPage === 'settings' && <h2>Settings page coming later</h2>}
       </main>

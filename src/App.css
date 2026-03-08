@@ -1,9 +1,45 @@
 /* ===== APP ROOT ===== */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* ===== APP LAYOUT ===== */
+.appLayout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #1f1f1f;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar h2 {
+  margin: 0 0 16px;
+  font-size: 2rem;
+}
+
+.sidebar button {
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar button.activeTab {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mainContent {
+  flex: 1;
+  padding: 30px;
 }
 
 /* ===== ROLE SCREEN ===== */
@@ -70,6 +106,48 @@
   margin-top: 6px;
 }
 
+/* ===== FORM INPUTS ===== */
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+
+input,
+select,
+button {
+  border-radius: 10px;
+}
+
+input,
+select {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== SEARCH INPUTS ===== */
+input[placeholder='Search inventory...'],
+input[placeholder='Search jobs...'] {
+  margin: 10px 0 16px;
+  min-width: 260px;
+}
+
 /* ===== TABLE CONTAINER ===== */
 .tableCard {
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -77,18 +155,19 @@
   border-radius: 16px;
   padding: 16px;
   margin-top: 20px;
+  overflow-x: auto;
 }
 
 /* ===== TABLE ===== */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 thead {
   text-align: left;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 th,
@@ -96,17 +175,18 @@ td {
   padding: 12px 10px;
   border-bottom: 1px solid #333;
   text-align: left;
+  vertical-align: middle;
 }
 
 td button {
   margin-right: 8px;
 }
 
-tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+tbody tr:hover td {
+  filter: brightness(1.08);
 }
 
-/* ===== LOW STOCK STATE ===== */
+/* ===== LOW STOCK ===== */
 .low-stock {
   background-color: rgba(255, 0, 0, 0.15);
 }
@@ -116,38 +196,78 @@ tbody tr:hover {
   font-weight: 600;
 }
 
-/* ===== APP LAYOUT ===== */
-.appLayout {
-  display: flex;
-  min-height: 100vh;
+/* ===== JOB STATUS COLORS ===== */
+.job-email td {
+  background: rgba(160, 160, 160, 0.12);
 }
 
-.sidebar {
-  width: 220px;
-  padding: 24px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  display: flex;
-  flex-direction: column;
+.job-blanks td {
+  background: rgba(255, 165, 0, 0.14);
+}
+
+.job-printing td {
+  background: rgba(0, 123, 255, 0.14);
+}
+
+.job-completed td {
+  background: rgba(40, 167, 69, 0.14);
+}
+
+.job-shipped td {
+  background: rgba(128, 0, 128, 0.16);
+}
+
+/* ===== JOB DEADLINE WARNINGS ===== */
+.job-overdue td {
+  background: rgba(255, 60, 60, 0.25);
+}
+
+.job-due-soon td {
+  background: rgba(255, 200, 0, 0.25);
+}
+
+/* ===== PRODUCTION BOARD ===== */
+.productionBoard {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
+  margin: 20px 0;
 }
 
-.sidebar h2 {
-  margin-bottom: 12px;
+.stageCard {
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.sidebar button {
-  text-align: left;
+.stageTitle {
+  font-size: 13px;
+  opacity: 0.7;
 }
 
-.mainContent {
-  flex: 1;
-  padding: 24px;
+.stageCount {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 5px;
 }
 
-/* ===== ACTIVE SIDEBAR TAB ===== */
+.stageCard.email {
+  border-top: 3px solid #5da3ff;
+}
 
-.sidebar button.activeTab {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.15);
+.stageCard.blanks {
+  border-top: 3px solid #ffcc66;
+}
+
+.stageCard.printing {
+  border-top: 3px solid #ff8c42;
+}
+
+.stageCard.completed {
+  border-top: 3px solid #4cd964;
+}
+
+.stageCard.shipped {
+  border-top: 3px solid #a78bfa;
 }
