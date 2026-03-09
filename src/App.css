@@ -172,7 +172,7 @@ thead {
 
 th,
 td {
-  padding: 12px 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid #333;
   text-align: left;
   vertical-align: middle;
@@ -302,4 +302,10 @@ tbody tr:hover td {
   background: rgba(255, 255, 255, 0.06);
   font-weight: 700;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 18px;
+}
+
+.groupRow:hover td {
+  filter: none;
 }

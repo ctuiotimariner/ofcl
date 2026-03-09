@@ -4,6 +4,7 @@ import RoleScreen from "./components/RoleScreen"
 import Sidebar from "./components/Sidebar"
 import InventoryPage from './components/InventoryPage'
 import JobsPage from "./components/JobsPage"
+import OrdersPage from './components/OrdersPage'
 
 function App() {
   // ===== STATE =====
@@ -54,6 +55,9 @@ function App() {
   const [status, setStatus] = useState('Email Received')
   const [dueDate, setDueDate] = useState('')
   const [orderGroup, setOrderGroup] = useState('')
+  const [vendor, setVendor] = useState('')
+  const [poNumber, setPoNumber] = useState('')
+  const [delivered, setDelivered] = useState(false)
 
   // ===== REFS =====
   const skuInputRef = useRef(null)
@@ -249,6 +253,9 @@ filteredJobs.forEach((job) => {
     method,
     status,
     dueDate,
+    vendor,
+    poNumber,
+    delivered
   }
 
     setJobs([...jobs, newJob])
@@ -264,6 +271,9 @@ filteredJobs.forEach((job) => {
     setDueDate('')
     setOrderGroup('')
     setDesignName('')
+    setVendor('')
+    setPoNumber('')
+    setDelivered(false)
   }
 
   function handleStatusChange(jobId, newStatus) {
@@ -374,7 +384,13 @@ if (!role) {
 
   </>
 )}
-        
+
+{currentPage === 'orders' && (
+  <OrdersPage
+    setJobs={setJobs}
+  />
+)}
+
 {/* ===== INVENTORY PAGE ===== */}
 
 {currentPage === 'inventory' && (
@@ -418,6 +434,12 @@ if (!role) {
     setGarment={setGarment}
     designName={designName}
     setDesignName={setDesignName}
+    vendor={vendor}
+    setVendor={setVendor}
+    poNumber={poNumber}
+    setPoNumber={setPoNumber}
+    delivered={delivered}
+    setDelivered={setDelivered}
     jobQty={jobQty}
     setJobQty={setJobQty}
     dueDate={dueDate}

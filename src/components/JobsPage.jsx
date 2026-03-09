@@ -15,6 +15,12 @@ function JobsPage({
   setGarment,
   designName,
   setDesignName,
+  vendor,
+  setVendor,
+  poNumber,
+  setPoNumber,
+  delivered,
+  setDelivered,
   jobQty,
   setJobQty,
   dueDate,
@@ -129,6 +135,27 @@ return (
           onChange={(e) => setDesignName(e.target.value)}
         />
 
+        <input
+          placeholder="Vendor"
+          value={vendor}
+          onChange={(e) => setVendor(e.target.value)}
+        />
+
+        <input
+          placeholder="PO Number"
+          value={poNumber}
+          onChange={(e) => setPoNumber(e.target.value)}
+        />
+
+        <label style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          Delivered
+          <input
+            type="checkbox"
+            checked={delivered}
+            onChange={(e) => setDelivered(e.target.checked)}
+          />
+        </label>
+
         <select value={method} onChange={(e) => setMethod(e.target.value)}>
           <option value="">Print Method</option>
           <option>Embroidery</option>
@@ -157,146 +184,159 @@ return (
           <thead>
             <tr>
               <th>ID</th>
-              <th>Order Group</th>
-              <th>Order Progress</th>
-              <th>Client</th>
-              <th>Garment</th>
-              <th>Qty</th>
-              <th>Due</th>
-              <th>Sizes</th>
-              <th>Placement</th>
-              <th>Design</th>
-              <th>Method</th>
-              <th>Status</th>
-              <th>Actions</th>
+<th>Order Group</th>
+<th>Order Progress</th>
+<th>Client</th>
+<th>Garment</th>
+<th>Qty</th>
+<th>Due</th>
+<th>Sizes</th>
+<th>Placement</th>
+<th>Design</th>
+<th>Artwork</th>
+<th>Method</th>
+<th>Vendor</th>
+<th>PO</th>
+<th>Delivered</th>
+<th>Status</th>
+<th>Actions</th>
+              
             </tr>
           </thead>
 
-          <tbody>
+<tbody>
   {Object.entries(groupedJobs).map(([group, jobs]) => (
     <Fragment key={group}>
-
       <tr
-  className="groupRow"
-  onClick={() => toggleGroup(group)}
-  style={{ cursor: 'pointer' }}
->
-  <td colSpan="13">
-    <strong>
-      {collapsedGroups[group] ? '▶' : '▼'} {group}
-    </strong>{' '}
-    ({jobs.length} items)
+        className="groupRow"
+        onClick={() => toggleGroup(group)}
+        style={{ cursor: 'pointer' }}
+      >
+        <td colSpan="17">
+          <strong>
+            {collapsedGroups[group] ? '▶' : '▼'} {group}
+          </strong>{' '}
+          ({jobs.length} items)
 
-    {orderProgress[group] && (() => {
-      const progress = orderProgress[group]
-      const percent = Math.round(
-        (progress.completed / progress.total) * 100
-      )
+          {orderProgress[group] && (() => {
+            const progress = orderProgress[group]
+            const percent = Math.round(
+              (progress.completed / progress.total) * 100
+            )
+
+            return (
+              <span
+                style={{
+                  marginLeft: '12px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '60px',
+                    height: '6px',
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${percent}%`,
+                      height: '100%',
+                      background: '#4cd964',
+                    }}
+                  />
+                </div>
+
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                  {progress.completed}/{progress.total}
+                </span>
+              </span>
+            )
+          })()}
+        </td>
+      </tr>
+
+      {!collapsedGroups[group] &&
+        jobs.map((job) => (
+          <tr
+  key={job.id}
+  className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
+>
+  <td>#{String(job.id).slice(-4)}</td>
+
+  <td>{job.orderGroup}</td>
+
+  <td>
+    {job.orderGroup && orderProgress[job.orderGroup] && (() => {
+      const progress = orderProgress[job.orderGroup]
+      const percent = Math.round((progress.completed / progress.total) * 100)
 
       return (
-        <span
-          style={{
-            marginLeft: '12px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <div
-            style={{
-              width: '60px',
-              height: '6px',
-              background: 'rgba(255,255,255,0.15)',
-              borderRadius: '4px',
-              overflow: 'hidden',
-            }}
-          >
+        <div className="progressWrapper">
+          <div className="progressBar">
             <div
-              style={{
-                width: `${percent}%`,
-                height: '100%',
-                background: '#4cd964',
-              }}
-            />
+              className="progressFill"
+              style={{ width: `${percent}%` }}
+            ></div>
           </div>
 
-          <span style={{ fontSize: '12px', opacity: 0.8 }}>
-            {progress.completed}/{progress.total}
-          </span>
-        </span>
+          <div className="progressText">
+            {progress.completed} / {progress.total}
+          </div>
+        </div>
       )
     })()}
   </td>
+
+  <td>{job.client}</td>
+  <td>{job.garment}</td>
+  <td>{job.qty}</td>
+  <td>{job.dueDate}</td>
+  <td>{job.sizes}</td>
+  <td>{job.placement}</td>
+  <td>{job.designName}</td>
+ <td>
+  {job.mockup instanceof File && (
+    <img
+      src={URL.createObjectURL(job.mockup)}
+      alt="mockup"
+      style={{ width: '40px', borderRadius: '4px' }}
+    />
+  )}
+</td>
+  <td>{job.method}</td>
+
+  <td>{job.vendor}</td>
+  <td>{job.poNumber}</td>
+  <td>{job.delivered ? "✔" : "—"}</td>
+
+  <td>
+    <select
+      value={job.status}
+      onChange={(e) => handleStatusChange(job.id, e.target.value)}
+    >
+      <option>Email Received</option>
+      <option>Waiting for Blanks</option>
+      <option>Printing</option>
+      <option>Completed</option>
+      <option>Shipped</option>
+    </select>
+  </td>
+
+  <td>
+    <button
+      type="button"
+      onClick={() => handleDeleteJob(job.id)}
+    >
+      Delete
+    </button>
+  </td>
 </tr>
-
-      {!collapsedGroups[group] &&
-       jobs.map((job) => (
-        <tr
-          key={job.id}
-          className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
-        >
-          <td>#{String(job.id).slice(-4)}</td>
-          <td>{job.orderGroup}</td>
-
-          <td>
-            {job.orderGroup && orderProgress[job.orderGroup] && (() => {
-              const progress = orderProgress[job.orderGroup]
-              const percent = Math.round(
-                (progress.completed / progress.total) * 100
-              )
-
-              return (
-                <div className="progressWrapper">
-                  <div className="progressBar">
-                    <div
-                      className="progressFill"
-                      style={{ width: `${percent}%` }}
-                    ></div>
-                  </div>
-
-                  <div className="progressText">
-                    {progress.completed} / {progress.total}
-                  </div>
-                </div>
-              )
-            })()}
-          </td>
-
-          <td>{job.client}</td>
-          <td>{job.garment}</td>
-          <td>{job.qty}</td>
-          <td>{job.dueDate}</td>
-          <td>{job.sizes}</td>
-          <td>{job.placement}</td>
-          <td>{job.designName}</td>
-          <td>{job.method}</td>
-
-          <td>
-            <select
-              value={job.status}
-              onChange={(e) =>
-                handleStatusChange(job.id, e.target.value)
-              }
-            >
-              <option>Email Received</option>
-              <option>Waiting for Blanks</option>
-              <option>Printing</option>
-              <option>Completed</option>
-              <option>Shipped</option>
-            </select>
-          </td>
-
-          <td>
-            <button
-              type="button"
-              onClick={() => handleDeleteJob(job.id)}
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      ))}
-
+        ))}
     </Fragment>
   ))}
 </tbody>
