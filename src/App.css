@@ -271,3 +271,35 @@ tbody tr:hover td {
 .stageCard.shipped {
   border-top: 3px solid #a78bfa;
 }
+
+/* ===== ORDER PROGRESS BAR ===== */
+.progressWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progressBar {
+  width: 120px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #4cd964;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.groupRow td {
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 700;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}

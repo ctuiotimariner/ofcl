@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
+import RoleScreen from "./components/RoleScreen"
+import Sidebar from "./components/Sidebar"
+import InventoryPage from './components/InventoryPage'
+import JobsPage from "./components/JobsPage"
 
 function App() {
   // ===== STATE =====
@@ -42,12 +46,14 @@ function App() {
   // Job form inputs
   const [client, setClient] = useState('')
   const [garment, setGarment] = useState('')
+  const [designName, setDesignName] = useState('')
   const [jobQty, setJobQty] = useState(0)
   const [sizes, setSizes] = useState('')
   const [placement, setPlacement] = useState('')
   const [method, setMethod] = useState('')
   const [status, setStatus] = useState('Email Received')
   const [dueDate, setDueDate] = useState('')
+  const [orderGroup, setOrderGroup] = useState('')
 
   // ===== REFS =====
   const skuInputRef = useRef(null)
@@ -61,12 +67,73 @@ function App() {
   )
 
   // Jobs search
-  const filteredJobs = jobs.filter((job) =>
+const filteredJobs = jobs
+  .filter((job) =>
     Object.values(job)
       .join(' ')
       .toLowerCase()
       .includes(jobSearch.toLowerCase())
   )
+  .sort((a, b) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const aDue = a.dueDate ? new Date(a.dueDate) : null
+    const bDue = b.dueDate ? new Date(b.dueDate) : null
+
+    if (aDue) aDue.setHours(0, 0, 0, 0)
+    if (bDue) bDue.setHours(0, 0, 0, 0)
+
+    const aDone = a.status === 'Completed' || a.status === 'Shipped'
+    const bDone = b.status === 'Completed' || b.status === 'Shipped'
+
+    // Completed / shipped jobs go last
+    if (aDone && !bDone) return 1
+    if (!aDone && bDone) return -1
+
+    const aOverdue = aDue && aDue < today && !aDone
+    const bOverdue = bDue && bDue < today && !bDone
+
+    // Overdue jobs go first
+    if (aOverdue && !bOverdue) return -1
+    if (!aOverdue && bOverdue) return 1
+
+    const aDueSoon =
+      aDue &&
+      aDue >= today &&
+      (aDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
+      !aDone
+
+    const bDueSoon =
+      bDue &&
+      bDue >= today &&
+      (bDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
+      !bDone
+
+    // Due soon jobs go next
+    if (aDueSoon && !bDueSoon) return -1
+    if (!aDueSoon && bDueSoon) return 1
+
+    // Then sort by order group
+    if (a.orderGroup && b.orderGroup) {
+      const groupCompare = a.orderGroup.localeCompare(b.orderGroup)
+      if (groupCompare !== 0) return groupCompare
+    }
+
+    return 0
+  })
+
+const groupedJobs = {}
+
+filteredJobs.forEach((job) => {
+  const group = job.orderGroup || 'No Group'
+
+  if (!groupedJobs[group]) {
+    groupedJobs[group] = []
+  }
+
+  groupedJobs[group].push(job)
+})
 
   // Inventory stats
   const totalSkus = inventory.length
@@ -79,6 +146,23 @@ function App() {
   const printingCount = jobs.filter((job) => job.status === 'Printing').length
   const completedCount = jobs.filter((job) => job.status === 'Completed').length
   const shippedCount = jobs.filter((job) => job.status === 'Shipped').length
+
+// ===== ORDER PROGRESS =====
+  const orderProgress = {}
+
+  jobs.forEach((job) => {
+    const group = job.orderGroup || "No Group"
+
+    if (!orderProgress[group]) {
+      orderProgress[group] = { total: 0, completed: 0 }
+    }
+
+    orderProgress[group].total++
+
+    if (job.status === "Completed" || job.status === "Shipped") {
+      orderProgress[group].completed++
+    }
+  })
 
   // ===== EFFECTS =====
 
@@ -153,17 +237,19 @@ function App() {
 
     if (!client || !garment || Number(jobQty) <= 0) return
 
-    const newJob = {
-      id: Date.now(),
-      client,
-      garment,
-      qty: Number(jobQty),
-      sizes,
-      placement,
-      method,
-      status,
-      dueDate,
-    }
+      const newJob = {
+    id: Date.now(),
+    orderGroup,
+    client,
+    garment,
+    designName,
+    qty: Number(jobQty),
+    sizes,
+    placement,
+    method,
+    status,
+    dueDate,
+  }
 
     setJobs([...jobs, newJob])
 
@@ -176,24 +262,26 @@ function App() {
     setMethod('')
     setStatus('Email Received')
     setDueDate('')
+    setOrderGroup('')
+    setDesignName('')
   }
 
-  function handleStatusChange(indexToUpdate, newStatus) {
-    setJobs(
-      jobs.map((job, index) => {
-        if (index !== indexToUpdate) return job
-        return { ...job, status: newStatus }
-      })
-    )
-  }
+  function handleStatusChange(jobId, newStatus) {
+  setJobs(
+    jobs.map((job) => {
+      if (job.id !== jobId) return job
+      return { ...job, status: newStatus }
+    })
+  )
+}
 
-  function handleDeleteJob(indexToDelete) {
-    const confirmed = window.confirm('Delete this job?')
+  function handleDeleteJob(jobId) {
+  const confirmed = window.confirm('Delete this job?')
 
-    if (!confirmed) return
+  if (!confirmed) return
 
-    setJobs(jobs.filter((_, index) => index !== indexToDelete))
-  }
+  setJobs(jobs.filter((job) => job.id !== jobId))
+}
 
   // ===== JOB STYLE HELPERS =====
 
@@ -239,339 +327,120 @@ function App() {
 
   // ===== ROLE SCREEN =====
 
-  if (!role) {
-    return (
-      <div className="roleScreen">
-        <div className="roleCard">
-          <h1>Welcome to OFCL PRNT</h1>
-          <p>Select your role to enter the dashboard</p>
-
-          <div className="roleButtons">
-            <button onClick={() => setRole('admin')}>Admin</button>
-            <button onClick={() => setRole('employee')}>Employee</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+if (!role) {
+  return <RoleScreen setRole={setRole} />
+}
 
   // ===== MAIN DASHBOARD UI =====
 
   return (
+
     <div className="appLayout">
-      <aside className="sidebar">
-        <h2>OFCL</h2>
 
-        <button
-          type="button"
-          className={currentPage === 'inventory' ? 'activeTab' : ''}
-          onClick={() => setCurrentPage('inventory')}
-        >
-          Inventory
-        </button>
-
-        <button
-          type="button"
-          className={currentPage === 'jobs' ? 'activeTab' : ''}
-          onClick={() => setCurrentPage('jobs')}
-        >
-          Jobs
-        </button>
-
-        <button
-          type="button"
-          className={currentPage === 'vendors' ? 'activeTab' : ''}
-          onClick={() => setCurrentPage('vendors')}
-        >
-          Vendors
-        </button>
-
-        <button
-          type="button"
-          className={currentPage === 'settings' ? 'activeTab' : ''}
-          onClick={() => setCurrentPage('settings')}
-        >
-          Settings
-        </button>
-
-        <button type="button" onClick={() => setRole('')}>
-          Logout
-        </button>
-      </aside>
+      <Sidebar 
+        currentPage={currentPage} 
+        setCurrentPage={setCurrentPage} 
+        setRole={setRole}
+      />
 
       <main className="mainContent">
         <h1>OFCL Operations Dashboard</h1>
         <p>Role: {role}</p>
 
-        {/* ===== INVENTORY PAGE ===== */}
-        {currentPage === 'inventory' && (
-          <>
-            <div className="stats">
-              <div className="card">
-                <div className="label">Total SKUs</div>
-                <div className="value">{totalSkus}</div>
-              </div>
+      {currentPage === 'dashboard' && (
+  <>
+    <h2>Dashboard</h2>
 
-              <div className="card">
-                <div className="label">Total Units</div>
-                <div className="value">{totalUnits}</div>
-              </div>
+    <div className="stats">
 
-              <div className="card">
-                <div className="label">Low Stock</div>
-                <div className="value">{lowStockCount}</div>
-              </div>
-            </div>
+      <div className="card">
+        <div className="label">Active Jobs</div>
+        <div className="value">{jobs.length}</div>
+      </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleAddItem()
-              }}
-            >
-              <input
-                ref={skuInputRef}
-                placeholder="SKU"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-              />
+      <div className="card">
+        <div className="label">Printing</div>
+        <div className="value">
+          {jobs.filter(job => job.status === "Printing").length}
+        </div>
+      </div>
 
-              <input
-                placeholder="Item Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+      <div className="card">
+        <div className="label">Low Stock</div>
+        <div className="value">{lowStockCount}</div>
+      </div>
 
-              <input
-                placeholder="Size"
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-              />
+    </div>
 
-              <input
-                type="number"
-                placeholder="Qty"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-              />
+  </>
+)}
+        
+{/* ===== INVENTORY PAGE ===== */}
 
-              <button type="submit">Add Item</button>
-            </form>
+{currentPage === 'inventory' && (
+  <InventoryPage
+    totalSkus={totalSkus}
+    totalUnits={totalUnits}
+    lowStockCount={lowStockCount}
+    handleAddItem={handleAddItem}
+    skuInputRef={skuInputRef}
+    sku={sku}
+    setSku={setSku}
+    name={name}
+    setName={setName}
+    size={size}
+    setSize={setSize}
+    qty={qty}
+    setQty={setQty}
+    search={search}
+    setSearch={setSearch}
+    filteredInventory={filteredInventory}
+    handleChangeQty={handleChangeQty}
+    handleDeleteItem={handleDeleteItem}
+  />
+)}
 
-            <input
-              placeholder="Search inventory..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-
-            <div className="tableCard">
-              <table>
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>Item</th>
-                    <th>Size</th>
-                    <th>Qty</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredInventory.map((item, index) => (
-                    <tr key={index} className={item.qty <= 5 ? 'low-stock' : ''}>
-                      <td>{item.sku}</td>
-                      <td>{item.name}</td>
-                      <td>{item.size}</td>
-                      <td>{item.qty}</td>
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => handleChangeQty(index, -1)}
-                        >
-                          -
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleChangeQty(index, 1)}
-                        >
-                          +
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteItem(index)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        {/* ===== JOBS PAGE ===== */}
-        {currentPage === 'jobs' && (
-          <>
-            <h2>Jobs</h2>
-
-            <div className="productionBoard">
-              <div className="stageCard email">
-                <div className="stageTitle">Email Received</div>
-                <div className="stageCount">{emailCount}</div>
-              </div>
-
-              <div className="stageCard blanks">
-                <div className="stageTitle">Waiting for Blanks</div>
-                <div className="stageCount">{blanksCount}</div>
-              </div>
-
-              <div className="stageCard printing">
-                <div className="stageTitle">Printing</div>
-                <div className="stageCount">{printingCount}</div>
-              </div>
-
-              <div className="stageCard completed">
-                <div className="stageTitle">Completed</div>
-                <div className="stageCount">{completedCount}</div>
-              </div>
-
-              <div className="stageCard shipped">
-                <div className="stageTitle">Shipped</div>
-                <div className="stageCount">{shippedCount}</div>
-              </div>
-            </div>
-
-            <form onSubmit={handleAddJob}>
-              <input
-                placeholder="Client"
-                value={client}
-                onChange={(e) => setClient(e.target.value)}
-              />
-
-              <input
-                placeholder="Garment"
-                value={garment}
-                onChange={(e) => setGarment(e.target.value)}
-              />
-
-              <input
-                type="number"
-                placeholder="Qty"
-                value={jobQty}
-                onChange={(e) => setJobQty(e.target.value)}
-              />
-
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-
-              <input
-                placeholder="Sizes / Notes"
-                value={sizes}
-                onChange={(e) => setSizes(e.target.value)}
-              />
-
-              <input
-                placeholder="Placement"
-                value={placement}
-                onChange={(e) => setPlacement(e.target.value)}
-              />
-
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value)}
-              >
-                <option value="">Print Method</option>
-                <option>Embroidery</option>
-                <option>Heat Transfer</option>
-              </select>
-
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option>Email Received</option>
-                <option>Waiting for Blanks</option>
-                <option>Printing</option>
-                <option>Completed</option>
-                <option>Shipped</option>
-              </select>
-
-              <button type="submit">Add Job</button>
-            </form>
-
-            <input
-              placeholder="Search jobs..."
-              value={jobSearch}
-              onChange={(e) => setJobSearch(e.target.value)}
-            />
-
-            <div className="tableCard">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Client</th>
-                    <th>Garment</th>
-                    <th>Qty</th>
-                    <th>Due</th>
-                    <th>Sizes</th>
-                    <th>Placement</th>
-                    <th>Method</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredJobs.map((job, index) => (
-                    <tr
-                      key={index}
-                      className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
-                    >
-                      <td>#{String(job.id).slice(-4)}</td>
-                      <td>{job.client}</td>
-                      <td>{job.garment}</td>
-                      <td>{job.qty}</td>
-                      <td>{job.dueDate}</td>
-                      <td>{job.sizes}</td>
-                      <td>{job.placement}</td>
-                      <td>{job.method}</td>
-                      <td>
-                        <select
-                          value={job.status}
-                          onChange={(e) =>
-                            handleStatusChange(index, e.target.value)
-                          }
-                        >
-                          <option>Email Received</option>
-                          <option>Waiting for Blanks</option>
-                          <option>Printing</option>
-                          <option>Completed</option>
-                          <option>Shipped</option>
-                        </select>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteJob(index)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+{/* ===== JOBS PAGE ===== */}
+  
+{currentPage === 'jobs' && (
+  <JobsPage
+    emailCount={emailCount}
+    blanksCount={blanksCount}
+    printingCount={printingCount}
+    completedCount={completedCount}
+    shippedCount={shippedCount}
+    handleAddJob={handleAddJob}
+    orderGroup={orderGroup}
+    setOrderGroup={setOrderGroup}
+    client={client}
+    setClient={setClient}
+    garment={garment}
+    setGarment={setGarment}
+    designName={designName}
+    setDesignName={setDesignName}
+    jobQty={jobQty}
+    setJobQty={setJobQty}
+    dueDate={dueDate}
+    setDueDate={setDueDate}
+    sizes={sizes}
+    setSizes={setSizes}
+    placement={placement}
+    setPlacement={setPlacement}
+    method={method}
+    setMethod={setMethod}
+    status={status}
+    setStatus={setStatus}
+    jobSearch={jobSearch}
+    setJobSearch={setJobSearch}
+    filteredJobs={filteredJobs}
+    groupedJobs={groupedJobs}
+    handleStatusChange={handleStatusChange}
+    handleDeleteJob={handleDeleteJob}
+    getJobStatusClass={getJobStatusClass}
+    getDueDateClass={getDueDateClass}
+    orderProgress={orderProgress}
+  />
+)}
 
         {currentPage === 'vendors' && <h2>Vendors page coming later</h2>}
         {currentPage === 'settings' && <h2>Settings page coming later</h2>}
