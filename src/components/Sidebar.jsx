@@ -32,6 +32,17 @@ function Sidebar({ currentPage, setCurrentPage, setRole }) {
         </button>
 
         <button
+          className={currentPage === 'receiving' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('receiving')}
+        >
+          Receiving
+        </button>
+
+        <button onClick={() => setCurrentPage('scanner')}>
+          Scanner
+        </button>
+
+        <button
           className={currentPage === "inventory" ? "activeTab" : ""}
           onClick={() => setCurrentPage("inventory")}
         >

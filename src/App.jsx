@@ -6,6 +6,8 @@ import InventoryPage from './components/InventoryPage'
 import JobsPage from "./components/JobsPage"
 import OrdersPage from './components/OrdersPage'
 import JobTicketPage from './components/JobTicketPage'
+import ScannerPage from './components/ScannerPage'
+import ReceivingPage from './components/ReceivingPage'
 
 function App() {
   // ===== STATE =====
@@ -42,13 +44,16 @@ function App() {
     return savedJobs ? JSON.parse(savedJobs) : []
   })
 
-  const [orders, setOrders] = useState(() => {
+ const [orders, setOrders] = useState(() => {
   const savedOrders = localStorage.getItem('orders')
   return savedOrders ? JSON.parse(savedOrders) : []
 })
 
-  // Job search
-  const [jobSearch, setJobSearch] = useState('')
+const [scannedOrderNumber, setScannedOrderNumber] = useState('')
+
+// Job search
+const [jobSearch, setJobSearch] = useState('')
+
 
   // Job form inputs
   const [client, setClient] = useState('')
@@ -406,6 +411,8 @@ if (!role) {
   <JobTicketPage
     orders={orders}
     setOrders={setOrders}
+    jobs={jobs}
+    scannedOrderNumber={scannedOrderNumber}
   />
 )}
 
@@ -479,6 +486,21 @@ if (!role) {
     getJobStatusClass={getJobStatusClass}
     getDueDateClass={getDueDateClass}
     orderProgress={orderProgress}
+  />
+)}
+
+{currentPage === 'receiving' && (
+  <ReceivingPage
+    jobs={jobs}
+    setJobs={setJobs}
+  />
+)}
+
+{currentPage === 'scanner' && (
+  <ScannerPage
+    orders={orders}
+    setCurrentPage={setCurrentPage}
+    setScannedOrderNumber={setScannedOrderNumber}
   />
 )}
 

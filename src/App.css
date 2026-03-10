@@ -30,6 +30,9 @@
 .sidebar button {
   width: 100%;
   text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .sidebar button.activeTab {
@@ -308,4 +311,112 @@ tbody tr:hover td {
 
 .groupRow:hover td {
   filter: none;
+}
+
+/* ===== JOB TICKET TIMELINE ===== */
+.timelineWrap {
+  margin: 20px 0 24px;
+}
+
+.timelineRow {
+  display: flex;
+  align-items: center;
+}
+
+.timelineDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.timelineDot.active {
+  background: #4cd964;
+}
+
+.timelineLine {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.timelineLine.active {
+  background: #4cd964;
+}
+
+.timelineLabels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.timelineLabels span {
+  text-align: center;
+}
+
+.timelineLabels span.active {
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* ===== JOB TICKET PLACEMENT GUIDE ===== */
+.placementGuide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+.placementCard {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.placementCard h4 {
+  margin: 0 0 10px;
+}
+
+.placementCard p {
+  margin: 6px 0;
+  opacity: 0.9;
+}
+
+.placementTag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.12);
+  font-size: 12px;
+}
+
+.ticketTopLayout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.ticketMockupBox {
+  min-height: 220px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticketMockupImage {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  object-fit: contain;
 }
