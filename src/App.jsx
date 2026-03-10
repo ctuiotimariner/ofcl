@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar"
 import InventoryPage from './components/InventoryPage'
 import JobsPage from "./components/JobsPage"
 import OrdersPage from './components/OrdersPage'
+import JobTicketPage from './components/JobTicketPage'
 
 function App() {
   // ===== STATE =====
@@ -40,6 +41,11 @@ function App() {
     const savedJobs = localStorage.getItem('jobs')
     return savedJobs ? JSON.parse(savedJobs) : []
   })
+
+  const [orders, setOrders] = useState(() => {
+  const savedOrders = localStorage.getItem('orders')
+  return savedOrders ? JSON.parse(savedOrders) : []
+})
 
   // Job search
   const [jobSearch, setJobSearch] = useState('')
@@ -179,6 +185,10 @@ filteredJobs.forEach((job) => {
   useEffect(() => {
     localStorage.setItem('jobs', JSON.stringify(jobs))
   }, [jobs])
+
+  useEffect(() => {
+  localStorage.setItem('orders', JSON.stringify(orders))
+}, [orders])
 
   // ===== INVENTORY ACTIONS =====
 
@@ -388,6 +398,14 @@ if (!role) {
 {currentPage === 'orders' && (
   <OrdersPage
     setJobs={setJobs}
+    setOrders={setOrders}
+  />
+)}
+
+{currentPage === 'tickets' && (
+  <JobTicketPage
+    orders={orders}
+    setOrders={setOrders}
   />
 )}
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function OrdersPage({ setJobs }) {
+function OrdersPage({ setJobs, setOrders }) {
   const [orderNumber, setOrderNumber] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [vendor, setVendor] = useState('')
@@ -63,7 +63,20 @@ function OrdersPage({ setJobs }) {
       delivered: false,
     }))
 
+    const newOrder = {
+  id: Date.now(),
+  orderNumber,
+  customerName,
+  vendor,
+  poNumber,
+  dueDate,
+  generalNotes,
+  items: orderItems,
+}
+
+
     setJobs((prev) => [...prev, ...newJobs])
+    setOrders((prev) => [...prev, newOrder])
 
     setOrderItems([])
 

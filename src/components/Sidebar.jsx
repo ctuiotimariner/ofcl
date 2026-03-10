@@ -18,6 +18,13 @@ function Sidebar({ currentPage, setCurrentPage, setRole }) {
         </button>
 
         <button
+          className={currentPage === 'tickets' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('tickets')}
+        >
+          Job Tickets
+        </button>
+
+        <button
           className={currentPage === "jobs" ? "activeTab" : ""}
           onClick={() => setCurrentPage("jobs")}
         >
