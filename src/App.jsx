@@ -77,6 +77,26 @@ const [jobSearch, setJobSearch] = useState('')
 
   // ===== DERIVED VALUES =====
 
+  const emailCount = jobs.filter(
+  (job) => job.status === 'Email Received'
+).length
+
+const blanksCount = jobs.filter(
+  (job) => job.status === 'Waiting for Blanks'
+).length
+
+const printingCount = jobs.filter(
+  (job) => job.status === 'Printing'
+).length
+
+const completedCount = jobs.filter(
+  (job) => job.status === 'Completed'
+).length
+
+const shippedCount = jobs.filter(
+  (job) => job.status === 'Shipped'
+).length
+
   // Inventory search
   const filteredInventory = inventory.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,13 +104,13 @@ const [jobSearch, setJobSearch] = useState('')
   )
 
   // Jobs search
-const filteredJobs = jobs
-  .filter((job) =>
-    Object.values(job)
-      .join(' ')
-      .toLowerCase()
-      .includes(jobSearch.toLowerCase())
-  )
+const filteredJobs = jobs.filter((job) =>
+  Object.values(job)
+    .join(' ')
+    .toLowerCase()
+    .includes(jobSearch.toLowerCase())
+)
+
   .sort((a, b) => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -157,12 +177,7 @@ filteredJobs.forEach((job) => {
   const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0)
   const lowStockCount = inventory.filter((item) => item.qty <= 5).length
 
-  // Jobs production counters
-  const emailCount = jobs.filter((job) => job.status === 'Email Received').length
-  const blanksCount = jobs.filter((job) => job.status === 'Waiting for Blanks').length
-  const printingCount = jobs.filter((job) => job.status === 'Printing').length
-  const completedCount = jobs.filter((job) => job.status === 'Completed').length
-  const shippedCount = jobs.filter((job) => job.status === 'Shipped').length
+
 
 // ===== ORDER PROGRESS =====
   const orderProgress = {}
@@ -450,36 +465,8 @@ if (!role) {
     printingCount={printingCount}
     completedCount={completedCount}
     shippedCount={shippedCount}
-    handleAddJob={handleAddJob}
-    orderGroup={orderGroup}
-    setOrderGroup={setOrderGroup}
-    client={client}
-    setClient={setClient}
-    garment={garment}
-    setGarment={setGarment}
-    designName={designName}
-    setDesignName={setDesignName}
-    vendor={vendor}
-    setVendor={setVendor}
-    poNumber={poNumber}
-    setPoNumber={setPoNumber}
-    delivered={delivered}
-    setDelivered={setDelivered}
-    jobQty={jobQty}
-    setJobQty={setJobQty}
-    dueDate={dueDate}
-    setDueDate={setDueDate}
-    sizes={sizes}
-    setSizes={setSizes}
-    placement={placement}
-    setPlacement={setPlacement}
-    method={method}
-    setMethod={setMethod}
-    status={status}
-    setStatus={setStatus}
     jobSearch={jobSearch}
     setJobSearch={setJobSearch}
-    filteredJobs={filteredJobs}
     groupedJobs={groupedJobs}
     handleStatusChange={handleStatusChange}
     handleDeleteJob={handleDeleteJob}

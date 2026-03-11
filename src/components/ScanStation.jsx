@@ -1,8 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 
 function ScanStation({ orders, jobs, setJobs, setCurrentPage, setSelectedOrder }) {
+
+
   const [scanValue, setScanValue] = useState('')
   const inputRef = useRef(null)
+  const [scanMessage, setScanMessage] = useState('')
+
+
+
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -23,6 +29,7 @@ function ScanStation({ orders, jobs, setJobs, setCurrentPage, setSelectedOrder }
         order.orderNumber.toLowerCase() === scanValue.toLowerCase()
     )
 
+
     if (!foundOrder) {
       alert('Order not found')
       setScanValue('')
@@ -39,6 +46,8 @@ function ScanStation({ orders, jobs, setJobs, setCurrentPage, setSelectedOrder }
         }
       })
     )
+
+    setScanMessage(`✓ ${foundOrder.orderNumber} moved to next stage`)
 
     setSelectedOrder(foundOrder.orderNumber)
     setCurrentPage('tickets')
@@ -59,6 +68,11 @@ function ScanStation({ orders, jobs, setJobs, setCurrentPage, setSelectedOrder }
           placeholder="Scan order number..."
         />
       </form>
+
+      {scanMessage && (
+        <p className="scanSuccess">{scanMessage}</p>
+      )}
+
     </>
   )
 }
