@@ -29,10 +29,10 @@ const filteredOrders = orders.filter((order) => {
     .toLowerCase()
     .includes(search.toLowerCase())
 })
-  const order = orders[selectedOrderIndex]
-  if (!order) {
-  return <h2>No saved orders yet</h2>
-}
+
+const order = orders[selectedOrderIndex]
+
+if (!order) return <h2>No saved orders yet</h2>
 
   const orderJobs = jobs.filter(
   (job) => job.orderGroup === order.orderNumber

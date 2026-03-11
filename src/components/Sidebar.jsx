@@ -18,13 +18,6 @@ function Sidebar({ currentPage, setCurrentPage, setRole }) {
         </button>
 
         <button
-          className={currentPage === 'tickets' ? 'activeTab' : ''}
-          onClick={() => setCurrentPage('tickets')}
-        >
-          Job Tickets
-        </button>
-
-        <button
           className={currentPage === "jobs" ? "activeTab" : ""}
           onClick={() => setCurrentPage("jobs")}
         >
@@ -38,8 +31,25 @@ function Sidebar({ currentPage, setCurrentPage, setRole }) {
           Receiving
         </button>
 
-        <button onClick={() => setCurrentPage('scanner')}>
-          Scanner
+        <button
+          className={currentPage === "production" ? "activeTab" : ""}
+          onClick={() => setCurrentPage("production")}
+        >
+          Production
+        </button>
+
+        <button
+          className={currentPage === 'tickets' ? 'activeTab' : ''}
+          onClick={() => setCurrentPage('tickets')}
+        >
+          Job Tickets
+        </button>
+
+        <button
+          className={currentPage === "scan" ? "activeTab" : ""}
+          onClick={() => setCurrentPage("scan")}
+        >
+          Scan Station
         </button>
 
         <button

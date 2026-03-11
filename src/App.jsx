@@ -6,8 +6,10 @@ import InventoryPage from './components/InventoryPage'
 import JobsPage from "./components/JobsPage"
 import OrdersPage from './components/OrdersPage'
 import JobTicketPage from './components/JobTicketPage'
-import ScannerPage from './components/ScannerPage'
 import ReceivingPage from './components/ReceivingPage'
+import ProductionBoard from './components/ProductionBoard'
+import ScanStation from './components/ScanStation'
+
 
 function App() {
   // ===== STATE =====
@@ -49,7 +51,7 @@ function App() {
   return savedOrders ? JSON.parse(savedOrders) : []
 })
 
-const [scannedOrderNumber, setScannedOrderNumber] = useState('')
+const [selectedOrder, setSelectedOrder] = useState(null)
 
 // Job search
 const [jobSearch, setJobSearch] = useState('')
@@ -409,11 +411,9 @@ if (!role) {
 
 {currentPage === 'tickets' && (
   <JobTicketPage
-    orders={orders}
-    setOrders={setOrders}
-    jobs={jobs}
-    scannedOrderNumber={scannedOrderNumber}
-  />
+  orders={orders}
+  jobs={jobs}
+/>
 )}
 
 {/* ===== INVENTORY PAGE ===== */}
@@ -496,13 +496,20 @@ if (!role) {
   />
 )}
 
-{currentPage === 'scanner' && (
-  <ScannerPage
+{currentPage === "scan" && (
+  <ScanStation
     orders={orders}
+    jobs={jobs}
+    setJobs={setJobs}
     setCurrentPage={setCurrentPage}
-    setScannedOrderNumber={setScannedOrderNumber}
+    setSelectedOrder={setSelectedOrder}
   />
 )}
+
+{currentPage === "production" && (
+  <ProductionBoard jobs={jobs} />
+)}
+
 
         {currentPage === 'vendors' && <h2>Vendors page coming later</h2>}
         {currentPage === 'settings' && <h2>Settings page coming later</h2>}
