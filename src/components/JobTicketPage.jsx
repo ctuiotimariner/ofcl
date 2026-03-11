@@ -2,10 +2,23 @@ import { useState, useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 
 
-function JobTicketPage({ orders, setOrders, jobs, scannedOrderNumber }) {
+function JobTicketPage({ orders, setOrders, jobs, selectedOrder, scannedOrderNumber }) {
   
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+  if (!selectedOrder) return
+
+  const foundIndex = orders.findIndex(
+    (order) =>
+      order.orderNumber.toLowerCase() === selectedOrder.toLowerCase()
+  )
+
+  if (foundIndex !== -1) {
+    setSelectedOrderIndex(foundIndex)
+  }
+}, [selectedOrder, orders])
 
 
   useEffect(() => {

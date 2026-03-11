@@ -421,14 +421,18 @@ if (!role) {
   <OrdersPage
     setJobs={setJobs}
     setOrders={setOrders}
+    setCurrentPage={setCurrentPage}
+    setSelectedOrder={setSelectedOrder}
   />
 )}
 
 {currentPage === 'tickets' && (
   <JobTicketPage
-  orders={orders}
-  jobs={jobs}
-/>
+    orders={orders}
+    setOrders={setOrders}
+    jobs={jobs}
+    selectedOrder={selectedOrder}
+  />
 )}
 
 {/* ===== INVENTORY PAGE ===== */}

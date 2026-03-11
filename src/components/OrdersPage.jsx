@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function OrdersPage({ setJobs, setOrders }) {
+function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
   const [orderNumber, setOrderNumber] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [vendor, setVendor] = useState('')
@@ -218,6 +218,56 @@ function OrdersPage({ setJobs, setOrders }) {
       <button type="button" onClick={handleCreateOrder}>
         Create Order
       </button>
+      <h3 style={{ marginTop: "30px" }}>Saved Orders</h3>
+
+      <div className="tableCard">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Due Date</th>
+              <th>Items</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {JSON.parse(localStorage.getItem("orders") || "[]").map((order) => (
+              <tr key={order.id}>
+                <td>{order.orderNumber}</td>
+                <td>{order.customerName}</td>
+                <td>{order.dueDate}</td>
+                <td>{order.items.length}</td>
+               <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => {
+                        setSelectedOrder(order.orderNumber)
+                        setCurrentPage('tickets')
+                      }}
+                    >
+                      View Ticket
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const updatedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+                          .filter((savedOrder) => savedOrder.id !== order.id)
+
+                        localStorage.setItem('orders', JSON.stringify(updatedOrders))
+                        setOrders(updatedOrders)
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }
