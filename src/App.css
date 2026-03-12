@@ -479,7 +479,6 @@ tbody tr:hover td {
   border-radius: 16px;
   margin-bottom: 16px;
   background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
 }
 
 .productionCard h4 {
@@ -491,9 +490,9 @@ tbody tr:hover td {
   font-size: 18px;
 }
 
-.activePrint {
-  border: 2px solid #4cd964;
-  box-shadow: 0 0 18px rgba(76,217,100,0.4);
+.productionCard.activePrint {
+  border: 2px solid #6ee787;
+  box-shadow: 0 0 18px rgba(110, 231, 135, 0.35);
 }
 
 .order-status.job-blanks {
@@ -544,4 +543,63 @@ tbody tr:hover td {
 .status-shipped {
   background: rgba(167, 139, 250, 0.2);
   color: #a78bfa;
+}
+.dueDate {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.dueDate.overdue {
+  color: #ff5c5c;
+  font-weight: 700;
+}
+
+.dueDate.dueSoon {
+  color: #ffcc66;
+  font-weight: 600;
+}
+
+.productionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.priorityBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.priorityBadge.overdue {
+  background: rgba(255, 92, 92, 0.18);
+  color: #ff5c5c;
+}
+
+.priorityBadge.dueSoon {
+  background: rgba(255, 204, 102, 0.18);
+  color: #ffcc66;
+}
+
+.productionCard.overdue {
+  border: 2px solid #ff5c5c;
+  box-shadow: 0 0 18px rgba(255, 92, 92, 0.35);
+}
+
+.productionCard.dueSoon {
+  border: 2px solid #ffcc66;
+  box-shadow: 0 0 18px rgba(255, 204, 102, 0.35);
+}
+
+.productionCard {
+  padding: 22px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid #6ee787;
+  box-shadow: 0 0 12px rgba(110, 231, 135, 0.25);
 }
