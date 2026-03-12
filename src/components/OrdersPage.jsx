@@ -1,6 +1,13 @@
 import { useState } from 'react'
 
-function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
+function OrdersPage({
+  orders,
+  jobs,
+  setJobs,
+  setOrders,
+  setCurrentPage,
+  setSelectedOrder,
+}) {
   const [orderNumber, setOrderNumber] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [vendor, setVendor] = useState('')
@@ -11,12 +18,13 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
   const [garment, setGarment] = useState('')
   const [qty, setQty] = useState(0)
   const [sizes, setSizes] = useState('')
-  const [method, setMethod] = useState('')
   const [placement, setPlacement] = useState('')
   const [designName, setDesignName] = useState('')
+  const [method, setMethod] = useState('')
   const [mockup, setMockup] = useState(null)
 
   const [orderItems, setOrderItems] = useState([])
+  const [orderSearch, setOrderSearch] = useState('')
 
   function handleAddItem() {
     if (!garment || Number(qty) <= 0 || !method || !placement) return
@@ -31,7 +39,7 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
       mockup,
     }
 
-    setOrderItems([...orderItems, newItem])
+    setOrderItems((prev) => [...prev, newItem])
 
     setGarment('')
     setQty(0)
@@ -56,30 +64,28 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
       designName: item.designName,
       method: item.method,
       mockup: item.mockup,
-      status: 'Email Received',
-      dueDate: dueDate,
-      vendor: vendor,
-      poNumber: poNumber,
+      status: 'Waiting for Blanks',
+      dueDate,
+      vendor,
+      poNumber,
       delivered: false,
     }))
 
     const newOrder = {
-  id: Date.now(),
-  orderNumber,
-  customerName,
-  vendor,
-  poNumber,
-  dueDate,
-  generalNotes,
-  items: orderItems,
-}
-
+      id: Date.now(),
+      orderNumber,
+      customerName,
+      vendor,
+      poNumber,
+      dueDate,
+      generalNotes,
+      items: orderItems,
+    }
 
     setJobs((prev) => [...prev, ...newJobs])
     setOrders((prev) => [...prev, newOrder])
 
     setOrderItems([])
-
     setOrderNumber('')
     setCustomerName('')
     setVendor('')
@@ -87,6 +93,98 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
     setDueDate('')
     setGeneralNotes('')
   }
+
+  function handleDeleteOrder(orderId) {
+    const updatedOrders = orders.filter((order) => order.id !== orderId)
+    setOrders(updatedOrders)
+    localStorage.setItem('orders', JSON.stringify(updatedOrders))
+  }
+
+  const filteredOrders = orders.filter((order) => {
+    const search = orderSearch.toLowerCase()
+
+    return (
+      order.orderNumber.toLowerCase().includes(search) ||
+      order.customerName.toLowerCase().includes(search) ||
+      order.vendor.toLowerCase().includes(search)
+    )
+  })
+
+  function getOrderStatus(orderNumber) {
+    const orderJobs = jobs.filter(
+      (job) => job.orderGroup === orderNumber
+    )
+
+    if (orderJobs.length === 0) return "No Jobs"
+
+    const allShipped = orderJobs.every(
+      (job) => job.status === "Shipped"
+    )
+
+    const allCompleted = orderJobs.every(
+      (job) =>
+        job.status === "Completed" || job.status === "Shipped"
+    )
+
+    const printing = orderJobs.some(
+      (job) => job.status === "Printing"
+    )
+
+    const waiting = orderJobs.some(
+      (job) => job.status === "Waiting for Blanks"
+    )
+
+    if (allShipped) return "Shipped"
+    if (allCompleted) return "Completed"
+    if (printing) return "Printing"
+    if (waiting) return "Waiting for Blanks"
+
+    return "Email Received"
+  }
+
+function getOrderStatusStyle(status) {
+  switch (status) {
+    case 'Waiting for Blanks':
+      return { color: '#ffcc66', fontWeight: 600 }
+
+    case 'Printing':
+      return { color: '#5da3ff', fontWeight: 600 }
+
+    case 'Completed':
+      return { color: '#4cd964', fontWeight: 600 }
+
+    case 'Shipped':
+      return { color: '#a78bfa', fontWeight: 600 }
+
+    default:
+      return {}
+  }
+}
+
+function getOrderStatusBadge(status) {
+  switch (status) {
+    case "Waiting for Blanks":
+      return "status-badge status-waiting"
+
+    case "Printing":
+      return "status-badge status-printing"
+
+    case "Completed":
+      return "status-badge status-completed"
+
+    case "Shipped":
+      return "status-badge status-shipped"
+
+    default:
+      return "status-badge"
+  }
+}
+
+
+
+
+
+
 
   return (
     <>
@@ -175,10 +273,7 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
           onChange={(e) => setMockup(e.target.files[0])}
         />
 
-        <select
-          value={method}
-          onChange={(e) => setMethod(e.target.value)}
-        >
+        <select value={method} onChange={(e) => setMethod(e.target.value)}>
           <option value="">Print Method</option>
           <option>Embroidery</option>
           <option>Heat Transfer</option>
@@ -218,30 +313,42 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
       <button type="button" onClick={handleCreateOrder}>
         Create Order
       </button>
-      <h3 style={{ marginTop: "30px" }}>Saved Orders</h3>
+
+      <h3 style={{ marginTop: '30px' }}>Saved Orders</h3>
+
+      <input
+        placeholder="Search orders..."
+        value={orderSearch}
+        onChange={(e) => setOrderSearch(e.target.value)}
+      />
 
       <div className="tableCard">
         <table>
           <thead>
-            <tr>
-              <th>Order</th>
-              <th>Customer</th>
-              <th>Due Date</th>
-              <th>Items</th>
-              <th>Actions</th>
-            </tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Due Date</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Actions</th>
           </thead>
 
           <tbody>
-            {JSON.parse(localStorage.getItem("orders") || "[]").map((order) => (
+            {filteredOrders.map((order) => (
               <tr key={order.id}>
                 <td>{order.orderNumber}</td>
                 <td>{order.customerName}</td>
                 <td>{order.dueDate}</td>
                 <td>{order.items.length}</td>
-               <td>
+                <td>
+                  <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber))}>
+                    {getOrderStatus(order.orderNumber)}
+                  </span>
+                </td>
+                <td>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
+                      type="button"
                       onClick={() => {
                         setSelectedOrder(order.orderNumber)
                         setCurrentPage('tickets')
@@ -251,13 +358,8 @@ function OrdersPage({ setJobs, setOrders, setCurrentPage, setSelectedOrder }) {
                     </button>
 
                     <button
-                      onClick={() => {
-                        const updatedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-                          .filter((savedOrder) => savedOrder.id !== order.id)
-
-                        localStorage.setItem('orders', JSON.stringify(updatedOrders))
-                        setOrders(updatedOrders)
-                      }}
+                      type="button"
+                      onClick={() => handleDeleteOrder(order.id)}
                     >
                       Delete
                     </button>

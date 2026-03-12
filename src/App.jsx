@@ -1,20 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
-import RoleScreen from "./components/RoleScreen"
-import Sidebar from "./components/Sidebar"
+import RoleScreen from './components/RoleScreen'
+import Sidebar from './components/Sidebar'
 import InventoryPage from './components/InventoryPage'
-import JobsPage from "./components/JobsPage"
+import JobsPage from './components/JobsPage'
 import OrdersPage from './components/OrdersPage'
 import JobTicketPage from './components/JobTicketPage'
 import ReceivingPage from './components/ReceivingPage'
 import ProductionBoard from './components/ProductionBoard'
 import ScanStation from './components/ScanStation'
 
-
 function App() {
   // ===== STATE =====
 
-  // Inventory data
+  // Inventory
   const [inventory, setInventory] = useState(() => {
     const saved = localStorage.getItem('inventory')
 
@@ -27,75 +26,34 @@ function App() {
         ]
   })
 
-  // Inventory form inputs
   const [name, setName] = useState('')
   const [size, setSize] = useState('')
   const [qty, setQty] = useState(0)
   const [sku, setSku] = useState('')
-
-  // Inventory search
   const [search, setSearch] = useState('')
 
   // App navigation / role
   const [role, setRole] = useState('')
   const [currentPage, setCurrentPage] = useState('inventory')
 
-  // Jobs data
+  // Jobs / Orders
   const [jobs, setJobs] = useState(() => {
     const savedJobs = localStorage.getItem('jobs')
     return savedJobs ? JSON.parse(savedJobs) : []
   })
 
- const [orders, setOrders] = useState(() => {
-  const savedOrders = localStorage.getItem('orders')
-  return savedOrders ? JSON.parse(savedOrders) : []
-})
+  const [orders, setOrders] = useState(() => {
+    const savedOrders = localStorage.getItem('orders')
+    return savedOrders ? JSON.parse(savedOrders) : []
+  })
 
-const [selectedOrder, setSelectedOrder] = useState(null)
-
-// Job search
-const [jobSearch, setJobSearch] = useState('')
-
-
-  // Job form inputs
-  const [client, setClient] = useState('')
-  const [garment, setGarment] = useState('')
-  const [designName, setDesignName] = useState('')
-  const [jobQty, setJobQty] = useState(0)
-  const [sizes, setSizes] = useState('')
-  const [placement, setPlacement] = useState('')
-  const [method, setMethod] = useState('')
-  const [status, setStatus] = useState('Email Received')
-  const [dueDate, setDueDate] = useState('')
-  const [orderGroup, setOrderGroup] = useState('')
-  const [vendor, setVendor] = useState('')
-  const [poNumber, setPoNumber] = useState('')
-  const [delivered, setDelivered] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [jobSearch, setJobSearch] = useState('')
 
   // ===== REFS =====
   const skuInputRef = useRef(null)
 
   // ===== DERIVED VALUES =====
-
-  const emailCount = jobs.filter(
-  (job) => job.status === 'Email Received'
-).length
-
-const blanksCount = jobs.filter(
-  (job) => job.status === 'Waiting for Blanks'
-).length
-
-const printingCount = jobs.filter(
-  (job) => job.status === 'Printing'
-).length
-
-const completedCount = jobs.filter(
-  (job) => job.status === 'Completed'
-).length
-
-const shippedCount = jobs.filter(
-  (job) => job.status === 'Shipped'
-).length
 
   // Inventory search
   const filteredInventory = inventory.filter((item) =>
@@ -103,87 +61,103 @@ const shippedCount = jobs.filter(
     item.sku.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Jobs search
-const filteredJobs = jobs.filter((job) =>
-  Object.values(job)
-    .join(' ')
-    .toLowerCase()
-    .includes(jobSearch.toLowerCase())
-)
+  // Job counts
+  const emailCount = jobs.filter(
+    (job) => job.status === 'Email Received'
+  ).length
 
-  .sort((a, b) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+  const blanksCount = jobs.filter(
+    (job) => job.status === 'Waiting for Blanks'
+  ).length
 
-    const aDue = a.dueDate ? new Date(a.dueDate) : null
-    const bDue = b.dueDate ? new Date(b.dueDate) : null
+  const printingCount = jobs.filter(
+    (job) => job.status === 'Printing'
+  ).length
 
-    if (aDue) aDue.setHours(0, 0, 0, 0)
-    if (bDue) bDue.setHours(0, 0, 0, 0)
+  const completedCount = jobs.filter(
+    (job) => job.status === 'Completed'
+  ).length
 
-    const aDone = a.status === 'Completed' || a.status === 'Shipped'
-    const bDone = b.status === 'Completed' || b.status === 'Shipped'
+  const shippedCount = jobs.filter(
+    (job) => job.status === 'Shipped'
+  ).length
 
-    // Completed / shipped jobs go last
-    if (aDone && !bDone) return 1
-    if (!aDone && bDone) return -1
+  // Filter + sort jobs
+  const filteredJobs = jobs
+    .filter((job) =>
+      Object.values(job)
+        .join(' ')
+        .toLowerCase()
+        .includes(jobSearch.toLowerCase())
+    )
+    .sort((a, b) => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
-    const aOverdue = aDue && aDue < today && !aDone
-    const bOverdue = bDue && bDue < today && !bDone
+      const aDue = a.dueDate ? new Date(a.dueDate) : null
+      const bDue = b.dueDate ? new Date(b.dueDate) : null
 
-    // Overdue jobs go first
-    if (aOverdue && !bOverdue) return -1
-    if (!aOverdue && bOverdue) return 1
+      if (aDue) aDue.setHours(0, 0, 0, 0)
+      if (bDue) bDue.setHours(0, 0, 0, 0)
 
-    const aDueSoon =
-      aDue &&
-      aDue >= today &&
-      (aDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
-      !aDone
+      const aDone = a.status === 'Completed' || a.status === 'Shipped'
+      const bDone = b.status === 'Completed' || b.status === 'Shipped'
 
-    const bDueSoon =
-      bDue &&
-      bDue >= today &&
-      (bDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
-      !bDone
+      if (aDone && !bDone) return 1
+      if (!aDone && bDone) return -1
 
-    // Due soon jobs go next
-    if (aDueSoon && !bDueSoon) return -1
-    if (!aDueSoon && bDueSoon) return 1
+      const aOverdue = aDue && aDue < today && !aDone
+      const bOverdue = bDue && bDue < today && !bDone
 
-    // Then sort by order group
-    if (a.orderGroup && b.orderGroup) {
-      const groupCompare = a.orderGroup.localeCompare(b.orderGroup)
-      if (groupCompare !== 0) return groupCompare
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+
+      const aDueSoon =
+        aDue &&
+        aDue >= today &&
+        (aDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
+        !aDone
+
+      const bDueSoon =
+        bDue &&
+        bDue >= today &&
+        (bDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
+        !bDone
+
+      if (aDueSoon && !bDueSoon) return -1
+      if (!aDueSoon && bDueSoon) return 1
+
+      if (a.orderGroup && b.orderGroup) {
+        const groupCompare = a.orderGroup.localeCompare(b.orderGroup)
+        if (groupCompare !== 0) return groupCompare
+      }
+
+      return 0
+    })
+
+  // Group jobs
+  const groupedJobs = {}
+
+  filteredJobs.forEach((job) => {
+    const group = job.orderGroup || 'No Group'
+
+    if (!groupedJobs[group]) {
+      groupedJobs[group] = []
     }
 
-    return 0
+    groupedJobs[group].push(job)
   })
-
-const groupedJobs = {}
-
-filteredJobs.forEach((job) => {
-  const group = job.orderGroup || 'No Group'
-
-  if (!groupedJobs[group]) {
-    groupedJobs[group] = []
-  }
-
-  groupedJobs[group].push(job)
-})
 
   // Inventory stats
   const totalSkus = inventory.length
   const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0)
   const lowStockCount = inventory.filter((item) => item.qty <= 5).length
 
-
-
-// ===== ORDER PROGRESS =====
+  // Order progress
   const orderProgress = {}
 
   jobs.forEach((job) => {
-    const group = job.orderGroup || "No Group"
+    const group = job.orderGroup || 'No Group'
 
     if (!orderProgress[group]) {
       orderProgress[group] = { total: 0, completed: 0 }
@@ -191,26 +165,24 @@ filteredJobs.forEach((job) => {
 
     orderProgress[group].total++
 
-    if (job.status === "Completed" || job.status === "Shipped") {
+    if (job.status === 'Completed' || job.status === 'Shipped') {
       orderProgress[group].completed++
     }
   })
 
   // ===== EFFECTS =====
 
-  // Save inventory whenever it changes
   useEffect(() => {
     localStorage.setItem('inventory', JSON.stringify(inventory))
   }, [inventory])
 
-  // Save jobs whenever they change
   useEffect(() => {
     localStorage.setItem('jobs', JSON.stringify(jobs))
   }, [jobs])
 
   useEffect(() => {
-  localStorage.setItem('orders', JSON.stringify(orders))
-}, [orders])
+    localStorage.setItem('orders', JSON.stringify(orders))
+  }, [orders])
 
   // ===== INVENTORY ACTIONS =====
 
@@ -239,13 +211,11 @@ filteredJobs.forEach((job) => {
       setInventory([...inventory, newItem])
     }
 
-    // Reset form
     setSku('')
     setName('')
     setSize('')
     setQty(0)
 
-    // Return cursor to SKU field
     setTimeout(() => {
       skuInputRef.current?.focus()
     }, 0)
@@ -268,62 +238,21 @@ filteredJobs.forEach((job) => {
 
   // ===== JOB ACTIONS =====
 
-  function handleAddJob(e) {
-    e.preventDefault()
-
-    if (!client || !garment || Number(jobQty) <= 0) return
-
-      const newJob = {
-    id: Date.now(),
-    orderGroup,
-    client,
-    garment,
-    designName,
-    qty: Number(jobQty),
-    sizes,
-    placement,
-    method,
-    status,
-    dueDate,
-    vendor,
-    poNumber,
-    delivered
-  }
-
-    setJobs([...jobs, newJob])
-
-    // Reset form
-    setClient('')
-    setGarment('')
-    setJobQty(0)
-    setSizes('')
-    setPlacement('')
-    setMethod('')
-    setStatus('Email Received')
-    setDueDate('')
-    setOrderGroup('')
-    setDesignName('')
-    setVendor('')
-    setPoNumber('')
-    setDelivered(false)
-  }
-
   function handleStatusChange(jobId, newStatus) {
-  setJobs(
-    jobs.map((job) => {
-      if (job.id !== jobId) return job
-      return { ...job, status: newStatus }
-    })
-  )
-}
+    setJobs(
+      jobs.map((job) => {
+        if (job.id !== jobId) return job
+        return { ...job, status: newStatus }
+      })
+    )
+  }
 
   function handleDeleteJob(jobId) {
-  const confirmed = window.confirm('Delete this job?')
+    const confirmed = window.confirm('Delete this job?')
+    if (!confirmed) return
 
-  if (!confirmed) return
-
-  setJobs(jobs.filter((job) => job.id !== jobId))
-}
+    setJobs(jobs.filter((job) => job.id !== jobId))
+  }
 
   // ===== JOB STYLE HELPERS =====
 
@@ -347,7 +276,6 @@ filteredJobs.forEach((job) => {
   function getDueDateClass(job) {
     if (!job.dueDate) return ''
 
-    // Ignore due-date warnings once job is completed or shipped
     if (job.status === 'Completed' || job.status === 'Shipped') {
       return ''
     }
@@ -369,19 +297,17 @@ filteredJobs.forEach((job) => {
 
   // ===== ROLE SCREEN =====
 
-if (!role) {
-  return <RoleScreen setRole={setRole} />
-}
+  if (!role) {
+    return <RoleScreen setRole={setRole} />
+  }
 
-  // ===== MAIN DASHBOARD UI =====
+  // ===== MAIN UI =====
 
   return (
-
     <div className="appLayout">
-
-      <Sidebar 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage} 
+      <Sidebar
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
         setRole={setRole}
       />
 
@@ -389,118 +315,110 @@ if (!role) {
         <h1>OFCL Operations Dashboard</h1>
         <p>Role: {role}</p>
 
-      {currentPage === 'dashboard' && (
-  <>
-    <h2>Dashboard</h2>
+        {currentPage === 'dashboard' && (
+          <>
+            <h2>Dashboard</h2>
 
-    <div className="stats">
+            <div className="stats">
+              <div className="card">
+                <div className="label">Active Jobs</div>
+                <div className="value">{jobs.length}</div>
+              </div>
 
-      <div className="card">
-        <div className="label">Active Jobs</div>
-        <div className="value">{jobs.length}</div>
-      </div>
+              <div className="card">
+                <div className="label">Printing</div>
+                <div className="value">{printingCount}</div>
+              </div>
 
-      <div className="card">
-        <div className="label">Printing</div>
-        <div className="value">
-          {jobs.filter(job => job.status === "Printing").length}
-        </div>
-      </div>
+              <div className="card">
+                <div className="label">Low Stock</div>
+                <div className="value">{lowStockCount}</div>
+              </div>
+            </div>
+          </>
+        )}
 
-      <div className="card">
-        <div className="label">Low Stock</div>
-        <div className="value">{lowStockCount}</div>
-      </div>
+        {currentPage === 'orders' && (
+         <OrdersPage
+            orders={orders}
+            jobs={jobs}
+            setJobs={setJobs}
+            setOrders={setOrders}
+            setCurrentPage={setCurrentPage}
+            setSelectedOrder={setSelectedOrder}
+          />
+        )}
 
-    </div>
+        {currentPage === 'tickets' && (
+          <JobTicketPage
+            orders={orders}
+            setOrders={setOrders}
+            jobs={jobs}
+            selectedOrder={selectedOrder}
+          />
+        )}
 
-  </>
-)}
+        {currentPage === 'inventory' && (
+          <InventoryPage
+            totalSkus={totalSkus}
+            totalUnits={totalUnits}
+            lowStockCount={lowStockCount}
+            handleAddItem={handleAddItem}
+            skuInputRef={skuInputRef}
+            sku={sku}
+            setSku={setSku}
+            name={name}
+            setName={setName}
+            size={size}
+            setSize={setSize}
+            qty={qty}
+            setQty={setQty}
+            search={search}
+            setSearch={setSearch}
+            filteredInventory={filteredInventory}
+            handleChangeQty={handleChangeQty}
+            handleDeleteItem={handleDeleteItem}
+          />
+        )}
 
-{currentPage === 'orders' && (
-  <OrdersPage
-    setJobs={setJobs}
-    setOrders={setOrders}
-    setCurrentPage={setCurrentPage}
-    setSelectedOrder={setSelectedOrder}
-  />
-)}
+        {currentPage === 'jobs' && (
+          <JobsPage
+            emailCount={emailCount}
+            blanksCount={blanksCount}
+            printingCount={printingCount}
+            completedCount={completedCount}
+            shippedCount={shippedCount}
+            jobSearch={jobSearch}
+            setJobSearch={setJobSearch}
+            groupedJobs={groupedJobs}
+            handleStatusChange={handleStatusChange}
+            handleDeleteJob={handleDeleteJob}
+            getJobStatusClass={getJobStatusClass}
+            getDueDateClass={getDueDateClass}
+            orderProgress={orderProgress}
+          />
+        )}
 
-{currentPage === 'tickets' && (
-  <JobTicketPage
-    orders={orders}
-    setOrders={setOrders}
-    jobs={jobs}
-    selectedOrder={selectedOrder}
-  />
-)}
+        {currentPage === 'receiving' && (
+          <ReceivingPage
+            jobs={jobs}
+            setJobs={setJobs}
+          />
+        )}
 
-{/* ===== INVENTORY PAGE ===== */}
+        {currentPage === 'scan' && (
+          <ScanStation
+            orders={orders}
+            jobs={jobs}
+            setJobs={setJobs}
+            setCurrentPage={setCurrentPage}
+            setSelectedOrder={setSelectedOrder}
+          />
+        )}
 
-{currentPage === 'inventory' && (
-  <InventoryPage
-    totalSkus={totalSkus}
-    totalUnits={totalUnits}
-    lowStockCount={lowStockCount}
-    handleAddItem={handleAddItem}
-    skuInputRef={skuInputRef}
-    sku={sku}
-    setSku={setSku}
-    name={name}
-    setName={setName}
-    size={size}
-    setSize={setSize}
-    qty={qty}
-    setQty={setQty}
-    search={search}
-    setSearch={setSearch}
-    filteredInventory={filteredInventory}
-    handleChangeQty={handleChangeQty}
-    handleDeleteItem={handleDeleteItem}
-  />
-)}
-
-{/* ===== JOBS PAGE ===== */}
-  
-{currentPage === 'jobs' && (
-  <JobsPage
-    emailCount={emailCount}
-    blanksCount={blanksCount}
-    printingCount={printingCount}
-    completedCount={completedCount}
-    shippedCount={shippedCount}
-    jobSearch={jobSearch}
-    setJobSearch={setJobSearch}
-    groupedJobs={groupedJobs}
-    handleStatusChange={handleStatusChange}
-    handleDeleteJob={handleDeleteJob}
-    getJobStatusClass={getJobStatusClass}
-    getDueDateClass={getDueDateClass}
-    orderProgress={orderProgress}
-  />
-)}
-
-{currentPage === 'receiving' && (
-  <ReceivingPage
-    jobs={jobs}
-    setJobs={setJobs}
-  />
-)}
-
-{currentPage === "scan" && (
-  <ScanStation
-    orders={orders}
-    jobs={jobs}
-    setJobs={setJobs}
-    setCurrentPage={setCurrentPage}
-    setSelectedOrder={setSelectedOrder}
-  />
-)}
-
-{currentPage === "production" && (
-  <ProductionBoard jobs={jobs} />
-)}
-
+        {currentPage === 'production' && (
+          <ProductionBoard jobs={jobs} />
+        )}
 
         {currentPage === 'vendors' && <h2>Vendors page coming later</h2>}
         {currentPage === 'settings' && <h2>Settings page coming later</h2>}
