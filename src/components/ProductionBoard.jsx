@@ -191,10 +191,22 @@ const departmentData = departments.map((dept) => {
 
   const printingCount = printing.length 
   const queueCount = queue.length
-  const totalQTY = printing.reduce(
-    (sum, job) => sum + (job.qty || 0),
-    0
-  )
+ const totalQty = [...printing, ...queue].reduce(
+  (sum, job) => sum + Number(job.qty || 0),
+  0
+)
+
+const overdueCount = [...printing, ...queue].filter((job) => {
+  if (!job.dueDate) return false
+
+  const today = new Date()
+  today.setHours(0,0,0,0)
+
+  const due = new Date(job.dueDate)
+  due.setHours(0,0,0,0)
+
+  return due < today
+}).length
   
 
   return {
@@ -204,7 +216,8 @@ const departmentData = departments.map((dept) => {
     queue,
     printingCount,
     queueCount,
-    totalQTY,
+    totalQty,
+    overdueCount
   }
 
 })
@@ -233,9 +246,12 @@ const departmentData = departments.map((dept) => {
 
 
             <div className="departmentStats">
-              <span>Printing Now: {dept.printingCount}</span>
-              <span>Queue: {dept.queueCount}</span>
-              <span>Total Qty: {dept.totalQty}</span>
+              <span>PRINTING: {dept.printingCount}</span>
+              <span>QUEUE: {dept.queueCount}</span>
+              <span>PIECES: {dept.totalQty}</span>
+              <span className={dept.overdueCount ? "overdueStat" : ""}>
+                OVERDUE: {dept.overdueCount}
+              </span>
             </div>
 
             {renderSection(
