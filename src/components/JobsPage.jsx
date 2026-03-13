@@ -185,9 +185,9 @@ function JobsPage({
                       <td>{job.designName}</td>
 
                       <td>
-                        {job.mockup instanceof File && (
+                        {job.mockup && (
                           <img
-                            src={URL.createObjectURL(job.mockup)}
+                            src={job.mockup}
                             alt="mockup"
                             style={{ width: '40px', borderRadius: '4px' }}
                           />

@@ -135,9 +135,9 @@ useEffect(() => {
             </p>
           </div>
 
-          {job.mockup instanceof File && (
+          {job.mockup && (
             <img
-              src={URL.createObjectURL(job.mockup)}
+              src={job.mockup}
               alt="artwork preview"
               className="productionArtwork"
             />

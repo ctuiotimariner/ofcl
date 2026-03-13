@@ -270,7 +270,16 @@ function getOrderStatusBadge(status) {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setMockup(e.target.files[0])}
+          onChange={(e) => {
+            const file = e.target.files[0]
+            if (!file) return
+
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              setMockup(reader.result)
+            }
+            reader.readAsDataURL(file)
+          }}
         />
 
         <select value={method} onChange={(e) => setMethod(e.target.value)}>

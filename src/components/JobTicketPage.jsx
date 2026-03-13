@@ -182,9 +182,9 @@ const stage = getOrderStage(orderJobs)
   </div>
 
   <div className="ticketMockupBox">
-    {order.items?.[0]?.mockup instanceof File && (
+    {order.items[0]?.mockup && (
       <img
-        src={URL.createObjectURL(order.items[0].mockup)}
+        src={order.items[0].mockup}
         alt="mockup"
         className="ticketMockupImage"
       />
