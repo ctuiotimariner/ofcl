@@ -334,12 +334,14 @@ function getOrderStatusBadge(status) {
       <div className="tableCard">
         <table>
           <thead>
-            <th>Order</th>
-            <th>Customer</th>
-            <th>Due Date</th>
-            <th>Items</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Due Date</th>
+              <th>Items</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>  
           </thead>
 
           <tbody>

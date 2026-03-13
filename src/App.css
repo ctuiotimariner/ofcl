@@ -321,6 +321,13 @@ tbody tr:hover td {
   background: #374151;
 }
 
+.departmentStats {
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 12px;
+}
 
 
 /* ===== ORDER PROGRESS BAR ===== */

@@ -1,86 +1,37 @@
 import { useEffect } from "react"
+import {
+  getDueStatus,
+  sortJobsByPriority,
+  getPriorityLabel
+} from "../utils/productionHelpers"
+
+
+
 
 function ProductionBoard({ jobs }) {
 
   const params = new URLSearchParams(window.location.search)
   const department = params.get("dept")
-
-  function enterFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen()
+  const departments = [
+  {
+    name: "Embroidery",
+    method: "Embroidery"
+  },
+  {
+    name: "Heat Transfer",
+    method: "Heat Transfer"
   }
-}
+]
 
-useEffect(() => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {})
-  }
-}, [])
-
-  function getDueStatus(job) {
-    if (!job.dueDate) return ''
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const due = new Date(job.dueDate)
-    due.setHours(0, 0, 0, 0)
-
-    const diffDays = (due - today) / (1000 * 60 * 60 * 24)
-
-    if (diffDays < 0) return 'overdue'
-    if (diffDays <= 2) return 'dueSoon'
-
-    return ''
+function enterFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    }
   }
 
-  function sortJobsByPriority(jobList) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
 
-    return [...jobList].sort((a, b) => {
-      const aDue = a.dueDate ? new Date(a.dueDate) : null
-      const bDue = b.dueDate ? new Date(b.dueDate) : null
-
-      if (aDue) aDue.setHours(0, 0, 0, 0)
-      if (bDue) bDue.setHours(0, 0, 0, 0)
-
-      const aOverdue = aDue && aDue < today
-      const bOverdue = bDue && bDue < today
-
-      if (aOverdue && !bOverdue) return -1
-      if (!aOverdue && bOverdue) return 1
-
-      const aDueSoon =
-        aDue && (aDue - today) / (1000 * 60 * 60 * 24) <= 2
-      const bDueSoon =
-        bDue && (bDue - today) / (1000 * 60 * 60 * 24) <= 2
-
-      if (aDueSoon && !bDueSoon) return -1
-      if (!aDueSoon && bDueSoon) return 1
-
-      return 0
-    })
-  }
-
-  function getPriorityLabel(job) {
-    if (!job.dueDate) return ''
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const due = new Date(job.dueDate)
-    due.setHours(0, 0, 0, 0)
-
-    const diffDays = (due - today) / (1000 * 60 * 60 * 24)
-
-    if (diffDays < 0) return 'OVERDUE'
-    if (diffDays <= 2) return 'DUE SOON'
-
-    return ''
-  }
-
-  function getCardStyle(job, isActivePrint = false) {
+function getCardStyle(job, isActivePrint = false) {
+    
     const dueStatus = getDueStatus(job)
 
     if (dueStatus === 'overdue') {
@@ -204,6 +155,65 @@ const waitingHeatTransfer = sortJobsByPriority(
   )
 )
 
+const embroideryPrintingCount = embroideryJobs.length
+const embroideryQueueCount = waitingEmbroidery.length
+
+const heatPrintingCount = heatTransferJobs.length
+const heatQueueCount = waitingHeatTransfer.length
+
+const embroideryQtyTotal = embroideryJobs.reduce(
+  (sum, job) => sum + (job.qty || 0),
+  0
+)
+
+const heatQtyTotal = heatTransferJobs.reduce(
+  (sum, job) => sum + (job.qty || 0),
+  0
+)
+
+const departmentData = departments.map((dept) => {
+
+  const printing = sortJobsByPriority(
+    jobs.filter(
+      (job) =>
+        job.method === dept.method &&
+        job.status === "Printing"
+    )
+  )
+
+  const queue = sortJobsByPriority(
+    jobs.filter(
+      (job) =>
+        job.method === dept.method &&
+        job.status === "Waiting for Blanks"
+    )
+  )
+
+  const printingCount = printing.length 
+  const queueCount = queue.length
+  const totalQTY = printing.reduce(
+    (sum, job) => sum + (job.qty || 0),
+    0
+  )
+  
+
+  return {
+    name: dept.name,
+    method: dept.method,
+    printing,
+    queue,
+    printingCount,
+    queueCount,
+    totalQTY,
+  }
+
+})
+
+
+
+
+
+
   return (
     <>
       <h2 className="productionTitle">PRINT FLOOR</h2>
@@ -213,40 +223,38 @@ const waitingHeatTransfer = sortJobsByPriority(
       </button>
 
       <div className="productionScreen">
-  {(!department || department === 'embroidery') && (
-    <div className="productionSection">
-      {renderSection(
-        'EMBROIDERY - PRINTING NOW',
-        embroideryJobs,
-        'No active embroidery jobs',
-        true
-      )}
+        {departmentData
+          .filter((dept) => {
+            if (!department) return true
+            return dept.method.toLowerCase().includes(department)
+          })
+          .map((dept) => (
+            <div key={dept.name} className="productionSection">
 
-      {renderSection(
-        'EMBROIDERY - NEXT UP',
-        waitingEmbroidery,
-        'No upcoming embroidery jobs'
-      )}
+
+            <div className="departmentStats">
+              <span>Printing Now: {dept.printingCount}</span>
+              <span>Queue: {dept.queueCount}</span>
+              <span>Total Qty: {dept.totalQty}</span>
+            </div>
+
+            {renderSection(
+              `${dept.name} - PRINTING NOW`,
+              dept.printing,
+              `No active ${dept.name.toLowerCase()} jobs`,
+              true
+            )}
+
+            {renderSection(
+              `${dept.name} - NEXT UP`,
+              dept.queue,
+              `No upcoming ${dept.name.toLowerCase()} jobs`
+            )}
+
+          </div>
+        ))}
+
     </div>
-  )}
-
-  {(!department || department === 'heat') && (
-    <div className="productionSection">
-      {renderSection(
-        'HEAT TRANSFER - PRINTING NOW',
-        heatTransferJobs,
-        'No active heat transfer jobs',
-        true
-      )}
-
-      {renderSection(
-        'HEAT TRANSFER - NEXT UP',
-        waitingHeatTransfer,
-        'No upcoming heat transfer jobs'
-      )}
-    </div>
-  )}
-</div>
     </>
   )
 }
