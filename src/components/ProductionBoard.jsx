@@ -2,12 +2,19 @@ import { useEffect } from "react"
 
 function ProductionBoard({ jobs }) {
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    window.location.reload()
-  }, 15000) // refresh every 15 seconds
+  const params = new URLSearchParams(window.location.search)
+  const department = params.get("dept")
 
-  return () => clearInterval(interval)
+  function enterFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen()
+  }
+}
+
+useEffect(() => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {})
+  }
 }, [])
 
   function getDueStatus(job) {
@@ -162,68 +169,84 @@ useEffect(() => {
   }
 
   const embroideryJobs = sortJobsByPriority(
-    jobs.filter(
-      (job) => job.method === 'Embroidery' && job.status === 'Printing'
-    )
+  jobs.filter(
+    (job) =>
+      job.method === 'Embroidery' &&
+      job.status === 'Printing' &&
+      (!department || department === 'embroidery')
   )
+)
 
-  const heatTransferJobs = sortJobsByPriority(
-    jobs.filter(
-      (job) => job.method === 'Heat Transfer' && job.status === 'Printing'
-    )
+const heatTransferJobs = sortJobsByPriority(
+  jobs.filter(
+    (job) =>
+      job.method === 'Heat Transfer' &&
+      job.status === 'Printing' &&
+      (!department || department === 'heat')
   )
+)
 
-  const waitingEmbroidery = sortJobsByPriority(
-    jobs.filter(
-      (job) =>
-        job.method === 'Embroidery' &&
-        job.status === 'Waiting for Blanks'
-    )
+const waitingEmbroidery = sortJobsByPriority(
+  jobs.filter(
+    (job) =>
+      job.method === 'Embroidery' &&
+      job.status === 'Waiting for Blanks' &&
+      (!department || department === 'embroidery')
   )
+)
 
-  const waitingHeatTransfer = sortJobsByPriority(
-    jobs.filter(
-      (job) =>
-        job.method === 'Heat Transfer' &&
-        job.status === 'Waiting for Blanks'
-    )
+const waitingHeatTransfer = sortJobsByPriority(
+  jobs.filter(
+    (job) =>
+      job.method === 'Heat Transfer' &&
+      job.status === 'Waiting for Blanks' &&
+      (!department || department === 'heat')
   )
+)
 
   return (
     <>
       <h2 className="productionTitle">PRINT FLOOR</h2>
 
+      <button className="fullscreenButton" onClick={enterFullscreen}>
+        Full Screen Mode
+      </button>
+
       <div className="productionScreen">
-        <div className="productionSection">
-          {renderSection(
-            'EMBROIDERY - PRINTING NOW',
-            embroideryJobs,
-            'No active embroidery jobs',
-            true
-          )}
+  {(!department || department === 'embroidery') && (
+    <div className="productionSection">
+      {renderSection(
+        'EMBROIDERY - PRINTING NOW',
+        embroideryJobs,
+        'No active embroidery jobs',
+        true
+      )}
 
-          {renderSection(
-            'EMBROIDERY - NEXT UP',
-            waitingEmbroidery,
-            'No upcoming embroidery jobs'
-          )}
-        </div>
+      {renderSection(
+        'EMBROIDERY - NEXT UP',
+        waitingEmbroidery,
+        'No upcoming embroidery jobs'
+      )}
+    </div>
+  )}
 
-        <div className="productionSection">
-          {renderSection(
-            'HEAT TRANSFER - PRINTING NOW',
-            heatTransferJobs,
-            'No active heat transfer jobs',
-            true
-          )}
+  {(!department || department === 'heat') && (
+    <div className="productionSection">
+      {renderSection(
+        'HEAT TRANSFER - PRINTING NOW',
+        heatTransferJobs,
+        'No active heat transfer jobs',
+        true
+      )}
 
-          {renderSection(
-            'HEAT TRANSFER - NEXT UP',
-            waitingHeatTransfer,
-            'No upcoming heat transfer jobs'
-          )}
-        </div>
-      </div>
+      {renderSection(
+        'HEAT TRANSFER - NEXT UP',
+        waitingHeatTransfer,
+        'No upcoming heat transfer jobs'
+      )}
+    </div>
+  )}
+</div>
     </>
   )
 }

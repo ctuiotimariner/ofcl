@@ -307,6 +307,22 @@ tbody tr:hover td {
   border-top: 3px solid #a78bfa;
 }
 
+.fullscreenButton {
+  background: #1f2937;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.fullscreenButton:hover {
+  background: #374151;
+}
+
+
+
 /* ===== ORDER PROGRESS BAR ===== */
 .progressWrapper {
   display: flex;
