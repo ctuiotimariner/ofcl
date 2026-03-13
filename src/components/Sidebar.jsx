@@ -75,7 +75,11 @@ function Sidebar({ currentPage, setCurrentPage, setRole }) {
       </button>
 
       <button
-        onClick={() => setRole("")}
+        onClick={() => {
+          localStorage.removeItem('role')
+          localStorage.removeItem('currentPage')
+          setRole('')
+        }}
       >
         Logout
       </button>

@@ -243,6 +243,25 @@ tbody tr:hover td {
 }
 
 /* ===== PRODUCTION BOARD ===== */
+
+.productionCardBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.productionArtwork {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
 .productionBoard {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -446,11 +465,10 @@ tbody tr:hover td {
 }
 
 .productionCard {
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
 }
 
 .productionCard h4 {
@@ -559,12 +577,17 @@ tbody tr:hover td {
   font-weight: 600;
 }
 
+.productionCardHeader h4 {
+  font-size: 18px;
+  font-weight: 600;
+} 
+
 .productionCardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .priorityBadge {
@@ -595,6 +618,13 @@ tbody tr:hover td {
   box-shadow: 0 0 18px rgba(255, 204, 102, 0.35);
 }
 
+.productionCardBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
 .productionCard {
   padding: 22px;
   border-radius: 16px;
@@ -602,4 +632,14 @@ tbody tr:hover td {
   background: rgba(255,255,255,0.06);
   border: 2px solid #6ee787;
   box-shadow: 0 0 12px rgba(110, 231, 135, 0.25);
+}
+
+.productionDetails {
+  flex: 1;
+}
+
+
+.productionDetails p {
+  margin: 6px 0;
+  font-size: 14px;
 }

@@ -33,8 +33,12 @@ function App() {
   const [search, setSearch] = useState('')
 
   // App navigation / role
-  const [role, setRole] = useState('')
-  const [currentPage, setCurrentPage] = useState('inventory')
+  const [role, setRole] = useState(() => {
+  return localStorage.getItem('role') || ''
+})
+  const [currentPage, setCurrentPage] = useState(() => {
+  return localStorage.getItem('currentPage') || 'dashboard'
+})
 
   // Jobs / Orders
   const [jobs, setJobs] = useState(() => {
@@ -183,6 +187,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem('orders', JSON.stringify(orders))
   }, [orders])
+
+  useEffect(() => {
+  localStorage.setItem('role', role)
+}, [role])
+
+useEffect(() => {
+  localStorage.setItem('currentPage', currentPage)
+}, [currentPage])
 
   // ===== INVENTORY ACTIONS =====
 
