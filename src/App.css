@@ -337,12 +337,48 @@ tbody tr:hover td {
   gap: 4px;
 }
 
-.progressBar {
-  width: 120px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+.progressContainer {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
   overflow: hidden;
+  margin-top: 8px;
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.4s ease;
+
+  /* 🔥 glow effect */
+  box-shadow: 0 0 10px currentColor,
+              0 0 20px currentColor;
+
+  /* 🔥 animated shine */
+  position: relative;
+  overflow: hidden;
+}
+
+.progressBar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: rgba(255,255,255,0.3);
+
+  animation: shineMove 2s infinite;
+}
+
+@keyframes shineMove {
+  from {
+    left: -50%;
+  }
+  to {
+    left: 120%;
+  }
 }
 
 .progressFill {
@@ -665,4 +701,50 @@ tbody tr:hover td {
 .productionDetails p {
   margin: 6px 0;
   font-size: 14px;
+}
+
+.fadeIn {
+  opacity: 1;
+  transition: opacity 0.4s ease-in;
+}
+
+.fadeOut {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.departmentHeader {
+  font-size: 48px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+  color: #6ee787;
+  text-shadow: 0 0 20px rgba(110, 231, 135, 0.6);
+  animation: headerGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes headerGlow {
+  from {
+    text-shadow: 0 0 10px rgba(110, 231, 135, 0.4);
+  }
+  to {
+    text-shadow: 0 0 25px rgba(110, 231, 135, 1);
+  }
+}
+
+.nearComplete {
+  animation: pulseComplete 1.2s infinite;
+}
+
+@keyframes pulseComplete {
+  0% {
+    box-shadow: 0 0 10px #6ee787;
+  }
+  50% {
+    box-shadow: 0 0 25px #00ff9c;
+  }
+  100% {
+    box-shadow: 0 0 10px #6ee787;
+  }
 }

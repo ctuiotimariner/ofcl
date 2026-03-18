@@ -1,37 +1,120 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import {
   getDueStatus,
   sortJobsByPriority,
   getPriorityLabel
 } from "../utils/productionHelpers"
 
-
-
-
 function ProductionBoard({ jobs }) {
+
 
   const params = new URLSearchParams(window.location.search)
   const department = params.get("dept")
-  const departments = [
-  {
-    name: "Embroidery",
-    method: "Embroidery"
-  },
-  {
-    name: "Heat Transfer",
-    method: "Heat Transfer"
-  }
-]
 
-function enterFullscreen() {
+  const departments = [
+    { name: "Embroidery", method: "Embroidery" },
+    { name: "Heat Transfer", method: "Heat Transfer" }
+  ]
+
+  // ✅ STATE (must be before useEffect)
+  const [currentDeptIndex, setCurrentDeptIndex] = useState(0)
+  const [fade, setFade] = useState(true)
+
+  function enterFullscreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen()
     }
   }
 
+  // =========================
+  // 🔧 BUILD DATA FIRST
+  // =========================
+  const departmentData = departments.map((dept) => {
 
-function getCardStyle(job, isActivePrint = false) {
-    
+    const printing = sortJobsByPriority(
+      jobs.filter(
+        (job) =>
+          job.method === dept.method &&
+          job.status === "Printing"
+      )
+    )
+
+    const queue = sortJobsByPriority(
+      jobs.filter(
+        (job) =>
+          job.method === dept.method &&
+          job.status === "Waiting for Blanks"
+      )
+    )
+
+    const printingCount = printing.length
+    const queueCount = queue.length
+
+    const printingPieces = printing.reduce(
+      (sum, job) => sum + Number(job.qty || 0),
+      0
+    )
+
+    const totalPieces = [...printing, ...queue].reduce(
+      (sum, job) => sum + Number(job.qty || 0),
+      0
+    )
+
+    const totalQty = totalPieces
+
+    const overdueCount = [...printing, ...queue].filter((job) => {
+      if (!job.dueDate) return false
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const due = new Date(job.dueDate)
+      due.setHours(0, 0, 0, 0)
+
+      return due < today
+    }).length
+
+    return {
+      name: dept.name,
+      method: dept.method,
+      printing,
+      queue,
+      printingCount,
+      queueCount,
+      totalQty,
+      overdueCount,
+      printingPieces,
+      totalPieces
+    }
+  })
+
+  // =========================
+  // 🔥 ROTATION (NOW SAFE)
+  // =========================
+useEffect(() => {
+  const interval = setInterval(() => {
+
+    setFade(false) // fade out
+
+    setTimeout(() => {
+      setCurrentDeptIndex((prev) =>
+        (prev + 1) % departmentData.length
+      )
+      setFade(true) // fade in
+    }, 400)
+
+  }, 15000)
+
+  return () => clearInterval(interval)
+}, [departmentData.length])
+
+  // ✅ ACTIVE DEPARTMENT
+  const activeDepartment = departmentData[currentDeptIndex]
+
+  // =========================
+  // UI HELPERS
+  // =========================
+  function getCardStyle(job, isActivePrint = false) {
     const dueStatus = getDueStatus(job)
 
     if (dueStatus === 'overdue') {
@@ -108,169 +191,84 @@ function getCardStyle(job, isActivePrint = false) {
   function renderSection(title, jobList, emptyMessage, isActivePrint = false) {
     return (
       <>
-        <h3 style={{ marginTop: title.includes('NEXT UP') ? '24px' : '0' }}>
-          {title}
-        </h3>
-
+        <h3>{title}</h3>
         {jobList.length === 0 && <p>{emptyMessage}</p>}
-
         {jobList.map((job) => renderJobCard(job, isActivePrint))}
       </>
     )
   }
 
-  const embroideryJobs = sortJobsByPriority(
-  jobs.filter(
-    (job) =>
-      job.method === 'Embroidery' &&
-      job.status === 'Printing' &&
-      (!department || department === 'embroidery')
-  )
-)
+  // =========================
+  // 🧱 RENDER
+  // =========================
+  if (!activeDepartment) return null
 
-const heatTransferJobs = sortJobsByPriority(
-  jobs.filter(
-    (job) =>
-      job.method === 'Heat Transfer' &&
-      job.status === 'Printing' &&
-      (!department || department === 'heat')
-  )
-)
-
-const waitingEmbroidery = sortJobsByPriority(
-  jobs.filter(
-    (job) =>
-      job.method === 'Embroidery' &&
-      job.status === 'Waiting for Blanks' &&
-      (!department || department === 'embroidery')
-  )
-)
-
-const waitingHeatTransfer = sortJobsByPriority(
-  jobs.filter(
-    (job) =>
-      job.method === 'Heat Transfer' &&
-      job.status === 'Waiting for Blanks' &&
-      (!department || department === 'heat')
-  )
-)
-
-const embroideryPrintingCount = embroideryJobs.length
-const embroideryQueueCount = waitingEmbroidery.length
-
-const heatPrintingCount = heatTransferJobs.length
-const heatQueueCount = waitingHeatTransfer.length
-
-const embroideryQtyTotal = embroideryJobs.reduce(
-  (sum, job) => sum + (job.qty || 0),
-  0
-)
-
-const heatQtyTotal = heatTransferJobs.reduce(
-  (sum, job) => sum + (job.qty || 0),
-  0
-)
-
-const departmentData = departments.map((dept) => {
-
-  const printing = sortJobsByPriority(
-    jobs.filter(
-      (job) =>
-        job.method === dept.method &&
-        job.status === "Printing"
-    )
-  )
-
-  const queue = sortJobsByPriority(
-    jobs.filter(
-      (job) =>
-        job.method === dept.method &&
-        job.status === "Waiting for Blanks"
-    )
-  )
-
-  const printingCount = printing.length 
-  const queueCount = queue.length
- const totalQty = [...printing, ...queue].reduce(
-  (sum, job) => sum + Number(job.qty || 0),
-  0
-)
-
-const overdueCount = [...printing, ...queue].filter((job) => {
-  if (!job.dueDate) return false
-
-  const today = new Date()
-  today.setHours(0,0,0,0)
-
-  const due = new Date(job.dueDate)
-  due.setHours(0,0,0,0)
-
-  return due < today
-}).length
-  
-
-  return {
-    name: dept.name,
-    method: dept.method,
-    printing,
-    queue,
-    printingCount,
-    queueCount,
-    totalQty,
-    overdueCount
-  }
-
-})
-
-
-
-
-
+  const progressPercent = activeDepartment.totalPieces
+    ? Math.round(
+        (activeDepartment.printingPieces / activeDepartment.totalPieces) * 100
+      )
+    : 0
 
   return (
     <>
-      <h2 className="productionTitle">PRINT FLOOR</h2>
+        <div className="departmentHeader">
+        {activeDepartment.name.toUpperCase()}
+      </div>
 
       <button className="fullscreenButton" onClick={enterFullscreen}>
         Full Screen Mode
       </button>
 
       <div className="productionScreen">
-        {departmentData
-          .filter((dept) => {
-            if (!department) return true
-            return dept.method.toLowerCase().includes(department)
-          })
-          .map((dept) => (
-            <div key={dept.name} className="productionSection">
 
+        <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
 
-            <div className="departmentStats">
-              <span>PRINTING: {dept.printingCount}</span>
-              <span>QUEUE: {dept.queueCount}</span>
-              <span>PIECES: {dept.totalQty}</span>
-              <span className={dept.overdueCount ? "overdueStat" : ""}>
-                OVERDUE: {dept.overdueCount}
-              </span>
-            </div>
-
-            {renderSection(
-              `${dept.name} - PRINTING NOW`,
-              dept.printing,
-              `No active ${dept.name.toLowerCase()} jobs`,
-              true
-            )}
-
-            {renderSection(
-              `${dept.name} - NEXT UP`,
-              dept.queue,
-              `No upcoming ${dept.name.toLowerCase()} jobs`
-            )}
-
+          <div className="departmentStats">
+            <span>PRINTING: {activeDepartment.printingCount}</span>
+            <span>QUEUE: {activeDepartment.queueCount}</span>
+            <span>PIECES: {activeDepartment.totalQty}</span>
+            <span className={activeDepartment.overdueCount ? "overdueStat" : ""}>
+              OVERDUE: {activeDepartment.overdueCount}
+            </span>
           </div>
-        ))}
 
-    </div>
+          <div className="progressContainer">
+         <div
+            className={`progressBar ${
+              progressPercent >= 90 ? "nearComplete" : ""
+            }`}
+            style={{
+              width: `${progressPercent}%`,
+              background:
+                progressPercent < 30
+                  ? 'linear-gradient(90deg, #ff5c5c, #ff1f1f)'
+                  : progressPercent < 70
+                  ? 'linear-gradient(90deg, #ffcc66, #ffaa00)'
+                  : 'linear-gradient(90deg, #6ee787, #00ff9c)'
+            }}
+          ></div>
+          </div>
+
+          <div className="progressText">
+            {progressPercent}% COMPLETE
+          </div>
+
+          {renderSection(
+            `${activeDepartment.name} - PRINTING NOW`,
+            activeDepartment.printing,
+            `No active ${activeDepartment.name.toLowerCase()} jobs`,
+            true
+          )}
+
+          {renderSection(
+            `${activeDepartment.name} - NEXT UP`,
+            activeDepartment.queue,
+            `No upcoming ${activeDepartment.name.toLowerCase()} jobs`
+          )}
+
+        </div>
+
+      </div>
     </>
   )
 }
