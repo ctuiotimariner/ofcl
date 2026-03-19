@@ -9,7 +9,7 @@ import JobTicketPage from './components/JobTicketPage'
 import ReceivingPage from './components/ReceivingPage'
 import ProductionBoard from './components/ProductionBoard'
 import ScanStation from './components/ScanStation'
-
+import DashboardMain from "./components/DashboardMain"
 import { supabase } from './lib/supabase'
 
 
@@ -62,6 +62,31 @@ function App() {
 
   // Jobs / Orders
   const [jobs, setJobs] = useState([])
+
+        const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      // Overdue jobs (past due date)
+      const overdueCount = jobs.filter((job) => {
+        if (!job.dueDate) return false
+
+        const due = new Date(job.dueDate)
+        due.setHours(0, 0, 0, 0)
+
+        return due < today
+      }).length
+
+      // Jobs due today
+      const dueTodayJobs = jobs.filter((job) => {
+        if (!job.dueDate) return false
+
+        const due = new Date(job.dueDate)
+        due.setHours(0, 0, 0, 0)
+
+        return due.getTime() === today.getTime()
+      })
+
+      const dueTodayCount = dueTodayJobs.length
 
   const [orders, setOrders] = useState(() => {
     const savedOrders = localStorage.getItem('orders')
@@ -387,26 +412,14 @@ useEffect(() => {
         <p>Role: {role}</p>
 
         {currentPage === 'dashboard' && (
-          <>
-            <h2>Dashboard</h2>
-
-            <div className="stats">
-              <div className="card">
-                <div className="label">Active Jobs</div>
-                <div className="value">{jobs.length}</div>
-              </div>
-
-              <div className="card">
-                <div className="label">Printing</div>
-                <div className="value">{printingCount}</div>
-              </div>
-
-              <div className="card">
-                <div className="label">Low Stock</div>
-                <div className="value">{lowStockCount}</div>
-              </div>
-            </div>
-          </>
+          <DashboardMain
+            jobs={jobs}
+            printingCount={printingCount}
+            lowStockCount={lowStockCount}
+            overdueCount={overdueCount}
+            dueTodayCount={dueTodayCount}
+            dueTodayJobs={dueTodayJobs}
+          />
         )}
 
         {currentPage === 'orders' && (

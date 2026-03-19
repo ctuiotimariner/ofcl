@@ -21,6 +21,9 @@ const departments = [
   const [fade, setFade] = useState(true)
   const [jobs, setJobs] = useState([])
 
+  const [audioReady, setAudioReady] = useState(false)
+  const sound = new Audio("/notify.mp3")
+
 async function fetchJobs() {
   const { data, error } = await supabase.from("jobs").select("*")
 
@@ -60,8 +63,8 @@ useEffect(() => {
         if (payload.eventType === "INSERT") {
           console.log("🆕 NEW JOB RECEIVED")
 
-          const audio = new Audio("/notify.wav")
-          audio.play().catch(() => {})
+          const audio = new Audio("/notify.mp3")
+            audio.play().catch(() => {})
         }
 
         fetchJobs()
@@ -98,17 +101,7 @@ useEffect(() => {
     }
   }
 
-  <button
-  type="button"
-  onClick={() => {
-    const audio = new Audio("/notify.wav")
-    audio.play()
-      .then(() => console.log("🔊 Test sound played"))
-      .catch((err) => console.log("🔇 Test sound failed:", err))
-  }}
->
-  Test Sound
-</button>
+  
 
   const departmentData = useMemo(() => {
     return departments.map((dept) => {
@@ -282,6 +275,23 @@ useEffect(() => {
         (activeDepartment.printingPieces / activeDepartment.totalPieces) * 100
       )
     : 0
+
+useEffect(() => {
+  const unlock = () => {
+    sound.play().then(() => {
+      sound.pause()
+      sound.currentTime = 0
+      setAudioReady(true)
+      console.log("Audio ready")
+    }).catch(() => {})
+
+    window.removeEventListener("click", unlock)
+  }
+
+  window.addEventListener("click", unlock)
+
+  return () => window.removeEventListener("click", unlock)
+}, [])
 
   return (
     <>
