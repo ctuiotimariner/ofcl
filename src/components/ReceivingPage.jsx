@@ -1,10 +1,26 @@
-function ReceivingPage({ jobs, setJobs }) {
+import { supabase } from "../lib/supabase"
 
+function ReceivingPage({ jobs, setJobs }) {
   const waitingJobs = jobs.filter(
     (job) => job.status === "Waiting for Blanks"
   )
 
-  function markDelivered(jobId) {
+  async function markDelivered(jobId) {
+    const { data, error } = await supabase
+      .from("jobs")
+      .update({
+        delivered: true,
+        status: "Printing"
+      })
+      .eq("id", jobId)
+      .select()
+
+    if (error) {
+      console.error("MARK DELIVERED ERROR:", error)
+      alert(`Failed to update job: ${error.message}`)
+      return
+    }
+
     setJobs(
       jobs.map((job) =>
         job.id === jobId
@@ -12,6 +28,8 @@ function ReceivingPage({ jobs, setJobs }) {
           : job
       )
     )
+
+    console.log("Updated job:", data)
   }
 
   return (
@@ -46,14 +64,11 @@ function ReceivingPage({ jobs, setJobs }) {
                   {job.delivered ? (
                     "✔ Delivered"
                   ) : (
-                    <button
-                      onClick={() => markDelivered(job.id)}
-                    >
+                    <button onClick={() => markDelivered(job.id)}>
                       Mark Delivered
                     </button>
                   )}
                 </td>
-
               </tr>
             ))}
           </tbody>

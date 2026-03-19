@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 function OrdersPage({
   orders,
@@ -50,49 +51,61 @@ function OrdersPage({
     setMockup(null)
   }
 
-  function handleCreateOrder() {
-    if (!orderNumber || !customerName || orderItems.length === 0) return
+ async function handleCreateOrder() {
+  if (!orderNumber || !customerName || orderItems.length === 0) return
 
-    const newJobs = orderItems.map((item) => ({
-      id: Date.now() + Math.random(),
-      orderGroup: orderNumber,
-      client: customerName,
-      garment: item.garment,
-      qty: item.qty,
-      sizes: item.sizes,
-      placement: item.placement,
-      designName: item.designName,
-      method: item.method,
-      mockup: item.mockup,
-      status: 'Waiting for Blanks',
-      dueDate,
-      vendor,
-      poNumber,
-      delivered: false,
-    }))
+  const newJobs = orderItems.map((item) => ({
+    orderGroup: orderNumber,
+    client: customerName,
+    garment: item.garment,
+    qty: item.qty,
+    sizes: item.sizes,
+    placement: item.placement,
+    designName: item.designName,
+    method: item.method,
+    mockup: item.mockup,
+    status: 'Waiting for Blanks',
+    dueDate,
+    vendor,
+    poNumber,
+    delivered: false,
+  }))
 
-    const newOrder = {
-      id: Date.now(),
-      orderNumber,
-      customerName,
-      vendor,
-      poNumber,
-      dueDate,
-      generalNotes,
-      items: orderItems,
-    }
-
-    setJobs((prev) => [...prev, ...newJobs])
-    setOrders((prev) => [...prev, newOrder])
-
-    setOrderItems([])
-    setOrderNumber('')
-    setCustomerName('')
-    setVendor('')
-    setPoNumber('')
-    setDueDate('')
-    setGeneralNotes('')
+  const newOrder = {
+    id: Date.now(),
+    orderNumber,
+    customerName,
+    vendor,
+    poNumber,
+    dueDate,
+    generalNotes,
+    items: orderItems,
   }
+
+  const { data, error } = await supabase
+    .from('jobs')
+    .insert(newJobs)
+    .select()
+
+  if (error) {
+    console.error('INSERT ERROR FULL:', JSON.stringify(error, null, 2))
+    alert(`Order failed: ${error.message}`)
+    return
+  }
+
+  console.log('INSERT SUCCESS:', data)
+
+  setJobs((prev) => [...prev, ...(data || newJobs)])
+  setOrders((prev) => [...prev, newOrder])
+
+  setOrderItems([])
+  setOrderNumber('')
+  setCustomerName('')
+  setVendor('')
+  setPoNumber('')
+  setDueDate('')
+  setGeneralNotes('')
+}
 
   function handleDeleteOrder(orderId) {
     const updatedOrders = orders.filter((order) => order.id !== orderId)
@@ -285,7 +298,7 @@ function getOrderStatusBadge(status) {
         <select value={method} onChange={(e) => setMethod(e.target.value)}>
           <option value="">Print Method</option>
           <option>Embroidery</option>
-          <option>Heat Transfer</option>
+          <option>DTF Printing</option>
         </select>
 
         <button type="submit">Add Item</button>

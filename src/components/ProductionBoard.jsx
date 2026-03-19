@@ -1,24 +1,64 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   getDueStatus,
   sortJobsByPriority,
   getPriorityLabel
 } from "../utils/productionHelpers"
+import { supabase } from "../lib/supabase"
 
-function ProductionBoard({ jobs }) {
+function ProductionBoard() {
 
 
   const params = new URLSearchParams(window.location.search)
-  const department = params.get("dept")
+  const departmentParam = params.get("dept")
 
-  const departments = [
-    { name: "Embroidery", method: "Embroidery" },
-    { name: "Heat Transfer", method: "Heat Transfer" }
-  ]
+const departments = [
+  { name: "Embroidery", method: "Embroidery" },
+  { name: "DTF Printing", method: "DTF Printing" }
+]
 
-  // ✅ STATE (must be before useEffect)
-  const [currentDeptIndex, setCurrentDeptIndex] = useState(0)
+  const [currentDeptIndex, setCurrentDeptIndex] = useState(1)
   const [fade, setFade] = useState(true)
+  const [jobs, setJobs] = useState([])
+
+useEffect(() => {
+  async function fetchJobs() {
+    const { data, error } = await supabase.from("jobs").select("*")
+
+    if (error) {
+      console.error("Supabase error:", error)
+    } else {
+      console.log("ALL JOBS:", data)
+
+      data?.forEach((job, index) => {
+        console.log(`JOB ${index + 1}`, {
+          orderGroup: job.orderGroup,
+          method: job.method,
+          status: job.status,
+          qty: job.qty
+        })
+      })
+
+      setJobs(data || [])
+    }
+  }
+
+  fetchJobs()
+}, [])
+
+  useEffect(() => {
+    if (!departmentParam) return
+
+    const foundIndex = departments.findIndex(
+      (dept) =>
+        dept.method.toLowerCase() === departmentParam.toLowerCase() ||
+        dept.name.toLowerCase() === departmentParam.toLowerCase()
+    )
+
+    if (foundIndex !== -1) {
+      setCurrentDeptIndex(foundIndex)
+    }
+  }, [departmentParam])
 
   function enterFullscreen() {
     if (!document.fullscreenElement) {
@@ -26,121 +66,113 @@ function ProductionBoard({ jobs }) {
     }
   }
 
-  // =========================
-  // 🔧 BUILD DATA FIRST
-  // =========================
-  const departmentData = departments.map((dept) => {
+  const departmentData = useMemo(() => {
+    return departments.map((dept) => {
 
-    const printing = sortJobsByPriority(
-      jobs.filter(
-        (job) =>
-          job.method === dept.method &&
-          job.status === "Printing"
+      const printing = sortJobsByPriority(
+        jobs.filter((job) => {
+          const methodMatches =
+            String(job.method || "").trim().toLowerCase() ===
+            String(dept.method || "").trim().toLowerCase()
+
+          return methodMatches && job.status === "Printing"
+        })
       )
-    )
 
-    const queue = sortJobsByPriority(
-      jobs.filter(
-        (job) =>
-          job.method === dept.method &&
-          job.status === "Waiting for Blanks"
+      const queue = sortJobsByPriority(
+        jobs.filter((job) => {
+          const methodMatches =
+            String(job.method || "").trim().toLowerCase() ===
+            String(dept.method || "").trim().toLowerCase()
+
+          return methodMatches && job.status === "Waiting for Blanks"
+        })
       )
-    )
 
-    const printingCount = printing.length
-    const queueCount = queue.length
+      const printingCount = printing.length
+      const queueCount = queue.length
 
-    const printingPieces = printing.reduce(
-      (sum, job) => sum + Number(job.qty || 0),
-      0
-    )
-
-    const totalPieces = [...printing, ...queue].reduce(
-      (sum, job) => sum + Number(job.qty || 0),
-      0
-    )
-
-    const totalQty = totalPieces
-
-    const overdueCount = [...printing, ...queue].filter((job) => {
-      if (!job.dueDate) return false
-
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const due = new Date(job.dueDate)
-      due.setHours(0, 0, 0, 0)
-
-      return due < today
-    }).length
-
-    return {
-      name: dept.name,
-      method: dept.method,
-      printing,
-      queue,
-      printingCount,
-      queueCount,
-      totalQty,
-      overdueCount,
-      printingPieces,
-      totalPieces
-    }
-  })
-
-  // =========================
-  // 🔥 ROTATION (NOW SAFE)
-  // =========================
-useEffect(() => {
-  const interval = setInterval(() => {
-
-    setFade(false) // fade out
-
-    setTimeout(() => {
-      setCurrentDeptIndex((prev) =>
-        (prev + 1) % departmentData.length
+      const printingPieces = printing.reduce(
+        (sum, job) => sum + Number(job.qty || 0),
+        0
       )
-      setFade(true) // fade in
-    }, 400)
 
-  }, 15000)
+      const totalPieces = [...printing, ...queue].reduce(
+        (sum, job) => sum + Number(job.qty || 0),
+        0
+      )
 
-  return () => clearInterval(interval)
-}, [departmentData.length])
+      const overdueCount = [...printing, ...queue].filter((job) => {
+        if (!job.dueDate) return false
 
-  // ✅ ACTIVE DEPARTMENT
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const due = new Date(job.dueDate)
+        due.setHours(0, 0, 0, 0)
+
+        return due < today
+      }).length
+
+      return {
+        name: dept.name,
+        method: dept.method,
+        printing,
+        queue,
+        printingCount,
+        queueCount,
+        totalQty: totalPieces,
+        overdueCount,
+        printingPieces,
+        totalPieces
+      }
+    })
+  }, [jobs])
+
+  useEffect(() => {
+    if (departmentParam) return
+
+    const interval = setInterval(() => {
+      setFade(false)
+
+      setTimeout(() => {
+        setCurrentDeptIndex((prev) => (prev + 1) % departmentData.length)
+        setFade(true)
+      }, 400)
+    }, 15000)
+
+    return () => clearInterval(interval)
+  }, [departmentData.length, departmentParam])
+
   const activeDepartment = departmentData[currentDeptIndex]
 
-  // =========================
-  // UI HELPERS
-  // =========================
   function getCardStyle(job, isActivePrint = false) {
     const dueStatus = getDueStatus(job)
 
-    if (dueStatus === 'overdue') {
+    if (dueStatus === "overdue") {
       return {
-        border: '2px solid #ff5c5c',
-        boxShadow: '0 0 18px rgba(255, 92, 92, 0.35)',
+        border: "2px solid #ff5c5c",
+        boxShadow: "0 0 18px rgba(255, 92, 92, 0.35)"
       }
     }
 
-    if (dueStatus === 'dueSoon') {
+    if (dueStatus === "dueSoon") {
       return {
-        border: '2px solid #ffcc66',
-        boxShadow: '0 0 18px rgba(255, 204, 102, 0.35)',
+        border: "2px solid #ffcc66",
+        boxShadow: "0 0 18px rgba(255, 204, 102, 0.35)"
       }
     }
 
     if (isActivePrint) {
       return {
-        border: '2px solid #6ee787',
-        boxShadow: '0 0 18px rgba(110, 231, 135, 0.35)',
+        border: "2px solid #6ee787",
+        boxShadow: "0 0 18px rgba(110, 231, 135, 0.35)"
       }
     }
 
     return {
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: 'none',
+      border: "1px solid rgba(255,255,255,0.15)",
+      boxShadow: "none"
     }
   }
 
@@ -148,7 +180,7 @@ useEffect(() => {
     return (
       <div
         key={job.id}
-        className={`productionCard ${isActivePrint ? 'activePrint' : ''}`}
+        className={`productionCard ${isActivePrint ? "activePrint" : ""}`}
         style={getCardStyle(job, isActivePrint)}
       >
         <div className="productionCardHeader">
@@ -157,7 +189,7 @@ useEffect(() => {
           {getPriorityLabel(job) && (
             <span
               className={`priorityBadge ${
-                getPriorityLabel(job) === 'OVERDUE' ? 'overdue' : 'dueSoon'
+                getPriorityLabel(job) === "OVERDUE" ? "overdue" : "dueSoon"
               }`}
             >
               {getPriorityLabel(job)}
@@ -172,7 +204,7 @@ useEffect(() => {
             <p><strong>Qty:</strong> {job.qty}</p>
             <p><strong>Design:</strong> {job.designName}</p>
             <p className={`dueDate ${getDueStatus(job)}`}>
-              <strong>Due:</strong> {job.dueDate || 'N/A'}
+              <strong>Due:</strong> {job.dueDate || "N/A"}
             </p>
           </div>
 
@@ -198,9 +230,6 @@ useEffect(() => {
     )
   }
 
-  // =========================
-  // 🧱 RENDER
-  // =========================
   if (!activeDepartment) return null
 
   const progressPercent = activeDepartment.totalPieces
@@ -211,7 +240,7 @@ useEffect(() => {
 
   return (
     <>
-        <div className="departmentHeader">
+      <div className="departmentHeader">
         {activeDepartment.name.toUpperCase()}
       </div>
 
@@ -220,9 +249,7 @@ useEffect(() => {
       </button>
 
       <div className="productionScreen">
-
         <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
-
           <div className="departmentStats">
             <span>PRINTING: {activeDepartment.printingCount}</span>
             <span>QUEUE: {activeDepartment.queueCount}</span>
@@ -233,20 +260,18 @@ useEffect(() => {
           </div>
 
           <div className="progressContainer">
-         <div
-            className={`progressBar ${
-              progressPercent >= 90 ? "nearComplete" : ""
-            }`}
-            style={{
-              width: `${progressPercent}%`,
-              background:
-                progressPercent < 30
-                  ? 'linear-gradient(90deg, #ff5c5c, #ff1f1f)'
-                  : progressPercent < 70
-                  ? 'linear-gradient(90deg, #ffcc66, #ffaa00)'
-                  : 'linear-gradient(90deg, #6ee787, #00ff9c)'
-            }}
-          ></div>
+            <div
+              className={`progressBar ${progressPercent >= 90 ? "nearComplete" : ""}`}
+              style={{
+                width: `${progressPercent}%`,
+                background:
+                  progressPercent < 30
+                    ? "linear-gradient(90deg, #ff5c5c, #ff1f1f)"
+                    : progressPercent < 70
+                    ? "linear-gradient(90deg, #ffcc66, #ffaa00)"
+                    : "linear-gradient(90deg, #6ee787, #00ff9c)"
+              }}
+            />
           </div>
 
           <div className="progressText">
@@ -265,9 +290,7 @@ useEffect(() => {
             activeDepartment.queue,
             `No upcoming ${activeDepartment.name.toLowerCase()} jobs`
           )}
-
         </div>
-
       </div>
     </>
   )

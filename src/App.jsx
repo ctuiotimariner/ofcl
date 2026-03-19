@@ -10,8 +10,28 @@ import ReceivingPage from './components/ReceivingPage'
 import ProductionBoard from './components/ProductionBoard'
 import ScanStation from './components/ScanStation'
 
+import { supabase } from './lib/supabase'
+
+
+
+
+
+
+
+
 function App() {
+
+
+
+
   // ===== STATE =====
+
+
+  
+
+
+
+
 
   // Inventory
   const [inventory, setInventory] = useState(() => {
@@ -438,5 +458,9 @@ useEffect(() => {
     </div>
   )
 }
+
+
+
+
 
 export default App
