@@ -29,11 +29,7 @@ function JobsPage({
       <h2>Jobs</h2>
 
       <div className="productionBoard">
-        <div className="stageCard email">
-          <div className="stageTitle">Email Received</div>
-          <div className="stageCount">{emailCount}</div>
-        </div>
-
+        
         <div className="stageCard blanks">
           <div className="stageTitle">Waiting for Blanks</div>
           <div className="stageCount">{blanksCount}</div>
@@ -200,18 +196,60 @@ function JobsPage({
                       <td>{job.delivered ? '✔' : '—'}</td>
 
                       <td>
-                        <select
-                          value={job.status}
-                          onChange={(e) =>
-                            handleStatusChange(job.id, e.target.value)
-                          }
-                        >
-                          <option>Email Received</option>
-                          <option>Waiting for Blanks</option>
-                          <option>Printing</option>
-                          <option>Completed</option>
-                          <option>Shipped</option>
-                        </select>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {job.status === "Waiting for Blanks" && (
+                            <button
+                              style={{
+                                background: "#ffcc66",
+                                color: "#000",
+                                border: "none",
+                                padding: "6px 10px",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                              }}
+                              onClick={() => handleStatusChange(job.id, "Printing")}
+                            >
+                              ▶ Start Printing
+                            </button>
+                          )}
+
+                          {job.status === "Printing" && (
+                            <button
+                              style={{
+                                background: "#4cd964",
+                                color: "#000",
+                                border: "none",
+                                padding: "6px 10px",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                              }}
+                              onClick={() => handleStatusChange(job.id, "Completed")}
+                            >
+                              ✔ Complete
+                            </button>
+                          )}
+
+                          {job.status === "Completed" && (
+                            <button
+                              style={{
+                                background: "#a78bfa",
+                                color: "#fff",
+                                border: "none",
+                                padding: "6px 10px",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                              }}
+                              onClick={() => handleStatusChange(job.id, "Shipped")}
+                            >
+                              🚚 Ship
+                            </button>
+                          )}
+
+                          <span style={{ fontWeight: 600 }}>{job.status}</span>
+                        </div>
                       </td>
 
                       <td>

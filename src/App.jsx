@@ -61,10 +61,7 @@ function App() {
 })
 
   // Jobs / Orders
-  const [jobs, setJobs] = useState(() => {
-    const savedJobs = localStorage.getItem('jobs')
-    return savedJobs ? JSON.parse(savedJobs) : []
-  })
+  const [jobs, setJobs] = useState([])
 
   const [orders, setOrders] = useState(() => {
     const savedOrders = localStorage.getItem('orders')
@@ -86,9 +83,6 @@ function App() {
   )
 
   // Job counts
-  const emailCount = jobs.filter(
-    (job) => job.status === 'Email Received'
-  ).length
 
   const blanksCount = jobs.filter(
     (job) => job.status === 'Waiting for Blanks'
@@ -195,14 +189,45 @@ function App() {
   })
 
   // ===== EFFECTS =====
+  async function fetchJobs() {
+  const { data, error } = await supabase.from("jobs").select("*")
+
+  if (error) {
+    console.error("FETCH JOBS ERROR:", error)
+    return
+  }
+
+  setJobs(data || [])
+}
+
+useEffect(() => {
+  fetchJobs()
+}, [])
+
+useEffect(() => {
+  const channel = supabase
+    .channel("jobs-live-app")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "jobs"
+      },
+      () => {
+        fetchJobs()
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}, [])
 
   useEffect(() => {
     localStorage.setItem('inventory', JSON.stringify(inventory))
   }, [inventory])
-
-  useEffect(() => {
-    localStorage.setItem('jobs', JSON.stringify(jobs))
-  }, [jobs])
 
   useEffect(() => {
     localStorage.setItem('orders', JSON.stringify(orders))
@@ -429,7 +454,6 @@ useEffect(() => {
 
         {currentPage === 'jobs' && (
           <JobsPage
-            emailCount={emailCount}
             blanksCount={blanksCount}
             printingCount={printingCount}
             completedCount={completedCount}

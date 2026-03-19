@@ -55,7 +55,15 @@ useEffect(() => {
         table: "jobs"
       },
       (payload) => {
-        console.log("Realtime change:", payload)
+        console.log("🔥 Realtime change:", payload)
+
+        if (payload.eventType === "INSERT") {
+          console.log("🆕 NEW JOB RECEIVED")
+
+          const audio = new Audio("/notify.wav")
+          audio.play().catch(() => {})
+        }
+
         fetchJobs()
       }
     )
@@ -67,6 +75,8 @@ useEffect(() => {
     supabase.removeChannel(channel)
   }
 }, [])
+
+
 
   useEffect(() => {
     if (!departmentParam) return
@@ -87,6 +97,18 @@ useEffect(() => {
       document.documentElement.requestFullscreen()
     }
   }
+
+  <button
+  type="button"
+  onClick={() => {
+    const audio = new Audio("/notify.wav")
+    audio.play()
+      .then(() => console.log("🔊 Test sound played"))
+      .catch((err) => console.log("🔇 Test sound failed:", err))
+  }}
+>
+  Test Sound
+</button>
 
   const departmentData = useMemo(() => {
     return departments.map((dept) => {
@@ -173,8 +195,9 @@ useEffect(() => {
 
     if (dueStatus === "overdue") {
       return {
-        border: "2px solid #ff5c5c",
-        boxShadow: "0 0 18px rgba(255, 92, 92, 0.35)"
+        border: "3px solid #ff0000",
+        boxShadow: "0 0 25px rgba(255, 0, 0, 0.7)",
+        animation: "pulse 1.5s infinite"
       }
     }
 
@@ -262,7 +285,16 @@ useEffect(() => {
 
   return (
     <>
-      <div className="departmentHeader">
+      <div
+        className="departmentHeader"
+        style={{
+          fontSize: "48px",
+          fontWeight: 800,
+          textAlign: "center",
+          marginBottom: "20px",
+          letterSpacing: "2px"
+        }}
+      >
         {activeDepartment.name.toUpperCase()}
       </div>
 
@@ -272,7 +304,18 @@ useEffect(() => {
 
       <div className="productionScreen">
         <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
-          <div className="departmentStats">
+          
+          <div
+              className="departmentStats"
+              style={{
+                display: "flex",
+                justifyContent: "space-around",
+                fontSize: "20px",
+                fontWeight: 600,
+                marginBottom: "20px"
+              }}
+            >
+          
             <span>PRINTING: {activeDepartment.printingCount}</span>
             <span>QUEUE: {activeDepartment.queueCount}</span>
             <span>PIECES: {activeDepartment.totalQty}</span>
@@ -300,22 +343,51 @@ useEffect(() => {
             {progressPercent}% COMPLETE
           </div>
 
-          {renderSection(
-            `${activeDepartment.name} - PRINTING NOW`,
-            activeDepartment.printing,
-            `No active ${activeDepartment.name.toLowerCase()} jobs`,
-            true
-          )}
+          <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "20px",
+              marginTop: "20px"
+            }}>
 
-          {renderSection(
-            `${activeDepartment.name} - NEXT UP`,
-            activeDepartment.queue,
-            `No upcoming ${activeDepartment.name.toLowerCase()} jobs`
-          )}
+              {/* LEFT - PRINTING */}
+              <div>
+                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
+                  🔥 PRINTING NOW
+                </h2>
+
+                {activeDepartment.printing.length === 0 && (
+                  <p>No active jobs</p>
+                )}
+
+                {activeDepartment.printing.slice(0, 6).map((job) =>
+                  renderJobCard(job, true)
+                )}
+              </div>
+
+              {/* RIGHT - QUEUE */}
+              <div>
+                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
+                  ⏭ NEXT UP
+                </h2>
+
+                {activeDepartment.queue.length === 0 && (
+                  <p>No upcoming jobs</p>
+                )}
+
+                {activeDepartment.queue.slice(0, 6).map((job) =>
+                  renderJobCard(job)
+                )}
+              </div>
+
+            </div>
+
         </div>
       </div>
     </>
   )
 }
+
+
 
 export default ProductionBoard
