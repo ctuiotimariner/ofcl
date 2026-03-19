@@ -60,8 +60,18 @@ function App() {
   return localStorage.getItem('currentPage') || 'dashboard'
 })
 
+function handleSelectRole(selectedRole) {
+  setRole(selectedRole)
+  localStorage.setItem("role", selectedRole)
+  setCurrentPage("dashboard")
+}
+
   // Jobs / Orders
   const [jobs, setJobs] = useState([])
+
+  const waitingForBlanksCount = jobs.filter(
+  (job) => job.status === "Waiting for Blanks"
+).length
 
         const today = new Date()
       today.setHours(0, 0, 0, 0)
@@ -393,13 +403,13 @@ useEffect(() => {
 
   // ===== ROLE SCREEN =====
 
-  if (!role) {
-    return <RoleScreen setRole={setRole} />
-  }
+if (!role) {
+  return <RoleScreen onSelectRole={handleSelectRole} />
+}
 
   // ===== MAIN UI =====
 
-  return (
+return (
     <div className="appLayout">
       <Sidebar
         currentPage={currentPage}
@@ -419,6 +429,7 @@ useEffect(() => {
             overdueCount={overdueCount}
             dueTodayCount={dueTodayCount}
             dueTodayJobs={dueTodayJobs}
+            waitingForBlanksCount={waitingForBlanksCount}
           />
         )}
 

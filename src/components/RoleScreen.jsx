@@ -1,4 +1,4 @@
-function RoleScreen({ setRole }) {
+function RoleScreen({ onSelectRole }) {
   return (
     <div className="roleScreen">
       <div className="roleCard">
@@ -6,8 +6,8 @@ function RoleScreen({ setRole }) {
         <p>Select your role to enter the dashboard</p>
 
         <div className="roleButtons">
-          <button onClick={() => setRole("admin")}>Admin</button>
-          <button onClick={() => setRole("employee")}>Employee</button>
+          <button onClick={() => onSelectRole("admin")}>Admin</button>
+          <button onClick={() => onSelectRole("employee")}>Employee</button>
         </div>
       </div>
     </div>
