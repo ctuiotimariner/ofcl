@@ -270,14 +270,28 @@ useEffect(() => {
 
   // ===== JOB ACTIONS =====
 
-  function handleStatusChange(jobId, newStatus) {
-    setJobs(
-      jobs.map((job) => {
-        if (job.id !== jobId) return job
-        return { ...job, status: newStatus }
-      })
-    )
+  async function handleStatusChange(jobId, newStatus) {
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({ status: newStatus })
+    .eq("id", jobId)
+    .select()
+
+  if (error) {
+    console.error("STATUS UPDATE ERROR:", error)
+    alert(`Failed to update status: ${error.message}`)
+    return
   }
+
+  setJobs(
+    jobs.map((job) => {
+      if (job.id !== jobId) return job
+      return { ...job, status: newStatus }
+    })
+  )
+
+  console.log("Status updated:", data)
+}
 
   function handleDeleteJob(jobId) {
     const confirmed = window.confirm('Delete this job?')

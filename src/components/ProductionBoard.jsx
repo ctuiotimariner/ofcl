@@ -21,29 +21,51 @@ const departments = [
   const [fade, setFade] = useState(true)
   const [jobs, setJobs] = useState([])
 
-useEffect(() => {
-  async function fetchJobs() {
-    const { data, error } = await supabase.from("jobs").select("*")
+async function fetchJobs() {
+  const { data, error } = await supabase.from("jobs").select("*")
 
-    if (error) {
-      console.error("Supabase error:", error)
-    } else {
-      console.log("ALL JOBS:", data)
+  if (error) {
+    console.error("Supabase error:", error)
+  } else {
+    console.log("ALL JOBS:", data)
 
-      data?.forEach((job, index) => {
-        console.log(`JOB ${index + 1}`, {
-          orderGroup: job.orderGroup,
-          method: job.method,
-          status: job.status,
-          qty: job.qty
-        })
+    data?.forEach((job, index) => {
+      console.log(`JOB ${index + 1}`, {
+        orderGroup: job.orderGroup,
+        method: job.method,
+        status: job.status,
+        qty: job.qty
       })
+    })
 
-      setJobs(data || [])
-    }
+    setJobs(data || [])
   }
+}
 
+useEffect(() => {
   fetchJobs()
+
+  const channel = supabase
+    .channel("production-jobs-live")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "jobs"
+      },
+      (payload) => {
+        console.log("Realtime change:", payload)
+        fetchJobs()
+      }
+    )
+    .subscribe((status) => {
+  console.log("📡 Realtime status:", status)
+})
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
 }, [])
 
   useEffect(() => {
