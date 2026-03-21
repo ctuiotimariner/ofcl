@@ -4,6 +4,7 @@
   margin: 0;
   padding: 0;
   text-align: left;
+  image-rendering: pixelated;
 }
 
 /* ===== APP LAYOUT ===== */
@@ -13,31 +14,49 @@
 }
 
 .sidebar {
-  width: 220px;
-  background: #1f1f1f;
+  width: 240px;
+  background: #111;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 4px solid #2eff7b;
+  box-shadow: 4px 0 0 #000;
 }
 
 .sidebar h2 {
   margin: 0 0 16px;
   font-size: 2rem;
+  color: #2eff7b;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .sidebar button {
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
+  padding: 12px 14px;
+  border-radius: 0;
+  border: 2px solid #3a3a3a;
+  background: #1b1b1b;
+  color: #f5f5f5;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.sidebar button:hover {
+  background: #2a2a2a;
+  border-color: #2eff7b;
+  transform: translate(-1px, -1px);
 }
 
 .sidebar button.activeTab {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #2eff7b;
+  color: #101010;
+  border-color: #c8ff00;
+  box-shadow: 3px 3px 0 #000;
 }
 
 .mainContent {
@@ -51,16 +70,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(46, 255, 123, 0.06), transparent),
+    #0b0b0b;
 }
 
 .roleCard {
   width: 100%;
-  max-width: 420px;
+  max-width: 460px;
   padding: 32px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: #151515;
+  border: 3px solid #2eff7b;
+  box-shadow: 6px 6px 0 #000;
   text-align: center;
+}
+
+.roleCard h1 {
+  margin-top: 0;
+  color: #2eff7b;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .roleButtons {
@@ -72,15 +102,20 @@
 
 .roleButtons button {
   padding: 12px 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  border: 2px solid #3a3a3a;
+  background: #1f1f1f;
   color: inherit;
   cursor: pointer;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 #000;
 }
 
 .roleButtons button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #2eff7b;
+  color: #101010;
+  border-color: #c8ff00;
 }
 
 /* ===== DASHBOARD STATS ===== */
@@ -92,28 +127,35 @@
 }
 
 .card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 16px;
+  border: 2px solid #2c2c2c;
+  background: #181818;
+  border-radius: 0;
   padding: 16px;
   min-height: 100px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+  border-color: #2eff7b;
 }
 
 .label {
-  opacity: 0.7;
-  font-size: 12px;
+  opacity: 0.9;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #bdbdbd;
 }
 
 .value {
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 800;
   margin-top: 6px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
 }
 
 /* ===== FORM INPUTS ===== */
@@ -127,28 +169,39 @@ form {
 input,
 select,
 button {
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 input,
 select {
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid #333;
+  background: #141414;
   color: inherit;
   font: inherit;
+  box-shadow: inset 2px 2px 0 #0a0a0a;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #2eff7b;
 }
 
 button {
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid #333;
+  background: #1f1f1f;
   color: inherit;
   cursor: pointer;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 #000;
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #2a2a2a;
+  border-color: #2eff7b;
 }
 
 /* ===== SEARCH INPUTS ===== */
@@ -160,12 +213,13 @@ input[placeholder='Search jobs...'] {
 
 /* ===== TABLE CONTAINER ===== */
 .tableCard {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+  border: 2px solid #2c2c2c;
+  background: #151515;
+  border-radius: 0;
   padding: 16px;
   margin-top: 20px;
   overflow-x: auto;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .tableCard table {
@@ -173,11 +227,11 @@ input[placeholder='Search jobs...'] {
 }
 
 .tableCard tbody tr {
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .tableCard tbody tr:hover {
-  background: rgba(255,255,255,0.03);
+  background: rgba(46,255,123,0.06);
   transition: background 0.15s ease;
 }
 
@@ -190,15 +244,22 @@ table {
 
 thead {
   text-align: left;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 th,
 td {
   padding: 10px 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #2e2e2e;
   text-align: left;
   vertical-align: middle;
+}
+
+th {
+  color: #2eff7b;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
 }
 
 td button {
@@ -211,12 +272,12 @@ tbody tr:hover td {
 
 /* ===== LOW STOCK ===== */
 .low-stock {
-  background-color: rgba(255, 0, 0, 0.15);
+  background-color: rgba(255, 70, 70, 0.12);
 }
 
 .low-stock td {
   color: #ff6b6b;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ===== JOB STATUS COLORS ===== */
@@ -225,19 +286,19 @@ tbody tr:hover td {
 }
 
 .job-blanks td {
-  background: rgba(255, 165, 0, 0.14);
+  background: rgba(255, 196, 0, 0.14);
 }
 
 .job-printing td {
-  background: rgba(0, 123, 255, 0.14);
+  background: rgba(0, 162, 255, 0.14);
 }
 
 .job-completed td {
-  background: rgba(40, 167, 69, 0.14);
+  background: rgba(46, 255, 123, 0.14);
 }
 
 .job-shipped td {
-  background: rgba(128, 0, 128, 0.16);
+  background: rgba(167, 139, 250, 0.16);
 }
 
 /* ===== JOB DEADLINE WARNINGS ===== */
@@ -250,7 +311,6 @@ tbody tr:hover td {
 }
 
 /* ===== PRODUCTION BOARD ===== */
-
 .productionCardBody {
   display: flex;
   justify-content: space-between;
@@ -262,11 +322,12 @@ tbody tr:hover td {
   width: 140px;
   height: 140px;
   object-fit: contain;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
+  background: #101010;
+  border: 2px solid #333;
+  border-radius: 0;
   padding: 8px;
   flex-shrink: 0;
+  box-shadow: 3px 3px 0 #000;
 }
 
 .productionBoard {
@@ -278,64 +339,71 @@ tbody tr:hover td {
 
 .stageCard {
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 0;
   text-align: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: #191919;
+  border: 2px solid #2c2c2c;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .stageTitle {
-  font-size: 13px;
-  opacity: 0.7;
+  font-size: 12px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .stageCount {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
   margin-top: 5px;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .stageCard.email {
-  border-top: 3px solid #5da3ff;
+  border-top: 4px solid #5da3ff;
 }
 
 .stageCard.blanks {
-  border-top: 3px solid #ffcc66;
+  border-top: 4px solid #ffcc66;
 }
 
 .stageCard.printing {
-  border-top: 3px solid #ff8c42;
+  border-top: 4px solid #ff8c42;
 }
 
 .stageCard.completed {
-  border-top: 3px solid #4cd964;
+  border-top: 4px solid #2eff7b;
 }
 
 .stageCard.shipped {
-  border-top: 3px solid #a78bfa;
+  border-top: 4px solid #a78bfa;
 }
 
 .fullscreenButton {
-  background: #1f2937;
-  color: white;
-  border: none;
+  background: #2eff7b;
+  color: #111;
+  border: 2px solid #c8ff00;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: 0;
   margin-bottom: 20px;
   cursor: pointer;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 #000;
 }
 
 .fullscreenButton:hover {
-  background: #374151;
+  background: #c8ff00;
 }
 
 .departmentStats {
   display: flex;
   gap: 18px;
   font-size: 14px;
-  opacity: 0.85;
+  opacity: 0.95;
   margin-bottom: 12px;
+  text-transform: uppercase;
 }
-
 
 /* ===== ORDER PROGRESS BAR ===== */
 .progressWrapper {
@@ -346,23 +414,19 @@ tbody tr:hover td {
 
 .progressContainer {
   width: 100%;
-  height: 10px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
+  height: 12px;
+  background: #0f0f0f;
+  border: 2px solid #333;
+  border-radius: 0;
   overflow: hidden;
   margin-top: 8px;
 }
 
 .progressBar {
   height: 100%;
-  border-radius: 10px;
+  border-radius: 0;
   transition: width 0.4s ease;
-
-  /* 🔥 glow effect */
-  box-shadow: 0 0 10px currentColor,
-              0 0 20px currentColor;
-
-  /* 🔥 animated shine */
+  box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   position: relative;
   overflow: hidden;
 }
@@ -374,8 +438,7 @@ tbody tr:hover td {
   left: -50%;
   width: 50%;
   height: 100%;
-  background: rgba(255,255,255,0.3);
-
+  background: rgba(255,255,255,0.22);
   animation: shineMove 2s infinite;
 }
 
@@ -390,13 +453,14 @@ tbody tr:hover td {
 
 .progressFill {
   height: 100%;
-  background: #4cd964;
+  background: #2eff7b;
   transition: width 0.3s ease;
 }
 
 .progressText {
   font-size: 11px;
-  opacity: 0.7;
+  opacity: 0.85;
+  text-transform: uppercase;
 }
 
 .groupRow td {
@@ -424,13 +488,15 @@ tbody tr:hover td {
 .timelineDot {
   width: 16px;
   height: 16px;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
+  border: 2px solid #333;
 }
 
 .timelineDot.active {
-  background: #4cd964;
+  background: #2eff7b;
+  border-color: #c8ff00;
 }
 
 .timelineLine {
@@ -440,7 +506,7 @@ tbody tr:hover td {
 }
 
 .timelineLine.active {
-  background: #4cd964;
+  background: #2eff7b;
 }
 
 .timelineLabels {
@@ -449,16 +515,18 @@ tbody tr:hover td {
   gap: 8px;
   margin-top: 8px;
   font-size: 12px;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .timelineLabels span {
   text-align: center;
+  text-transform: uppercase;
 }
 
 .timelineLabels span.active {
   opacity: 1;
-  font-weight: 600;
+  font-weight: 700;
+  color: #2eff7b;
 }
 
 /* ===== JOB TICKET PLACEMENT GUIDE ===== */
@@ -470,27 +538,30 @@ tbody tr:hover td {
 }
 
 .placementCard {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
+  border: 2px solid #2c2c2c;
+  background: #181818;
+  border-radius: 0;
   padding: 14px;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .placementCard h4 {
   margin: 0 0 10px;
+  color: #2eff7b;
 }
 
 .placementCard p {
   margin: 6px 0;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .placementTag {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 0;
   background: rgba(255,255,255,0.12);
   font-size: 12px;
+  border: 1px solid #444;
 }
 
 .ticketTopLayout {
@@ -503,66 +574,46 @@ tbody tr:hover td {
 
 .ticketMockupBox {
   min-height: 220px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.04);
-  border-radius: 12px;
+  border: 2px solid #2c2c2c;
+  background: #151515;
+  border-radius: 0;
   padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .ticketMockupImage {
   width: 100%;
   height: auto;
-  border-radius: 10px;
+  border-radius: 0;
   object-fit: contain;
 }
 
 .productionScreen {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-top: 20px;
-}
-
-.productionSection h3 {
-  margin-bottom: 12px;
-}
-
-.productionCard {
-  background: rgba(255,255,255,0.03);
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 18px;
-}
-
-.productionCard h4 {
-  margin-bottom: 6px;
-}
-
-.productionTitle {
-  font-size: 42px;
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-}
-
-.productionScreen {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 40px;
+  margin-top: 20px;
 }
 
 .productionSection h3 {
   font-size: 26px;
   margin-bottom: 14px;
+  color: #2eff7b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .productionCard {
   padding: 22px;
-  border-radius: 16px;
+  border-radius: 0;
   margin-bottom: 16px;
-  background: rgba(255,255,255,0.06);
+  background: #191919;
+  border: 2px solid #333;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .productionCard h4 {
@@ -575,8 +626,8 @@ tbody tr:hover td {
 }
 
 .productionCard.activePrint {
-  border: 2px solid #6ee787;
-  box-shadow: 0 0 18px rgba(110, 231, 135, 0.35);
+  border: 2px solid #2eff7b;
+  box-shadow: 0 0 18px rgba(46, 255, 123, 0.35), 4px 4px 0 #000;
 }
 
 .order-status.job-blanks {
@@ -588,7 +639,7 @@ tbody tr:hover td {
 }
 
 .order-status.job-completed {
-  color: #4cd964;
+  color: #2eff7b;
 }
 
 .order-status.job-shipped {
@@ -596,17 +647,17 @@ tbody tr:hover td {
 }
 
 .status-badge {
-  width: 140px;           /* fixed width */
+  width: 140px;
   padding: 6px 0;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 12px;
-  font-weight: 600;
-
+  font-weight: 700;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-
   text-align: center;
+  border: 1px solid rgba(255,255,255,0.12);
+  text-transform: uppercase;
 }
 
 .status-waiting {
@@ -620,14 +671,15 @@ tbody tr:hover td {
 }
 
 .status-completed {
-  background: rgba(76, 217, 100, 0.2);
-  color: #4cd964;
+  background: rgba(46, 255, 123, 0.2);
+  color: #2eff7b;
 }
 
 .status-shipped {
   background: rgba(167, 139, 250, 0.2);
   color: #a78bfa;
 }
+
 .dueDate {
   margin-top: 6px;
   font-size: 13px;
@@ -640,13 +692,13 @@ tbody tr:hover td {
 
 .dueDate.dueSoon {
   color: #ffcc66;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .productionCardHeader h4 {
   font-size: 18px;
-  font-weight: 600;
-} 
+  font-weight: 700;
+}
 
 .productionCardHeader {
   display: flex;
@@ -658,10 +710,12 @@ tbody tr:hover td {
 
 .priorityBadge {
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   white-space: nowrap;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
 .priorityBadge.overdue {
@@ -676,34 +730,17 @@ tbody tr:hover td {
 
 .productionCard.overdue {
   border: 2px solid #ff5c5c;
-  box-shadow: 0 0 18px rgba(255, 92, 92, 0.35);
+  box-shadow: 0 0 18px rgba(255, 92, 92, 0.35), 4px 4px 0 #000;
 }
 
 .productionCard.dueSoon {
   border: 2px solid #ffcc66;
-  box-shadow: 0 0 18px rgba(255, 204, 102, 0.35);
-}
-
-.productionCardBody {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-}
-
-.productionCard {
-  padding: 22px;
-  border-radius: 16px;
-  margin-bottom: 16px;
-  background: rgba(255,255,255,0.06);
-  border: 2px solid #6ee787;
-  box-shadow: 0 0 12px rgba(110, 231, 135, 0.25);
+  box-shadow: 0 0 18px rgba(255, 204, 102, 0.35), 4px 4px 0 #000;
 }
 
 .productionDetails {
   flex: 1;
 }
-
 
 .productionDetails p {
   margin: 6px 0;
@@ -722,21 +759,22 @@ tbody tr:hover td {
 
 .departmentHeader {
   font-size: 48px;
-  font-weight: 800;
+  font-weight: 900;
   text-align: center;
   letter-spacing: 4px;
   margin-bottom: 20px;
-  color: #6ee787;
-  text-shadow: 0 0 20px rgba(110, 231, 135, 0.6);
+  color: #2eff7b;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(46, 255, 123, 0.6), 2px 2px 0 #000;
   animation: headerGlow 2s ease-in-out infinite alternate;
 }
 
 @keyframes headerGlow {
   from {
-    text-shadow: 0 0 10px rgba(110, 231, 135, 0.4);
+    text-shadow: 0 0 10px rgba(46, 255, 123, 0.35), 2px 2px 0 #000;
   }
   to {
-    text-shadow: 0 0 25px rgba(110, 231, 135, 1);
+    text-shadow: 0 0 25px rgba(46, 255, 123, 0.95), 2px 2px 0 #000;
   }
 }
 
@@ -746,12 +784,25 @@ tbody tr:hover td {
 
 @keyframes pulseComplete {
   0% {
-    box-shadow: 0 0 10px #6ee787;
+    box-shadow: 0 0 10px #2eff7b;
   }
   50% {
-    box-shadow: 0 0 25px #00ff9c;
+    box-shadow: 0 0 25px #c8ff00;
   }
   100% {
-    box-shadow: 0 0 10px #6ee787;
+    box-shadow: 0 0 10px #2eff7b;
+  }
+}
+
+/* ===== OVERDUE PULSE ===== */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 0, 0, 1);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
   }
 }
