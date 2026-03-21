@@ -1,78 +1,118 @@
-function Sidebar({ currentPage, setCurrentPage, setRole }) {
+function Sidebar({ currentPage, setCurrentPage, setRole, allowedPages }) {
   return (
     <aside className="sidebar">
 
       <h2>OFCL</h2>
 
-      <button
-        className={currentPage === "dashboard" ? "activeTab" : ""}
+      {allowedPages.includes("dashboard") && (
+        <button
         onClick={() => setCurrentPage("dashboard")}
+        style={{
+          background: currentPage === "dashboard" ? "#333" : "transparent"
+        }}
       >
         Dashboard
       </button>
+      )}
 
-      <button
-        className={currentPage === "orders" ? "activeTab" : ""}
+      {allowedPages.includes("orders") && (
+        <button
         onClick={() => setCurrentPage("orders")}
+        style={{
+          background: currentPage === "orders" ? "#333" : "transparent"
+        }}
       >
         Orders
       </button>
+      )}
 
-      <button
-        className={currentPage === "jobs" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("jobs")}
-      >
-        Jobs
-      </button>
+      {allowedPages.includes("jobs") && (
+        <button 
+          onClick={() => setCurrentPage("jobs")}
+          style={{
+          background: currentPage === "jobs" ? "#333" : "transparent"
+        }}
+        >
+          Jobs
+        </button>
+      )}
 
-      <button
-        className={currentPage === "tickets" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("tickets")}
-      >
-        Tickets
-      </button>
+      {allowedPages.includes("tickets") && (
+        <button
+          onClick={() => setCurrentPage("tickets")}
+          style={{
+            background: currentPage === "tickets" ? "#333" : "transparent"
+          }}
+        >
+          Tickets
+        </button>
+      )}
 
-      <button
-        className={currentPage === "receiving" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("receiving")}
-      >
-        Receiving
-      </button>
+      {allowedPages.includes("receiving") && (
+        <button
+          onClick={() => setCurrentPage("receiving")}
+          style={{
+            background: currentPage === "receiving" ? "#333" : "transparent"
+          }}
+        >
+          Receiving
+        </button>
+      )}
 
-      <button
-        className={currentPage === "production" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("production")}
-      >
-        Production
-      </button>
+         {allowedPages.includes("production") && (
+          <button
+            onClick={() => setCurrentPage("production")}
+            style={{
+              background: currentPage === "production" ? "#333" : "transparent"
+            }}
+          >
+            Production
+          </button>
+        )}  
 
-      <button
-        className={currentPage === "scan" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("scan")}
-      >
-        Scan Station
-      </button>
+        {allowedPages.includes("scan") && (
+          <button
+            onClick={() => setCurrentPage("scan")}
+            style={{
+              background: currentPage === "scan" ? "#333" : "transparent"
+            }}
+          >
+            Scan Station
+          </button>
+        )}
 
-      <button
-        className={currentPage === "inventory" ? "activeTab" : ""}
-        onClick={() => setCurrentPage("inventory")}
-      >
-        Inventory
-      </button>
+      {allowedPages.includes("inventory") && (
+        <button
+          onClick={() => setCurrentPage("inventory")}
+          style={{
+            background: currentPage === "inventory" ? "#333" : "transparent"
+          }}
+        >
+          Inventory
+        </button>
+      )}
 
+          {allowedPages.includes("vendors") && (
       <button
-        className={currentPage === "vendors" ? "activeTab" : ""}
         onClick={() => setCurrentPage("vendors")}
+        style={{
+          background: currentPage === "vendors" ? "#333" : "transparent"
+        }}
       >
         Vendors
       </button>
+    )}
 
+          {allowedPages.includes("settings") && (
       <button
-        className={currentPage === "settings" ? "activeTab" : ""}
         onClick={() => setCurrentPage("settings")}
+        style={{
+          background: currentPage === "settings" ? "#333" : "transparent"
+        }}
       >
         Settings
       </button>
+    )}
 
       <button
         onClick={() => {

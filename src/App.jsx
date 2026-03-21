@@ -21,18 +21,6 @@ import { supabase } from './lib/supabase'
 
 function App() {
 
-
-
-
-  // ===== STATE =====
-
-
-  
-
-
-
-
-
   // Inventory
   const [inventory, setInventory] = useState(() => {
     const saved = localStorage.getItem('inventory')
@@ -60,11 +48,38 @@ function App() {
   return localStorage.getItem('currentPage') || 'dashboard'
 })
 
+const adminPages = [
+  "dashboard",
+  "orders",
+  "jobs",
+  "tickets",
+  "receiving",
+  "production",
+  "scan",
+  "inventory",
+  "vendors",
+  "settings"
+]
+
+const employeePages = [
+  "dashboard",
+  "jobs",
+  "tickets",
+  "receiving",
+  "production",
+  "scan"
+]
+
+const allowedPages = role === "admin" ? adminPages : employeePages
+
+
 function handleSelectRole(selectedRole) {
   setRole(selectedRole)
   localStorage.setItem("role", selectedRole)
   setCurrentPage("dashboard")
 }
+
+
 
   // Jobs / Orders
   const [jobs, setJobs] = useState([])
@@ -415,6 +430,7 @@ return (
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         setRole={setRole}
+        allowedPages={allowedPages}
       />
 
       <main className="mainContent">

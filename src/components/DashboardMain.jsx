@@ -11,40 +11,70 @@ function DashboardMain({
     <div>
       <h2>Dashboard</h2>
 
-      <div className="stats">
-        <div className="card">
-          <div className="label">Active Jobs</div>
-          <div className="value">{jobs.length}</div>
-        </div>
+      <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "16px",
+    marginBottom: "20px"
+  }}
+>
+  <div className="card" style={{ minHeight: "110px" }}>
+    <div className="label">Active Jobs</div>
+    <div className="value" style={{ fontSize: "28px", fontWeight: "bold", marginTop: "8px" }}>
+      {jobs.length}
+    </div>
+  </div>
 
-        <div className="card">
-          <div className="label">Printing</div>
-          <div className="value">{printingCount}</div>
-        </div>
+  <div className="card" style={{ minHeight: "110px" }}>
+    <div className="label">Printing</div>
+    <div className="value" style={{ fontSize: "28px", fontWeight: "bold", marginTop: "8px" }}>
+      {printingCount}
+    </div>
+  </div>
 
-        <div className="card">
-          <div className="label">Low Stock</div>
-          <div className="value">{lowStockCount}</div>
-        </div>
+  <div className="card" style={{ minHeight: "110px" }}>
+    <div className="label">Low Stock</div>
+    <div className="value" style={{ fontSize: "28px", fontWeight: "bold", marginTop: "8px" }}>
+      {lowStockCount}
+    </div>
+  </div>
 
-        <div className="card">
-          <div className="label">Overdue Jobs</div>
-          <div
-            className="value"
-            style={{ color: overdueCount > 0 ? "red" : "white" }}
-          >
-            {overdueCount}
-          </div>
-        </div>
+  <div className="card" style={{ minHeight: "110px" }}>
+    <div className="label">Overdue Jobs</div>
+    <div
+      className="value"
+      style={{
+        fontSize: "28px",
+        fontWeight: "bold",
+        marginTop: "8px",
+        color: overdueCount > 0 ? "red" : "#ccc"
+      }}
+    >
+      {overdueCount}
+    </div>
+  </div>
 
-        <div className="card">
-          <div className="label">Due Today</div>
-          <div className="value">{dueTodayCount}</div>
-        </div>
-      </div>
+  <div className="card" style={{ minHeight: "110px" }}>
+    <div className="label">Due Today</div>
+    <div className="value" style={{ fontSize: "28px", fontWeight: "bold", marginTop: "8px" }}>
+      {dueTodayCount}
+    </div>
+  </div>
+</div>
 
-      <div className="card" style={{ marginTop: "20px" }}>
-        <div className="label">⚠️ Attention Needed</div>
+      <div
+        className="card"
+        style={{
+            marginTop: "20px",
+            background: "rgba(255, 0, 0, 0.08)",
+            border: "1px solid rgba(255, 0, 0, 0.3)"
+        }}
+        >
+
+        <div className="label" style={{ fontWeight: "bold" }}>
+            ⚠️ Attention Needed
+            </div>
 
         {overdueCount === 0 &&
         dueTodayCount === 0 &&
@@ -72,11 +102,21 @@ function DashboardMain({
         {dueTodayJobs.length === 0 ? (
           <p>No jobs due today</p>
         ) : (
-          dueTodayJobs.map((job) => (
-            <div key={job.id}>
-              {job.orderGroup} - {job.method} - {job.qty}
+          <div style={{ marginTop: "10px" }}>
+            {dueTodayJobs.map((job) => (
+                <div
+                key={job.id}
+                style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.05)"
+                }}
+                >
+                {job.orderGroup} - {job.method} - {job.qty}
+                </div>
+            ))}
             </div>
-          ))
         )}
       </div>
     </div>
