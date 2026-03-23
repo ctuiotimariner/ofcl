@@ -64,7 +64,10 @@ function DashboardMain({
 </div>
 
 <div className="card" style={{ marginTop: "20px" }}>
-  <div className="label">🚀 Next Action</div>
+  <div className="label">
+  <img src="/icons/sword.png" className="pixelIcon" />
+  Next Action
+</div>
 
   {jobs.length === 0 ? (
     <p style={{ marginTop: "10px" }}>No jobs right now.</p>
@@ -80,9 +83,10 @@ function DashboardMain({
             style={{ marginTop: "20px" }}
             >
 
-        <div className="label" style={{ fontWeight: "bold" }}>
-            ⚠️ Attention Needed
-            </div>
+        <div className="label">
+          <img src="/icons/warning.png" className="pixelIcon" />
+          Attention Needed
+        </div>
 
         {overdueCount === 0 &&
         dueTodayCount === 0 &&
@@ -98,14 +102,20 @@ function DashboardMain({
         </div>
 
         <div className="card" style={{ marginTop: "20px" }}>
-            <div className="label">📣 Message of the Day</div>
+            <div className="label">
+              <img src="/icons/scroll.png" className="pixelIcon" />
+              Message of the Day
+            </div>
             <p style={{ marginTop: "10px" }}>
                 Check blanks before starting jobs today.
             </p>
         </div>
 
       <div className="card" style={{ marginTop: "20px" }}>
-        <div className="label">Today’s Jobs</div>
+        <div className="label">
+          <img src="/icons/work.png" className="pixelIcon" />
+          Today’s Jobs
+        </div>
 
         {dueTodayJobs.length === 0 ? (
           <p>No jobs due today</p>
@@ -114,6 +124,7 @@ function DashboardMain({
             {dueTodayJobs.map((job) => (
                 <div
                 key={job.id}
+                className="todayJob"
                 style={{
                     padding: "10px",
                     marginBottom: "10px",

@@ -137,9 +137,8 @@
 }
 
 .card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #000;
-  border-color: #2eff7b;
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(0,255,150,0.2);
 }
 
 .label {
@@ -817,4 +816,24 @@ tbody tr:hover td {
   0% { box-shadow: 0 0 6px #ff5c5c; }
   50% { box-shadow: 0 0 18px #ff0000; }
   100% { box-shadow: 0 0 6px #ff5c5c; }
+}
+
+.pixelIcon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  margin-right: 8px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.2));
+}
+
+.card.alertCard:hover {
+  box-shadow: 0 0 16px rgba(255, 80, 80, 0.3);
+}
+
+.todayJob {
+  border: 1px solid #ffcc66;
+  box-shadow: 
+    0 0 4px rgba(255, 204, 102, 0.3),
+    0 0 8px rgba(255, 204, 102, 0.2);
 }

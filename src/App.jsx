@@ -84,6 +84,11 @@ function handleSelectRole(selectedRole) {
   // Jobs / Orders
   const [jobs, setJobs] = useState([])
 
+function parseLocalDate(dateString) {
+  const parts = dateString.split("-")
+  return new Date(parts[0], parts[1] - 1, parts[2])
+}
+
   const waitingForBlanksCount = jobs.filter(
   (job) => job.status === "Waiting for Blanks"
 ).length
@@ -93,25 +98,27 @@ function handleSelectRole(selectedRole) {
 
       // Overdue jobs (past due date)
       const overdueCount = jobs.filter((job) => {
-        if (!job.dueDate) return false
+  if (!job.dueDate) return false
 
-        const due = new Date(job.dueDate)
-        due.setHours(0, 0, 0, 0)
+  const due = parseLocalDate(job.dueDate)
+  due.setHours(0, 0, 0, 0)
 
-        return due < today
-      }).length
+  return due < today
+}).length
 
-      // Jobs due today
-      const dueTodayJobs = jobs.filter((job) => {
-        if (!job.dueDate) return false
 
-        const due = new Date(job.dueDate)
-        due.setHours(0, 0, 0, 0)
 
-        return due.getTime() === today.getTime()
-      })
+// Jobs due today
+const dueTodayJobs = jobs.filter((job) => {
+  if (!job.dueDate) return false
 
-      const dueTodayCount = dueTodayJobs.length
+  const due = parseLocalDate(job.dueDate)
+  due.setHours(0, 0, 0, 0)
+
+  return due.getTime() === today.getTime()
+})
+
+const dueTodayCount = dueTodayJobs.length
 
   const [orders, setOrders] = useState(() => {
     const savedOrders = localStorage.getItem('orders')
@@ -149,6 +156,7 @@ function handleSelectRole(selectedRole) {
   const shippedCount = jobs.filter(
     (job) => job.status === 'Shipped'
   ).length
+
 
   // Filter + sort jobs
   const filteredJobs = jobs
