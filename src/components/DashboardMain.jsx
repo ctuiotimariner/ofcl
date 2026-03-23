@@ -63,14 +63,22 @@ function DashboardMain({
   </div>
 </div>
 
-      <div
-        className="card"
-        style={{
-            marginTop: "20px",
-            background: "rgba(255, 0, 0, 0.08)",
-            border: "1px solid rgba(255, 0, 0, 0.3)"
-        }}
-        >
+<div className="card" style={{ marginTop: "20px" }}>
+  <div className="label">🚀 Next Action</div>
+
+  {jobs.length === 0 ? (
+    <p style={{ marginTop: "10px" }}>No jobs right now.</p>
+  ) : (
+    <p style={{ marginTop: "10px" }}>
+      {jobs[0].orderGroup} → Continue Processing
+    </p>
+  )}
+</div>
+
+        <div
+            className={`card ${overdueCount > 0 ? "alertCard" : ""}`}
+            style={{ marginTop: "20px" }}
+            >
 
         <div className="label" style={{ fontWeight: "bold" }}>
             ⚠️ Attention Needed

@@ -806,3 +806,15 @@ tbody tr:hover td {
     box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
   }
 }
+
+.alertCard {
+  border: 2px solid #ff5c5c;
+  box-shadow: 0 0 10px #ff5c5c;
+  animation: alertPulse 1.2s infinite;
+}
+
+@keyframes alertPulse {
+  0% { box-shadow: 0 0 6px #ff5c5c; }
+  50% { box-shadow: 0 0 18px #ff0000; }
+  100% { box-shadow: 0 0 6px #ff5c5c; }
+}

@@ -434,7 +434,7 @@ return (
       />
 
       <main className="mainContent">
-        <h1>OFCL Operations Dashboard</h1>
+        <h1>OFCL Operation System</h1>
         <p>Role: {role}</p>
 
         {currentPage === 'dashboard' && (
