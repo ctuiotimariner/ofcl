@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react'
 
 function JobsPage({
+  orders,
   emailCount,
   blanksCount,
   printingCount,
@@ -18,11 +19,24 @@ function JobsPage({
   const [collapsedGroups, setCollapsedGroups] = useState({})
 
   function toggleGroup(group) {
-    setCollapsedGroups((prev) => ({
-      ...prev,
-      [group]: !prev[group],
-    }))
-  }
+        setCollapsedGroups((prev) => ({
+          ...prev,
+          [group]: !prev[group],
+        }))
+      } 
+
+
+
+  function isOrderPaid(orderGroup) {
+      const matchingOrder = orders.find(
+        (order) => order.orderNumber === orderGroup
+      )
+
+      return matchingOrder?.paymentStatus === "Paid"
+    }
+
+
+
 
   return (
     <>
@@ -197,22 +211,30 @@ function JobsPage({
 
                       <td>
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          
                           {job.status === "Waiting for Blanks" && (
-                            <button
-                              style={{
-                                background: "#ffcc66",
-                                color: "#000",
-                                border: "none",
-                                padding: "6px 10px",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                              }}
-                              onClick={() => handleStatusChange(job.id, "Printing")}
-                            >
-                              ▶ Start Printing
-                            </button>
-                          )}
+                                <button
+                                  style={{
+                                    background: isOrderPaid(job.orderGroup) ? "#ffcc66" : "#555",
+                                    color: isOrderPaid(job.orderGroup) ? "#000" : "#bbb",
+                                    border: "none",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: 600,
+                                    cursor: isOrderPaid(job.orderGroup) ? "pointer" : "not-allowed"
+                                  }}
+                                  onClick={() => {
+                                    if (!isOrderPaid(job.orderGroup)) {
+                                      alert("Order must be paid before printing.")
+                                      return
+                                    }
+
+                                    handleStatusChange(job.id, "Printing")
+                                  }}
+                                >
+                                  ▶ Start Printing
+                                </button>
+                              )}
 
                           {job.status === "Printing" && (
                             <button

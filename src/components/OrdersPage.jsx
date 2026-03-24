@@ -72,39 +72,53 @@ function OrdersPage({
   }))
 
   const newOrder = {
-    id: Date.now(),
-    orderNumber,
-    customerName,
-    vendor,
-    poNumber,
-    dueDate,
-    generalNotes,
-    items: orderItems,
-  }
+  orderNumber,
+  customerName,
+  vendor,
+  poNumber,
+  dueDate,
+  generalNotes,
+  items: orderItems,
+  paymentStatus: "Unpaid",
+}
 
-  const { data, error } = await supabase
-    .from('jobs')
-    .insert(newJobs)
-    .select()
+// 1. save jobs
+const { data: jobData, error: jobError } = await supabase
+  .from('jobs')
+  .insert(newJobs)
+  .select()
 
-  if (error) {
-    console.error('INSERT ERROR FULL:', JSON.stringify(error, null, 2))
-    alert(`Order failed: ${error.message}`)
-    return
-  }
+if (jobError) {
+  console.error('INSERT JOBS ERROR FULL:', JSON.stringify(jobError, null, 2))
+  alert(`Jobs failed: ${jobError.message}`)
+  return
+}
 
-  console.log('INSERT SUCCESS:', data)
+// 2. save order
+const { data: orderData, error: orderError } = await supabase
+  .from('orders')
+  .insert([newOrder])
+  .select()
 
-  setJobs((prev) => [...prev, ...(data || newJobs)])
-  setOrders((prev) => [...prev, newOrder])
+if (orderError) {
+  console.error('INSERT ORDER ERROR FULL:', JSON.stringify(orderError, null, 2))
+  alert(`Order failed: ${orderError.message}`)
+  return
+}
 
-  setOrderItems([])
-  setOrderNumber('')
-  setCustomerName('')
-  setVendor('')
-  setPoNumber('')
-  setDueDate('')
-  setGeneralNotes('')
+console.log('INSERT JOBS SUCCESS:', jobData)
+console.log('INSERT ORDER SUCCESS:', orderData)
+
+setJobs((prev) => [...prev, ...(jobData || newJobs)])
+setOrders((prev) => [...(orderData || []), ...prev])
+
+setOrderItems([])
+setOrderNumber('')
+setCustomerName('')
+setVendor('')
+setPoNumber('')
+setDueDate('')
+setGeneralNotes('')
 }
 
   function handleDeleteOrder(orderId) {
@@ -193,7 +207,16 @@ function getOrderStatusBadge(status) {
   }
 }
 
+function handleMarkPaid(orderId) {
+  const updatedOrders = orders.map((order) =>
+    order.id === orderId
+      ? { ...order, paymentStatus: "Paid" }
+      : order
+  )
 
+  setOrders(updatedOrders)
+  localStorage.setItem("orders", JSON.stringify(updatedOrders))
+}
 
 
 
@@ -353,43 +376,65 @@ function getOrderStatusBadge(status) {
               <th>Due Date</th>
               <th>Items</th>
               <th>Status</th>
+              <th>Payment</th>
               <th>Actions</th>
+              
             </tr>  
           </thead>
 
           <tbody>
             {filteredOrders.map((order) => (
               <tr key={order.id}>
-                <td>{order.orderNumber}</td>
-                <td>{order.customerName}</td>
-                <td>{order.dueDate}</td>
-                <td>{order.items.length}</td>
-                <td>
-                  <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber))}>
-                    {getOrderStatus(order.orderNumber)}
-                  </span>
-                </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedOrder(order.orderNumber)
-                        setCurrentPage('tickets')
-                      }}
-                    >
-                      View Ticket
-                    </button>
+  <td>{order.orderNumber}</td>
+  <td>{order.customerName}</td>
+  <td>{order.dueDate}</td>
+  <td>{order.items.length}</td>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteOrder(order.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
+  <td>
+    <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber))}>
+      {getOrderStatus(order.orderNumber)}
+    </span>
+  </td>
+
+  <td>
+    <span
+      style={{
+        color: order.paymentStatus === "Paid" ? "#4cd964" : "#ffcc66",
+        fontWeight: 700
+      }}
+    >
+      {order.paymentStatus || "Unpaid"}
+    </span>
+  </td>
+
+  <td>
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      <button
+        type="button"
+        onClick={() => handleMarkPaid(order.id)}
+      >
+        Mark Paid
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setSelectedOrder(order.orderNumber)
+          setCurrentPage('tickets')
+        }}
+      >
+        View Ticket
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleDeleteOrder(order.id)}
+      >
+        Delete
+      </button>
+    </div>
+  </td>
+</tr>
             ))}
           </tbody>
         </table>

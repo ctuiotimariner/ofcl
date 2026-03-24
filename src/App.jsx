@@ -120,10 +120,7 @@ const dueTodayJobs = jobs.filter((job) => {
 
 const dueTodayCount = dueTodayJobs.length
 
-  const [orders, setOrders] = useState(() => {
-    const savedOrders = localStorage.getItem('orders')
-    return savedOrders ? JSON.parse(savedOrders) : []
-  })
+  const [orders, setOrders] = useState([])
 
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [jobSearch, setJobSearch] = useState('')
@@ -294,8 +291,23 @@ if (overdueJobs.length > 0) {
   setJobs(data || [])
 }
 
+async function fetchOrders() {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("id", { ascending: false })
+
+  if (error) {
+    console.error("FETCH ORDERS ERROR:", error)
+    return
+  }
+
+  setOrders(data || [])
+}
+
 useEffect(() => {
   fetchJobs()
+  fetchOrders()
 }, [])
 
 useEffect(() => {
@@ -323,9 +335,7 @@ useEffect(() => {
     localStorage.setItem('inventory', JSON.stringify(inventory))
   }, [inventory])
 
-  useEffect(() => {
-    localStorage.setItem('orders', JSON.stringify(orders))
-  }, [orders])
+  
 
   useEffect(() => {
   localStorage.setItem('role', role)
@@ -539,6 +549,7 @@ return (
 
         {currentPage === 'jobs' && (
           <JobsPage
+            orders={orders}
             blanksCount={blanksCount}
             printingCount={printingCount}
             completedCount={completedCount}
