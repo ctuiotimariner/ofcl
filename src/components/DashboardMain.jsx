@@ -4,9 +4,31 @@ function DashboardMain({
   lowStockCount,
   overdueCount,
   dueTodayCount,
-  dueTodayJobs,
-  waitingForBlanksCount
+  waitingForBlanksCount,
+  nextActionText
 }) {
+
+
+
+
+const today = new Date()
+today.setHours(0, 0, 0, 0)
+
+const fixedDueTodayJobs = jobs.filter((job) => {
+  if (!job.dueDate) return false
+
+  const parts = job.dueDate.split("-")
+  const due = new Date(parts[0], parts[1] - 1, parts[2])
+
+  due.setHours(0, 0, 0, 0)
+
+  return due.getTime() === today.getTime()
+})
+
+
+
+
+
   return (
     <div>
       <h2>Dashboard</h2>
@@ -69,13 +91,9 @@ function DashboardMain({
   Next Action
 </div>
 
-  {jobs.length === 0 ? (
-    <p style={{ marginTop: "10px" }}>No jobs right now.</p>
-  ) : (
-    <p style={{ marginTop: "10px" }}>
-      {jobs[0].orderGroup} → Continue Processing
-    </p>
-  )}
+  <p style={{ marginTop: "10px" }}>
+  {nextActionText}
+</p>
 </div>
 
         <div
@@ -117,11 +135,11 @@ function DashboardMain({
           Today’s Jobs
         </div>
 
-        {dueTodayJobs.length === 0 ? (
+        {fixedDueTodayJobs.length === 0 ? (
           <p>No jobs due today</p>
         ) : (
           <div style={{ marginTop: "10px" }}>
-            {dueTodayJobs.map((job) => (
+            {fixedDueTodayJobs.map((job) => (
                 <div
                 key={job.id}
                 className="todayJob"

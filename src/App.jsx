@@ -128,6 +128,42 @@ const dueTodayCount = dueTodayJobs.length
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [jobSearch, setJobSearch] = useState('')
 
+
+let nextActionJob = null
+let nextActionText = "No jobs right now"
+
+const overdueJobs = jobs.filter((job) => {
+  if (!job.dueDate) return false
+
+  const due = parseLocalDate(job.dueDate)
+  due.setHours(0, 0, 0, 0)
+
+  const isDone = job.status === "Completed" || job.status === "Shipped"
+
+  return due < today && !isDone
+})
+
+if (overdueJobs.length > 0) {
+  nextActionJob = overdueJobs[0]
+  nextActionText = `⚠️ ${nextActionJob.orderGroup} → Overdue`
+} else if (dueTodayJobs.length > 0) {
+  nextActionJob = dueTodayJobs[0]
+  nextActionText = `🚨 ${nextActionJob.orderGroup} → Due Today`
+} else {
+  const waitingJob = jobs.find((job) => job.status === "Waiting for Blanks")
+  const printingJob = jobs.find((job) => job.status === "Printing")
+
+  if (waitingJob) {
+    nextActionJob = waitingJob
+    nextActionText = `📦 ${nextActionJob.orderGroup} → Waiting for Blanks`
+  } else if (printingJob) {
+    nextActionJob = printingJob
+    nextActionText = `🧵 ${nextActionJob.orderGroup} → Printing`
+  }
+}
+
+
+
   // ===== REFS =====
   const skuInputRef = useRef(null)
 
@@ -454,6 +490,7 @@ return (
             dueTodayCount={dueTodayCount}
             dueTodayJobs={dueTodayJobs}
             waitingForBlanksCount={waitingForBlanksCount}
+            nextActionText={nextActionText}
           />
         )}
 
