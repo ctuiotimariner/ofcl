@@ -878,5 +878,13 @@ tbody tr:hover td {
     0 0 12px rgba(255, 204, 102, 0.3);
 }
 
+.status-will-call {
+  background: #facc15;
+  color: #111827;
+}
 
+.status-picked-up {
+  background: #22c55e;
+  color: white;
+}
 

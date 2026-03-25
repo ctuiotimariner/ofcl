@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState } from "react"
+import { supabase } from "../lib/supabase"
+import { getOrderStatusFromJobs } from "../utils/statusHelpers"
 
 function OrdersPage({
   orders,
@@ -9,23 +10,23 @@ function OrdersPage({
   setCurrentPage,
   setSelectedOrder,
 }) {
-  const [orderNumber, setOrderNumber] = useState('')
-  const [customerName, setCustomerName] = useState('')
-  const [vendor, setVendor] = useState('')
-  const [poNumber, setPoNumber] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [generalNotes, setGeneralNotes] = useState('')
+  const [orderNumber, setOrderNumber] = useState("")
+  const [customerName, setCustomerName] = useState("")
+  const [vendor, setVendor] = useState("")
+  const [poNumber, setPoNumber] = useState("")
+  const [dueDate, setDueDate] = useState("")
+  const [generalNotes, setGeneralNotes] = useState("")
 
-  const [garment, setGarment] = useState('')
+  const [garment, setGarment] = useState("")
   const [qty, setQty] = useState(0)
-  const [sizes, setSizes] = useState('')
-  const [placement, setPlacement] = useState('')
-  const [designName, setDesignName] = useState('')
-  const [method, setMethod] = useState('')
+  const [sizes, setSizes] = useState("")
+  const [placement, setPlacement] = useState("")
+  const [designName, setDesignName] = useState("")
+  const [method, setMethod] = useState("")
   const [mockup, setMockup] = useState(null)
 
   const [orderItems, setOrderItems] = useState([])
-  const [orderSearch, setOrderSearch] = useState('')
+  const [orderSearch, setOrderSearch] = useState("")
 
   function handleAddItem() {
     if (!garment || Number(qty) <= 0 || !method || !placement) return
@@ -42,117 +43,156 @@ function OrdersPage({
 
     setOrderItems((prev) => [...prev, newItem])
 
-    setGarment('')
+    setGarment("")
     setQty(0)
-    setSizes('')
-    setPlacement('')
-    setDesignName('')
-    setMethod('')
+    setSizes("")
+    setPlacement("")
+    setDesignName("")
+    setMethod("")
     setMockup(null)
   }
 
- async function handleCreateOrder() {
-  if (!orderNumber || !customerName || orderItems.length === 0) return
+  async function handleCreateOrder() {
+    if (!orderNumber || !customerName || orderItems.length === 0) return
 
-  const newJobs = orderItems.map((item) => ({
-    orderGroup: orderNumber,
-    client: customerName,
-    garment: item.garment,
-    qty: item.qty,
-    sizes: item.sizes,
-    placement: item.placement,
-    designName: item.designName,
-    method: item.method,
-    mockup: item.mockup,
-    status: 'Waiting for Blanks',
-    dueDate,
-    vendor,
-    poNumber,
-    delivered: false,
-  }))
+    const newJobs = orderItems.map((item) => ({
+      orderGroup: orderNumber,
+      client: customerName,
+      garment: item.garment,
+      qty: item.qty,
+      sizes: item.sizes,
+      placement: item.placement,
+      designName: item.designName,
+      method: item.method,
+      mockup: item.mockup,
+      status: "Waiting for Blanks",
+      dueDate,
+      vendor,
+      poNumber,
+      delivered: false,
+    }))
 
-  const newOrder = {
-  orderNumber,
-  customerName,
-  vendor,
-  poNumber,
-  dueDate,
-  generalNotes,
-  items: orderItems,
-  paymentStatus: "Unpaid",
-}
+    const newOrder = {
+      orderNumber,
+      customerName,
+      vendor,
+      poNumber,
+      dueDate,
+      generalNotes,
+      items: orderItems,
+      paymentStatus: "Unpaid",
+    }
 
-// 1. save jobs
-const { data: jobData, error: jobError } = await supabase
-  .from('jobs')
-  .insert(newJobs)
-  .select()
+    const { data: jobData, error: jobError } = await supabase
+      .from("jobs")
+      .insert(newJobs)
+      .select()
 
-if (jobError) {
-  console.error('INSERT JOBS ERROR FULL:', JSON.stringify(jobError, null, 2))
-  alert(`Jobs failed: ${jobError.message}`)
-  return
-}
+    if (jobError) {
+      console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
+      alert(`Jobs failed: ${jobError.message}`)
+      return
+    }
 
-// 2. save order
-const { data: orderData, error: orderError } = await supabase
-  .from('orders')
-  .insert([newOrder])
-  .select()
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .insert([newOrder])
+      .select()
 
-if (orderError) {
-  console.error('INSERT ORDER ERROR FULL:', JSON.stringify(orderError, null, 2))
-  alert(`Order failed: ${orderError.message}`)
-  return
-}
+    if (orderError) {
+      console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
+      alert(`Order failed: ${orderError.message}`)
+      return
+    }
 
-console.log('INSERT JOBS SUCCESS:', jobData)
-console.log('INSERT ORDER SUCCESS:', orderData)
+    console.log("INSERT JOBS SUCCESS:", jobData)
+    console.log("INSERT ORDER SUCCESS:", orderData)
 
-setJobs((prev) => [...prev, ...(jobData || newJobs)])
-setOrders((prev) => [...(orderData || []), ...prev])
+    setJobs((prev) => [...prev, ...(jobData || newJobs)])
+    setOrders((prev) => [...(orderData || []), ...prev])
 
-setOrderItems([])
-setOrderNumber('')
-setCustomerName('')
-setVendor('')
-setPoNumber('')
-setDueDate('')
-setGeneralNotes('')
-}
+    setOrderItems([])
+    setOrderNumber("")
+    setCustomerName("")
+    setVendor("")
+    setPoNumber("")
+    setDueDate("")
+    setGeneralNotes("")
+  }
 
   async function handleDeleteOrder(orderId, orderNumber) {
-  const confirmed = window.confirm("Delete this order and all related jobs?")
-  if (!confirmed) return
+    const confirmed = window.confirm("Delete this order and all related jobs?")
+    if (!confirmed) return
 
-  // 1. delete related jobs
-  const { error: jobsError } = await supabase
-    .from("jobs")
-    .delete()
-    .eq("orderGroup", orderNumber)
+    const { error: jobsError } = await supabase
+      .from("jobs")
+      .delete()
+      .eq("orderGroup", orderNumber)
 
-  if (jobsError) {
-    console.error("DELETE JOBS ERROR:", jobsError)
-    alert("Failed to delete related jobs")
-    return
+    if (jobsError) {
+      console.error("DELETE JOBS ERROR:", jobsError)
+      alert("Failed to delete related jobs")
+      return
+    }
+
+    const { error: orderError } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", orderId)
+
+    if (orderError) {
+      console.error("DELETE ORDER ERROR:", orderError)
+      alert("Failed to delete order")
+      return
+    }
+
+    setOrders((prev) => prev.filter((order) => order.id !== orderId))
+    setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
   }
 
-  // 2. delete the order
-  const { error: orderError } = await supabase
-    .from("orders")
-    .delete()
-    .eq("id", orderId)
+  async function handleMarkPaid(orderId) {
+    const { error } = await supabase
+      .from("orders")
+      .update({ paymentStatus: "Paid" })
+      .eq("id", orderId)
 
-  if (orderError) {
-    console.error("DELETE ORDER ERROR:", orderError)
-    alert("Failed to delete order")
-    return
+    if (error) {
+      console.error("MARK PAID ERROR:", error)
+      alert("Failed to update payment status")
+      return
+    }
+
+    const { data, error: fetchError } = await supabase
+      .from("orders")
+      .select("*")
+      .order("id", { ascending: false })
+
+    if (fetchError) {
+      console.error("REFETCH ORDERS ERROR:", fetchError)
+      return
+    }
+
+    setOrders(data || [])
   }
 
-  // 3. update UI
-  setOrders((prev) => prev.filter((order) => order.id !== orderId))
-  setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
-}
+  function getOrderStatusBadge(status) {
+    switch (status) {
+      case "Waiting for Blanks":
+        return "status-badge status-waiting"
+      case "Printing":
+        return "status-badge status-printing"
+      case "Completed":
+        return "status-badge status-completed"
+      case "Will Call":
+        return "status-badge status-will-call"
+      case "Picked Up":
+        return "status-badge status-picked-up"
+      case "Shipped":
+        return "status-badge status-shipped"
+      default:
+        return "status-badge"
+    }
+  }
 
   const filteredOrders = orders.filter((order) => {
     const search = orderSearch.toLowerCase()
@@ -163,115 +203,6 @@ setGeneralNotes('')
       order.vendor.toLowerCase().includes(search)
     )
   })
-
-  function getOrderStatus(orderNumber) {
-  const orderJobs = jobs.filter(
-    (job) => job.orderGroup === orderNumber
-  )
-
-  if (orderJobs.length === 0) return "No Jobs"
-
-  const allPickedUp = orderJobs.every(
-    (job) => job.status === "Picked Up"
-  )
-
-  const allWillCall = orderJobs.every(
-    (job) => job.status === "Will Call"
-  )
-
-  const allShipped = orderJobs.every(
-    (job) => job.status === "Shipped"
-  )
-
-  const allCompleted = orderJobs.every(
-    (job) =>
-      job.status === "Completed" || job.status === "Shipped"
-  )
-
-  const printing = orderJobs.some(
-    (job) => job.status === "Printing"
-  )
-
-  const waiting = orderJobs.some(
-    (job) => job.status === "Waiting for Blanks"
-  )
-
-  if (allPickedUp) return "Picked Up"
-  if (allWillCall) return "Will Call"
-  if (allShipped) return "Shipped"
-  if (allCompleted) return "Completed"
-  if (printing) return "Printing"
-  if (waiting) return "Waiting for Blanks"
-
-  return "Email Received"
-}
-
-function getOrderStatusStyle(status) {
-  switch (status) {
-    case 'Waiting for Blanks':
-      return { color: '#ffcc66', fontWeight: 600 }
-
-    case 'Printing':
-      return { color: '#5da3ff', fontWeight: 600 }
-
-    case 'Completed':
-      return { color: '#4cd964', fontWeight: 600 }
-
-    case 'Shipped':
-      return { color: '#a78bfa', fontWeight: 600 }
-
-    default:
-      return {}
-  }
-}
-
-function getOrderStatusBadge(status) {
-  switch (status) {
-    case "Waiting for Blanks":
-      return "status-badge status-waiting"
-
-    case "Printing":
-      return "status-badge status-printing"
-
-    case "Completed":
-      return "status-badge status-completed"
-
-    case "Shipped":
-      return "status-badge status-shipped"
-
-    default:
-      return "status-badge"
-  }
-}
-
-async function handleMarkPaid(orderId) {
-  const { error } = await supabase
-    .from("orders")
-    .update({ paymentStatus: "Paid" })
-    .eq("id", orderId)
-
-  if (error) {
-    console.error("MARK PAID ERROR:", error)
-    alert("Failed to update payment status")
-    return
-  }
-
-  const { data, error: fetchError } = await supabase
-    .from("orders")
-    .select("*")
-    .order("id", { ascending: false })
-
-  if (fetchError) {
-    console.error("REFETCH ORDERS ERROR:", fetchError)
-    return
-  }
-
-  setOrders(data || [])
-}
-
-
-
-
 
   return (
     <>
@@ -410,7 +341,7 @@ async function handleMarkPaid(orderId) {
         Create Order
       </button>
 
-      <h3 style={{ marginTop: '30px' }}>Saved Orders</h3>
+      <h3 style={{ marginTop: "30px" }}>Saved Orders</h3>
 
       <input
         placeholder="Search orders..."
@@ -429,64 +360,68 @@ async function handleMarkPaid(orderId) {
               <th>Status</th>
               <th>Payment</th>
               <th>Actions</th>
-              
-            </tr>  
+            </tr>
           </thead>
 
           <tbody>
-            {filteredOrders.map((order) => (
-              <tr key={order.id}>
-  <td>{order.orderNumber}</td>
-  <td>{order.customerName}</td>
-  <td>{order.dueDate}</td>
-  <td>{order.items.length}</td>
+            {filteredOrders.map((order) => {
+              const displayStatus =
+                getOrderStatusFromJobs(jobs, order.orderNumber) || order.status
 
-  <td>
-    <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber) || order.status)}>
-  {getOrderStatus(order.orderNumber) || order.status}
-</span>
-  </td>
+              return (
+                <tr key={order.id}>
+                  <td>{order.orderNumber}</td>
+                  <td>{order.customerName}</td>
+                  <td>{order.dueDate}</td>
+                  <td>{order.items.length}</td>
 
-  <td>
-    <span
-      style={{
-        color: order.paymentStatus === "Paid" ? "#4cd964" : "#ffcc66",
-        fontWeight: 700
-      }}
-    >
-      {order.paymentStatus || "Unpaid"}
-    </span>
-  </td>
+                  <td>
+                    <span className={getOrderStatusBadge(displayStatus)}>
+                      {displayStatus}
+                    </span>
+                  </td>
 
-  <td>
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-      <button
-        type="button"
-        onClick={() => handleMarkPaid(order.id)}
-      >
-        Mark Paid
-      </button>
+                  <td>
+                    <span
+                      style={{
+                        color: order.paymentStatus === "Paid" ? "#4cd964" : "#ffcc66",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {order.paymentStatus || "Unpaid"}
+                    </span>
+                  </td>
 
-      <button
-        type="button"
-        onClick={() => {
-          setSelectedOrder(order.orderNumber)
-          setCurrentPage('tickets')
-        }}
-      >
-        View Ticket
-      </button>
+                  <td>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleMarkPaid(order.id)}
+                      >
+                        Mark Paid
+                      </button>
 
-      <button
-        type="button"
-        onClick={() => handleDeleteOrder(order.id, order.orderNumber)}
-      >
-        Delete
-      </button>
-    </div>
-  </td>
-</tr>
-            ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedOrder(order.orderNumber)
+                          setCurrentPage("tickets")
+                        }}
+                      >
+                        View Ticket
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOrder(order.id, order.orderNumber)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

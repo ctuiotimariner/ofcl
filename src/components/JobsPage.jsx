@@ -1,14 +1,10 @@
-import { useState, Fragment } from 'react'
-import { supabase } from '../lib/supabase'
-
-
-
+import { useState, Fragment } from "react"
+import { supabase } from "../lib/supabase"
 
 function JobsPage({
   orders,
   setJobs,
   setOrders,
-  emailCount,
   blanksCount,
   printingCount,
   completedCount,
@@ -22,202 +18,183 @@ function JobsPage({
   getDueDateClass,
   orderProgress,
 }) {
-
-
-
-
   const [collapsedGroups, setCollapsedGroups] = useState({})
 
-
-
-
-  async function handleShip(jobId) {
-                        const carrier = prompt("Enter carrier (UPS or FedEx):")
-                        if (!carrier) return
-
-                        const trackingNumber = prompt("Enter tracking number:")
-                        if (!trackingNumber) return
-
-                        const jobToUpdate = Object.values(groupedJobs)
-                          .flat()
-                          .find((job) => job.id === jobId)
-
-                        const { data, error } = await supabase
-                          .from("jobs")
-                          .update({
-                            status: "Shipped",
-                            carrier,
-                            trackingNumber
-                          })
-                          .eq("id", jobId)
-                          .select()
-
-                        if (error) {
-                          console.error("SHIP ERROR:", error)
-                          alert("Failed to ship job")
-                          return
-                        }
-
-                        setJobs((prevJobs) =>
-                          prevJobs.map((job) =>
-                            job.id === jobId
-                              ? {
-                                  ...job,
-                                  status: "Shipped",
-                                  carrier,
-                                  trackingNumber
-                                }
-                              : job
-                          )
-                        )
-
-                        if (jobToUpdate?.orderGroup) {
-                          await updateOrderStatusByOrderGroup(jobToUpdate.orderGroup, "Shipped")
-                        }
-                      }
-
-
-
-
-async function handleWillCall(jobId) {
-                const { data, error } = await supabase
-                  .from("jobs")
-                  .update({
-                    status: "Will Call",
-                    carrier: null,
-                    trackingNumber: null
-                  })
-                  .eq("id", jobId)
-                  .select()
-
-                if (error) {
-                  console.error("WILL CALL ERROR:", error)
-                  alert("Failed to mark job as Will Call")
-                  return
-                }
-
-                setJobs((prevJobs) =>
-                  prevJobs.map((job) =>
-                    job.id === jobId
-                      ? {
-                          ...job,
-                          status: "Will Call",
-                          carrier: null,
-                          trackingNumber: null
-                        }
-                      : job
-                  )
-                )
-              }
-
-
-
-  async function handlePickedUp(jobId, orderGroup) {
-  const { error } = await supabase
-    .from("jobs")
-    .update({
-      status: "Picked Up",
-      carrier: null,
-      trackingNumber: null
-    })
-    .eq("id", jobId)
-
-  if (error) {
-    console.error("PICKED UP ERROR:", error)
-    alert("Failed to mark job as Picked Up")
-    return
-  }
-
-  setJobs((prevJobs) =>
-    prevJobs.map((job) =>
-      job.id === jobId
-        ? {
-            ...job,
-            status: "Picked Up",
-            carrier: null,
-            trackingNumber: null
-          }
-        : job
-    )
-  )
-
-  await updateOrderStatusByOrderGroup(orderGroup, "Picked Up")
-}
-
-
-
-
-
-
-
   async function updateOrderStatusByOrderGroup(orderGroup, newStatus) {
-                        const matchingOrder = orders?.find(
-                          (order) =>
-                            order.orderNumber?.trim().toLowerCase() ===
-                            orderGroup?.trim().toLowerCase()
-                        )
+    const matchingOrder = orders?.find(
+      (order) =>
+        order.orderNumber?.trim().toLowerCase() ===
+        orderGroup?.trim().toLowerCase()
+    )
 
-                        if (!matchingOrder) return
+    if (!matchingOrder) return
 
-                        const { error } = await supabase
-                          .from("orders")
-                          .update({ status: newStatus })
-                          .eq("id", matchingOrder.id)
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", matchingOrder.id)
 
-                        if (error) {
-                          console.error("UPDATE ORDER STATUS ERROR:", error)
-                          return
-                        }
-
-                        setOrders((prevOrders) =>
-                          prevOrders.map((order) =>
-                            order.id === matchingOrder.id
-                              ? { ...order, status: newStatus }
-                              : order
-                          )
-                        )
-                      }
-
-
-
-function getPaymentStatus(orderGroup) {
-  const order = orders.find(
-    (o) => o.orderNumber === orderGroup
-  )
-
-  return order?.paymentStatus || "Unpaid"
-}
-
-
-
-
-
-  function toggleGroup(group) {
-        setCollapsedGroups((prev) => ({
-          ...prev,
-          [group]: !prev[group],
-        }))
-      } 
-
-
-
-  function isOrderPaid(orderGroup) {
-      const matchingOrder = orders.find(
-        (order) => order.orderNumber === orderGroup
-      )
-
-      return matchingOrder?.paymentStatus === "Paid"
+    if (error) {
+      console.error("UPDATE ORDER STATUS ERROR:", error)
+      return
     }
 
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === matchingOrder.id
+          ? { ...order, status: newStatus }
+          : order
+      )
+    )
+  }
 
+  async function handleShip(jobId, orderGroup) {
+    const carrier = prompt("Enter carrier (UPS or FedEx):")
+    if (!carrier) return
 
+    const trackingNumber = prompt("Enter tracking number:")
+    if (!trackingNumber) return
+
+    const { error } = await supabase
+      .from("jobs")
+      .update({
+        status: "Shipped",
+        carrier,
+        trackingNumber,
+      })
+      .eq("id", jobId)
+
+    if (error) {
+      console.error("SHIP ERROR:", error)
+      alert("Failed to ship job")
+      return
+    }
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId
+          ? {
+              ...job,
+              status: "Shipped",
+              carrier,
+              trackingNumber,
+            }
+          : job
+      )
+    )
+
+    await updateOrderStatusByOrderGroup(orderGroup, "Shipped")
+  }
+
+  async function handleWillCall(jobId, orderGroup) {
+    const { error } = await supabase
+      .from("jobs")
+      .update({
+        status: "Will Call",
+        carrier: null,
+        trackingNumber: null,
+      })
+      .eq("id", jobId)
+
+    if (error) {
+      console.error("WILL CALL ERROR:", error)
+      alert("Failed to mark job as Will Call")
+      return
+    }
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId
+          ? {
+              ...job,
+              status: "Will Call",
+              carrier: null,
+              trackingNumber: null,
+            }
+          : job
+      )
+    )
+
+    await updateOrderStatusByOrderGroup(orderGroup, "Will Call")
+  }
+
+  async function handlePickedUp(jobId, orderGroup) {
+    const { error } = await supabase
+      .from("jobs")
+      .update({
+        status: "Picked Up",
+        carrier: null,
+        trackingNumber: null,
+      })
+      .eq("id", jobId)
+
+    if (error) {
+      console.error("PICKED UP ERROR:", error)
+      alert("Failed to mark job as Picked Up")
+      return
+    }
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId
+          ? {
+              ...job,
+              status: "Picked Up",
+              carrier: null,
+              trackingNumber: null,
+            }
+          : job
+      )
+    )
+
+    await updateOrderStatusByOrderGroup(orderGroup, "Picked Up")
+  }
+
+  function getPaymentStatus(orderGroup) {
+    const order = orders.find((o) => o.orderNumber === orderGroup)
+    return order?.paymentStatus || "Unpaid"
+  }
+
+  function toggleGroup(group) {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }))
+  }
+
+  function isOrderPaid(orderGroup) {
+    const matchingOrder = orders.find(
+      (order) => order.orderNumber === orderGroup
+    )
+
+    return matchingOrder?.paymentStatus === "Paid"
+  }
+
+  function renderJobStatusDetails(job) {
+    if (job.status === "Shipped" && job.trackingNumber) {
+      return (
+        <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
+          📦 {job.carrier} - {job.trackingNumber}
+        </div>
+      )
+    }
+
+    if (job.status === "Will Call") {
+      return (
+        <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
+          📦 Customer Pickup
+        </div>
+      )
+    }
+
+    return null
+  }
 
   return (
     <>
       <h2>Jobs</h2>
 
       <div className="productionBoard">
-        
         <div className="stageCard blanks">
           <div className="stageTitle">Waiting for Blanks</div>
           <div className="stageCount">{blanksCount}</div>
@@ -276,12 +253,12 @@ function getPaymentStatus(orderGroup) {
                 <tr
                   className="groupRow"
                   onClick={() => toggleGroup(group)}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: "pointer" }}
                 >
-                  <td colSpan="19">
+                  <td colSpan="18">
                     <strong>
-                      {collapsedGroups[group] ? '▶' : '▼'} {group}
-                    </strong>{' '}
+                      {collapsedGroups[group] ? "▶" : "▼"} {group}
+                    </strong>{" "}
                     ({jobs.length} items)
 
                     {orderProgress[group] && (() => {
@@ -293,31 +270,31 @@ function getPaymentStatus(orderGroup) {
                       return (
                         <span
                           style={{
-                            marginLeft: '12px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
+                            marginLeft: "12px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
                           <div
                             style={{
-                              width: '60px',
-                              height: '6px',
-                              background: 'rgba(255,255,255,0.15)',
-                              borderRadius: '4px',
-                              overflow: 'hidden',
+                              width: "60px",
+                              height: "6px",
+                              background: "rgba(255,255,255,0.15)",
+                              borderRadius: "4px",
+                              overflow: "hidden",
                             }}
                           >
                             <div
                               style={{
                                 width: `${percent}%`,
-                                height: '100%',
-                                background: '#4cd964',
+                                height: "100%",
+                                background: "#4cd964",
                               }}
                             />
                           </div>
 
-                          <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                          <span style={{ fontSize: "12px", opacity: 0.8 }}>
                             {progress.completed}/{progress.total}
                           </span>
                         </span>
@@ -327,231 +304,209 @@ function getPaymentStatus(orderGroup) {
                 </tr>
 
                 {!collapsedGroups[group] &&
-                  jobs.map((job) => (
+                  jobs.map((job) => {
+                    const paymentStatus = getPaymentStatus(job.orderGroup)
 
-                    <tr
+                    return (
+                      <tr
                         key={job.id}
                         className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
                       >
+                        <td>#{String(job.id).slice(-4)}</td>
+                        <td>{job.orderGroup}</td>
 
+                        <td>
+                          {job.orderGroup &&
+                            orderProgress[job.orderGroup] &&
+                            (() => {
+                              const progress = orderProgress[job.orderGroup]
+                              const percent = Math.round(
+                                (progress.completed / progress.total) * 100
+                              )
 
-                      <td>#{String(job.id).slice(-4)}</td>
-                      <td>{job.orderGroup}</td>
+                              return (
+                                <div className="progressWrapper">
+                                  <div className="progressBar">
+                                    <div
+                                      className="progressFill"
+                                      style={{ width: `${percent}%` }}
+                                    ></div>
+                                  </div>
 
-                      <td>
-                        {job.orderGroup &&
-                          orderProgress[job.orderGroup] &&
-                          (() => {
-                            const progress = orderProgress[job.orderGroup]
-                            const percent = Math.round(
-                              (progress.completed / progress.total) * 100
-                            )
-
-                            return (
-                              <div className="progressWrapper">
-                                <div className="progressBar">
-                                  <div
-                                    className="progressFill"
-                                    style={{ width: `${percent}%` }}
-                                  ></div>
+                                  <div className="progressText">
+                                    {progress.completed} / {progress.total}
+                                  </div>
                                 </div>
+                              )
+                            })()}
+                        </td>
 
-                                <div className="progressText">
-                                  {progress.completed} / {progress.total}
-                                </div>
-                              </div>
-                            )
-                          })()}
-                      </td>
+                        <td>{job.client}</td>
+                        <td>{job.garment}</td>
+                        <td>{job.qty}</td>
+                        <td>{job.dueDate}</td>
+                        <td>{job.sizes}</td>
+                        <td>{job.placement}</td>
+                        <td>{job.designName}</td>
 
-                      <td>{job.client}</td>
-                      <td>{job.garment}</td>
-                      <td>{job.qty}</td>
-                      <td>{job.dueDate}</td>
-                      <td>{job.sizes}</td>
-                      <td>{job.placement}</td>
-                      <td>{job.designName}</td>
+                        <td>
+                          {job.mockup && (
+                            <img
+                              src={job.mockup}
+                              alt="mockup"
+                              style={{ width: "40px", borderRadius: "4px" }}
+                            />
+                          )}
+                        </td>
 
-                      <td>
-                        {job.mockup && (
-                          <img
-                            src={job.mockup}
-                            alt="mockup"
-                            style={{ width: '40px', borderRadius: '4px' }}
-                          />
-                        )}
-                      </td>
+                        <td>{job.method}</td>
+                        <td>{job.vendor}</td>
+                        <td>{job.poNumber}</td>
+                        <td>{job.delivered ? "✔" : "—"}</td>
 
-                      <td>{job.method}</td>
-                      <td>{job.vendor}</td>
-                      <td>{job.poNumber}</td>
-                      <td>{job.delivered ? '✔' : '—'}</td>
+                        <td>
+                          <span style={{ fontWeight: 600 }}>{job.status}</span>
+                          {renderJobStatusDetails(job)}
+                        </td>
 
-                      <td>
-  <span style={{ fontWeight: 600 }}>{job.status}</span>
+                        <td>
+                          <span
+                            className={
+                              paymentStatus === "Paid"
+                                ? "paymentBadge paid"
+                                : "paymentBadge unpaid"
+                            }
+                          >
+                            {paymentStatus}
+                          </span>
+                        </td>
 
-  {job.status === "Shipped" && job.trackingNumber && (
-    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
-      📦 {job.carrier} - {job.trackingNumber}
-    </div>
-  )}
+                        <td style={{ minWidth: "220px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                              alignItems: "center",
+                            }}
+                          >
+                            {job.status === "Waiting for Blanks" && (
+                              <button
+                                style={{
+                                  background: isOrderPaid(job.orderGroup)
+                                    ? "#ffcc66"
+                                    : "#555",
+                                  color: isOrderPaid(job.orderGroup)
+                                    ? "#000"
+                                    : "#bbb",
+                                  border: "none",
+                                  padding: "6px 10px",
+                                  borderRadius: "6px",
+                                  fontWeight: 600,
+                                  cursor: isOrderPaid(job.orderGroup)
+                                    ? "pointer"
+                                    : "not-allowed",
+                                }}
+                                onClick={() => {
+                                  if (!isOrderPaid(job.orderGroup)) {
+                                    alert("Order must be paid before printing.")
+                                    return
+                                  }
 
-  {job.status === "Will Call" && (
-    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
-      📦 Customer Pickup
-    </div>
-  )}
-</td>
+                                  handleStatusChange(job.id, "Printing")
+                                }}
+                              >
+                                ▶ Start Printing
+                              </button>
+                            )}
 
-                      <td>
-                        <span
-                          className={
-                            getPaymentStatus(job.orderGroup) === "Paid"
-                              ? "paymentBadge paid"
-                              : "paymentBadge unpaid"
-                          }
-                        >
-                          {getPaymentStatus(job.orderGroup)}
-                        </span>
-                      </td>
+                            {job.status === "Printing" && (
+                              <button
+                                style={{
+                                  background: "#4cd964",
+                                  color: "#000",
+                                  border: "none",
+                                  padding: "6px 10px",
+                                  borderRadius: "6px",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                }}
+                                onClick={() =>
+                                  handleStatusChange(job.id, "Completed")
+                                }
+                              >
+                                ✔ Complete
+                              </button>
+                            )}
 
+                            {job.status === "Completed" && (
+                              <>
+                                <button
+                                  style={{
+                                    background: "#a78bfa",
+                                    color: "#fff",
+                                    border: "none",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() =>
+                                    handleShip(job.id, job.orderGroup)
+                                  }
+                                >
+                                  🚚 Ship
+                                </button>
 
-<td>
-  <span className={getJobStatusClass(job.status)}>
-    {job.status}
-  </span>
+                                <button
+                                  style={{
+                                    background: "#5da3ff",
+                                    color: "#fff",
+                                    border: "none",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() =>
+                                    handleWillCall(job.id, job.orderGroup)
+                                  }
+                                >
+                                  📦 Will Call
+                                </button>
+                              </>
+                            )}
 
-  {job.status === "Shipped" && job.trackingNumber && (
-    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
-      📦 {job.carrier} - {job.trackingNumber}
-    </div>
-  )}
-</td>
+                            {job.status === "Will Call" && (
+                              <button
+                                style={{
+                                  background: "#4cd964",
+                                  color: "#000",
+                                  border: "none",
+                                  padding: "6px 10px",
+                                  borderRadius: "6px",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                }}
+                                onClick={() =>
+                                  handlePickedUp(job.id, job.orderGroup)
+                                }
+                              >
+                                🙌 Picked Up
+                              </button>
+                            )}
 
-
-
-
-                      <td style={{ minWidth: "220px" }}>
-  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-    {job.status === "Waiting for Blanks" && (
-      <button
-        style={{
-          background: isOrderPaid(job.orderGroup) ? "#ffcc66" : "#555",
-          color: isOrderPaid(job.orderGroup) ? "#000" : "#bbb",
-          border: "none",
-          padding: "6px 10px",
-          borderRadius: "6px",
-          fontWeight: 600,
-          cursor: isOrderPaid(job.orderGroup) ? "pointer" : "not-allowed"
-        }}
-        onClick={() => {
-          if (!isOrderPaid(job.orderGroup)) {
-            alert("Order must be paid before printing.")
-            return
-          }
-
-          handleStatusChange(job.id, "Printing")
-        }}
-      >
-        ▶ Start Printing
-      </button>
-    )}
-
-    {job.status === "Printing" && (
-      <button
-        style={{
-          background: "#4cd964",
-          color: "#000",
-          border: "none",
-          padding: "6px 10px",
-          borderRadius: "6px",
-          fontWeight: 600,
-          cursor: "pointer"
-        }}
-        onClick={() => handleStatusChange(job.id, "Completed")}
-      >
-        ✔ Complete
-      </button>
-    )}
-
-    {job.status === "Completed" && (
-  <>
-    <button
-      style={{
-        background: "#a78bfa",
-        color: "#fff",
-        border: "none",
-        padding: "6px 10px",
-        borderRadius: "6px",
-        fontWeight: 600,
-        cursor: "pointer"
-      }}
-      onClick={() => handleShip(job.id)}
-    >
-      🚚 Ship
-    </button>
-
-    <button
-      style={{
-        background: "#5da3ff",
-        color: "#fff",
-        border: "none",
-        padding: "6px 10px",
-        borderRadius: "6px",
-        fontWeight: 600,
-        cursor: "pointer"
-      }}
-      onClick={() => handleWillCall(job.id)}
-    >
-      📦 Will Call
-    </button>
-  </>
-)}
-
-
-
-
-
-{job.status === "Will Call" && (
-  <button
-    style={{
-      background: "#4cd964",
-      color: "#000",
-      border: "none",
-      padding: "6px 10px",
-      borderRadius: "6px",
-      fontWeight: 600,
-      cursor: "pointer"
-    }}
-    onClick={() => handlePickedUp(job.id, job.orderGroup)}
-  >
-    🙌 Picked Up
-  </button>
-)}
-
-
-
-
-
-
-
-
-
-
-
-
-    <button
-      type="button"
-      onClick={() => handleDeleteJob(job.id)}
-    >
-      Delete
-    </button>
-  </div>
-</td>
-
-
-                    </tr>
-                  ))}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteJob(job.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
               </Fragment>
             ))}
           </tbody>
