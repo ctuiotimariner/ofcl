@@ -1,7 +1,13 @@
 import { useState, Fragment } from 'react'
+import { supabase } from '../lib/supabase'
+
+
+
 
 function JobsPage({
   orders,
+  setJobs,
+  setOrders,
   emailCount,
   blanksCount,
   printingCount,
@@ -16,7 +22,162 @@ function JobsPage({
   getDueDateClass,
   orderProgress,
 }) {
+
+
+
+
   const [collapsedGroups, setCollapsedGroups] = useState({})
+
+
+
+
+  async function handleShip(jobId) {
+                        const carrier = prompt("Enter carrier (UPS or FedEx):")
+                        if (!carrier) return
+
+                        const trackingNumber = prompt("Enter tracking number:")
+                        if (!trackingNumber) return
+
+                        const jobToUpdate = Object.values(groupedJobs)
+                          .flat()
+                          .find((job) => job.id === jobId)
+
+                        const { data, error } = await supabase
+                          .from("jobs")
+                          .update({
+                            status: "Shipped",
+                            carrier,
+                            trackingNumber
+                          })
+                          .eq("id", jobId)
+                          .select()
+
+                        if (error) {
+                          console.error("SHIP ERROR:", error)
+                          alert("Failed to ship job")
+                          return
+                        }
+
+                        setJobs((prevJobs) =>
+                          prevJobs.map((job) =>
+                            job.id === jobId
+                              ? {
+                                  ...job,
+                                  status: "Shipped",
+                                  carrier,
+                                  trackingNumber
+                                }
+                              : job
+                          )
+                        )
+
+                        if (jobToUpdate?.orderGroup) {
+                          await updateOrderStatusByOrderGroup(jobToUpdate.orderGroup, "Shipped")
+                        }
+                      }
+
+
+
+
+async function handleWillCall(jobId) {
+                const { data, error } = await supabase
+                  .from("jobs")
+                  .update({
+                    status: "Will Call",
+                    carrier: null,
+                    trackingNumber: null
+                  })
+                  .eq("id", jobId)
+                  .select()
+
+                if (error) {
+                  console.error("WILL CALL ERROR:", error)
+                  alert("Failed to mark job as Will Call")
+                  return
+                }
+
+                setJobs((prevJobs) =>
+                  prevJobs.map((job) =>
+                    job.id === jobId
+                      ? {
+                          ...job,
+                          status: "Will Call",
+                          carrier: null,
+                          trackingNumber: null
+                        }
+                      : job
+                  )
+                )
+              }
+
+
+
+  async function handlePickedUp(jobId, orderGroup) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({
+      status: "Picked Up",
+      carrier: null,
+      trackingNumber: null
+    })
+    .eq("id", jobId)
+
+  if (error) {
+    console.error("PICKED UP ERROR:", error)
+    alert("Failed to mark job as Picked Up")
+    return
+  }
+
+  setJobs((prevJobs) =>
+    prevJobs.map((job) =>
+      job.id === jobId
+        ? {
+            ...job,
+            status: "Picked Up",
+            carrier: null,
+            trackingNumber: null
+          }
+        : job
+    )
+  )
+
+  await updateOrderStatusByOrderGroup(orderGroup, "Picked Up")
+}
+
+
+
+
+
+
+
+  async function updateOrderStatusByOrderGroup(orderGroup, newStatus) {
+                        const matchingOrder = orders?.find(
+                          (order) =>
+                            order.orderNumber?.trim().toLowerCase() ===
+                            orderGroup?.trim().toLowerCase()
+                        )
+
+                        if (!matchingOrder) return
+
+                        const { error } = await supabase
+                          .from("orders")
+                          .update({ status: newStatus })
+                          .eq("id", matchingOrder.id)
+
+                        if (error) {
+                          console.error("UPDATE ORDER STATUS ERROR:", error)
+                          return
+                        }
+
+                        setOrders((prevOrders) =>
+                          prevOrders.map((order) =>
+                            order.id === matchingOrder.id
+                              ? { ...order, status: newStatus }
+                              : order
+                          )
+                        )
+                      }
+
 
 
 function getPaymentStatus(orderGroup) {
@@ -117,7 +278,7 @@ function getPaymentStatus(orderGroup) {
                   onClick={() => toggleGroup(group)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <td colSpan="18">
+                  <td colSpan="19">
                     <strong>
                       {collapsedGroups[group] ? '▶' : '▼'} {group}
                     </strong>{' '}
@@ -227,8 +388,20 @@ function getPaymentStatus(orderGroup) {
                       <td>{job.delivered ? '✔' : '—'}</td>
 
                       <td>
-                        <span style={{ fontWeight: 600 }}>{job.status}</span>
-                      </td>
+  <span style={{ fontWeight: 600 }}>{job.status}</span>
+
+  {job.status === "Shipped" && job.trackingNumber && (
+    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
+      📦 {job.carrier} - {job.trackingNumber}
+    </div>
+  )}
+
+  {job.status === "Will Call" && (
+    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
+      📦 Customer Pickup
+    </div>
+  )}
+</td>
 
                       <td>
                         <span
@@ -241,6 +414,22 @@ function getPaymentStatus(orderGroup) {
                           {getPaymentStatus(job.orderGroup)}
                         </span>
                       </td>
+
+
+<td>
+  <span className={getJobStatusClass(job.status)}>
+    {job.status}
+  </span>
+
+  {job.status === "Shipped" && job.trackingNumber && (
+    <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.8 }}>
+      📦 {job.carrier} - {job.trackingNumber}
+    </div>
+  )}
+</td>
+
+
+
 
                       <td style={{ minWidth: "220px" }}>
   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
@@ -286,21 +475,70 @@ function getPaymentStatus(orderGroup) {
     )}
 
     {job.status === "Completed" && (
-      <button
-        style={{
-          background: "#a78bfa",
-          color: "#fff",
-          border: "none",
-          padding: "6px 10px",
-          borderRadius: "6px",
-          fontWeight: 600,
-          cursor: "pointer"
-        }}
-        onClick={() => handleStatusChange(job.id, "Shipped")}
-      >
-        🚚 Ship
-      </button>
-    )}
+  <>
+    <button
+      style={{
+        background: "#a78bfa",
+        color: "#fff",
+        border: "none",
+        padding: "6px 10px",
+        borderRadius: "6px",
+        fontWeight: 600,
+        cursor: "pointer"
+      }}
+      onClick={() => handleShip(job.id)}
+    >
+      🚚 Ship
+    </button>
+
+    <button
+      style={{
+        background: "#5da3ff",
+        color: "#fff",
+        border: "none",
+        padding: "6px 10px",
+        borderRadius: "6px",
+        fontWeight: 600,
+        cursor: "pointer"
+      }}
+      onClick={() => handleWillCall(job.id)}
+    >
+      📦 Will Call
+    </button>
+  </>
+)}
+
+
+
+
+
+{job.status === "Will Call" && (
+  <button
+    style={{
+      background: "#4cd964",
+      color: "#000",
+      border: "none",
+      padding: "6px 10px",
+      borderRadius: "6px",
+      fontWeight: 600,
+      cursor: "pointer"
+    }}
+    onClick={() => handlePickedUp(job.id, job.orderGroup)}
+  >
+    🙌 Picked Up
+  </button>
+)}
+
+
+
+
+
+
+
+
+
+
+
 
     <button
       type="button"

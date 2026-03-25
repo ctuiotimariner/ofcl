@@ -561,6 +561,8 @@ return (
         {currentPage === 'jobs' && (
           <JobsPage
             orders={orders}
+            setJobs={setJobs}
+            setOrders={setOrders}
             blanksCount={blanksCount}
             printingCount={printingCount}
             completedCount={completedCount}

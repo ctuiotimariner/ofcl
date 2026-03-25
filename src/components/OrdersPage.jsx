@@ -165,36 +165,46 @@ setGeneralNotes('')
   })
 
   function getOrderStatus(orderNumber) {
-    const orderJobs = jobs.filter(
-      (job) => job.orderGroup === orderNumber
-    )
+  const orderJobs = jobs.filter(
+    (job) => job.orderGroup === orderNumber
+  )
 
-    if (orderJobs.length === 0) return "No Jobs"
+  if (orderJobs.length === 0) return "No Jobs"
 
-    const allShipped = orderJobs.every(
-      (job) => job.status === "Shipped"
-    )
+  const allPickedUp = orderJobs.every(
+    (job) => job.status === "Picked Up"
+  )
 
-    const allCompleted = orderJobs.every(
-      (job) =>
-        job.status === "Completed" || job.status === "Shipped"
-    )
+  const allWillCall = orderJobs.every(
+    (job) => job.status === "Will Call"
+  )
 
-    const printing = orderJobs.some(
-      (job) => job.status === "Printing"
-    )
+  const allShipped = orderJobs.every(
+    (job) => job.status === "Shipped"
+  )
 
-    const waiting = orderJobs.some(
-      (job) => job.status === "Waiting for Blanks"
-    )
+  const allCompleted = orderJobs.every(
+    (job) =>
+      job.status === "Completed" || job.status === "Shipped"
+  )
 
-    if (allShipped) return "Shipped"
-    if (allCompleted) return "Completed"
-    if (printing) return "Printing"
-    if (waiting) return "Waiting for Blanks"
+  const printing = orderJobs.some(
+    (job) => job.status === "Printing"
+  )
 
-    return "Email Received"
-  }
+  const waiting = orderJobs.some(
+    (job) => job.status === "Waiting for Blanks"
+  )
+
+  if (allPickedUp) return "Picked Up"
+  if (allWillCall) return "Will Call"
+  if (allShipped) return "Shipped"
+  if (allCompleted) return "Completed"
+  if (printing) return "Printing"
+  if (waiting) return "Waiting for Blanks"
+
+  return "Email Received"
+}
 
 function getOrderStatusStyle(status) {
   switch (status) {
@@ -432,9 +442,9 @@ async function handleMarkPaid(orderId) {
   <td>{order.items.length}</td>
 
   <td>
-    <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber))}>
-      {getOrderStatus(order.orderNumber)}
-    </span>
+    <span className={getOrderStatusBadge(getOrderStatus(order.orderNumber) || order.status)}>
+  {getOrderStatus(order.orderNumber) || order.status}
+</span>
   </td>
 
   <td>
