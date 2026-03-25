@@ -124,7 +124,7 @@ setGeneralNotes('')
   function handleDeleteOrder(orderId) {
     const updatedOrders = orders.filter((order) => order.id !== orderId)
     setOrders(updatedOrders)
-    localStorage.setItem('orders', JSON.stringify(updatedOrders))
+    
   }
 
   const filteredOrders = orders.filter((order) => {
@@ -207,15 +207,29 @@ function getOrderStatusBadge(status) {
   }
 }
 
-function handleMarkPaid(orderId) {
-  const updatedOrders = orders.map((order) =>
-    order.id === orderId
-      ? { ...order, paymentStatus: "Paid" }
-      : order
-  )
+async function handleMarkPaid(orderId) {
+  const { error } = await supabase
+    .from("orders")
+    .update({ paymentStatus: "Paid" })
+    .eq("id", orderId)
 
-  setOrders(updatedOrders)
-  localStorage.setItem("orders", JSON.stringify(updatedOrders))
+  if (error) {
+    console.error("MARK PAID ERROR:", error)
+    alert("Failed to update payment status")
+    return
+  }
+
+  const { data, error: fetchError } = await supabase
+    .from("orders")
+    .select("*")
+    .order("id", { ascending: false })
+
+  if (fetchError) {
+    console.error("REFETCH ORDERS ERROR:", fetchError)
+    return
+  }
+
+  setOrders(data || [])
 }
 
 

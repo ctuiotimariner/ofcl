@@ -18,6 +18,19 @@ function JobsPage({
 }) {
   const [collapsedGroups, setCollapsedGroups] = useState({})
 
+
+function getPaymentStatus(orderGroup) {
+  const order = orders.find(
+    (o) => o.orderNumber === orderGroup
+  )
+
+  return order?.paymentStatus || "Unpaid"
+}
+
+
+
+
+
   function toggleGroup(group) {
         setCollapsedGroups((prev) => ({
           ...prev,
@@ -91,6 +104,7 @@ function JobsPage({
               <th>PO</th>
               <th>Delivered</th>
               <th>Status</th>
+              <th>Payment</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -208,6 +222,19 @@ function JobsPage({
                       <td>{job.vendor}</td>
                       <td>{job.poNumber}</td>
                       <td>{job.delivered ? '✔' : '—'}</td>
+                      <td>
+                        <span
+                          style={{
+                            color:
+                              getPaymentStatus(job.orderGroup) === "Paid"
+                                ? "#4cd964"
+                                : "#ffcc66",
+                            fontWeight: 700
+                          }}
+                        >
+                          {getPaymentStatus(job.orderGroup)}
+                        </span>
+                      </td>
 
                       <td>
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>

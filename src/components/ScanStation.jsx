@@ -65,6 +65,23 @@ setJobs((prevJobs) =>
   })
 )
 
+
+
+
+const isPaid = orders.find(
+  (order) => order.orderNumber === foundOrder.orderNumber
+)?.paymentStatus === "Paid"
+
+if (!isPaid) {
+  playSound("alert")
+  alert("Order is NOT paid yet!")
+  return
+}
+
+
+
+
+
 // 🔥 play correct sound
 if (playedSuccess) {
   playSound('success')
