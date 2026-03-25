@@ -62,6 +62,7 @@
 .mainContent {
   flex: 1;
   padding: 30px;
+  overflow-x: hidden;
 }
 
 /* ===== ROLE SCREEN ===== */
@@ -212,13 +213,14 @@ input[placeholder='Search jobs...'] {
 
 /* ===== TABLE CONTAINER ===== */
 .tableCard {
-  border: 2px solid #2c2c2c;
-  background: #151515;
-  border-radius: 0;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
   padding: 16px;
   margin-top: 20px;
   overflow-x: auto;
-  box-shadow: 4px 4px 0 #000;
 }
 
 .tableCard table {
@@ -236,7 +238,8 @@ input[placeholder='Search jobs...'] {
 
 /* ===== TABLE ===== */
 table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   margin-top: 8px;
 }
@@ -248,7 +251,7 @@ thead {
 
 th,
 td {
-  padding: 10px 8px;
+  padding: 12px 10px;
   border-bottom: 1px solid #2e2e2e;
   text-align: left;
   vertical-align: middle;
@@ -837,3 +840,35 @@ tbody tr:hover td {
     0 0 4px rgba(255, 204, 102, 0.3),
     0 0 8px rgba(255, 204, 102, 0.2);
 }
+
+.paymentBadge {
+  display: inline-block;
+  min-width: 90px;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ✅ PAID (neon green glow) */
+.paymentBadge.paid {
+  background: rgba(76, 217, 100, 0.12);
+  color: #4cd964;
+  border: 1px solid #4cd964;
+  box-shadow:
+    0 0 6px rgba(76, 217, 100, 0.6),
+    0 0 12px rgba(76, 217, 100, 0.3);
+}
+
+/* ⚠️ UNPAID (neon warning) */
+.paymentBadge.unpaid {
+  background: rgba(255, 204, 102, 0.12);
+  color: #ffcc66;
+  border: 1px solid #ffcc66;
+  box-shadow:
+    0 0 6px rgba(255, 204, 102, 0.6),
+    0 0 12px rgba(255, 204, 102, 0.3);
+}
+

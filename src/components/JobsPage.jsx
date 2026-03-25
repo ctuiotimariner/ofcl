@@ -104,8 +104,8 @@ function getPaymentStatus(orderGroup) {
               <th>PO</th>
               <th>Delivered</th>
               <th>Status</th>
-              <th>Payment</th>
-              <th>Actions</th>
+              <th style={{ width: "140px" }}>Payment</th>
+              <th style={{ width: "160px" }}>Actions</th>
             </tr>
           </thead>
 
@@ -117,7 +117,7 @@ function getPaymentStatus(orderGroup) {
                   onClick={() => toggleGroup(group)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <td colSpan="17">
+                  <td colSpan="18">
                     <strong>
                       {collapsedGroups[group] ? '▶' : '▼'} {group}
                     </strong>{' '}
@@ -222,22 +222,20 @@ function getPaymentStatus(orderGroup) {
                       <td>{job.vendor}</td>
                       <td>{job.poNumber}</td>
                       <td>{job.delivered ? '✔' : '—'}</td>
-                      <td>
+                      <td style={{ minWidth: "140px" }}>
                         <span
-                          style={{
-                            color:
-                              getPaymentStatus(job.orderGroup) === "Paid"
-                                ? "#4cd964"
-                                : "#ffcc66",
-                            fontWeight: 700
-                          }}
+                          className={
+                            getPaymentStatus(job.orderGroup) === "Paid"
+                              ? "paymentBadge paid"
+                              : "paymentBadge unpaid"
+                          }
                         >
                           {getPaymentStatus(job.orderGroup)}
                         </span>
                       </td>
 
                       <td>
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                           
                           {job.status === "Waiting for Blanks" && (
                                 <button
@@ -301,14 +299,21 @@ function getPaymentStatus(orderGroup) {
                         </div>
                       </td>
 
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteJob(job.id)}
+                      <td
+                          style={{
+                            minWidth: "160px",
+                            textAlign: "center"
+                          }}
                         >
-                          Delete
-                        </button>
-                      </td>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteJob(job.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+
+
                     </tr>
                   ))}
               </Fragment>
