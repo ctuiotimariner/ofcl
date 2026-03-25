@@ -121,11 +121,38 @@ setDueDate('')
 setGeneralNotes('')
 }
 
-  function handleDeleteOrder(orderId) {
-    const updatedOrders = orders.filter((order) => order.id !== orderId)
-    setOrders(updatedOrders)
-    
+  async function handleDeleteOrder(orderId, orderNumber) {
+  const confirmed = window.confirm("Delete this order and all related jobs?")
+  if (!confirmed) return
+
+  // 1. delete related jobs
+  const { error: jobsError } = await supabase
+    .from("jobs")
+    .delete()
+    .eq("orderGroup", orderNumber)
+
+  if (jobsError) {
+    console.error("DELETE JOBS ERROR:", jobsError)
+    alert("Failed to delete related jobs")
+    return
   }
+
+  // 2. delete the order
+  const { error: orderError } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", orderId)
+
+  if (orderError) {
+    console.error("DELETE ORDER ERROR:", orderError)
+    alert("Failed to delete order")
+    return
+  }
+
+  // 3. update UI
+  setOrders((prev) => prev.filter((order) => order.id !== orderId))
+  setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
+}
 
   const filteredOrders = orders.filter((order) => {
     const search = orderSearch.toLowerCase()
@@ -442,7 +469,7 @@ async function handleMarkPaid(orderId) {
 
       <button
         type="button"
-        onClick={() => handleDeleteOrder(order.id)}
+        onClick={() => handleDeleteOrder(order.id, order.orderNumber)}
       >
         Delete
       </button>

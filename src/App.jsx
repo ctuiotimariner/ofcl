@@ -422,12 +422,23 @@ useEffect(() => {
   console.log("Status updated:", data)
 }
 
-  function handleDeleteJob(jobId) {
-    const confirmed = window.confirm('Delete this job?')
-    if (!confirmed) return
+  async function handleDeleteJob(jobId) {
+  const confirmed = window.confirm('Delete this job?')
+  if (!confirmed) return
 
-    setJobs(jobs.filter((job) => job.id !== jobId))
+  const { error } = await supabase
+    .from("jobs")
+    .delete()
+    .eq("id", jobId)
+
+  if (error) {
+    console.error("DELETE JOB ERROR:", error)
+    alert("Failed to delete job")
+    return
   }
+
+  setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId))
+}
 
   // ===== JOB STYLE HELPERS =====
 

@@ -167,10 +167,13 @@ function getPaymentStatus(orderGroup) {
 
                 {!collapsedGroups[group] &&
                   jobs.map((job) => (
+
                     <tr
-                      key={job.id}
-                      className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
-                    >
+                        key={job.id}
+                        className={`${getJobStatusClass(job.status)} ${getDueDateClass(job)}`}
+                      >
+
+
                       <td>#{String(job.id).slice(-4)}</td>
                       <td>{job.orderGroup}</td>
 
@@ -222,7 +225,12 @@ function getPaymentStatus(orderGroup) {
                       <td>{job.vendor}</td>
                       <td>{job.poNumber}</td>
                       <td>{job.delivered ? '✔' : '—'}</td>
-                      <td style={{ minWidth: "140px" }}>
+
+                      <td>
+                        <span style={{ fontWeight: 600 }}>{job.status}</span>
+                      </td>
+
+                      <td>
                         <span
                           className={
                             getPaymentStatus(job.orderGroup) === "Paid"
@@ -234,84 +242,74 @@ function getPaymentStatus(orderGroup) {
                         </span>
                       </td>
 
-                      <td>
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                          
-                          {job.status === "Waiting for Blanks" && (
-                                <button
-                                  style={{
-                                    background: isOrderPaid(job.orderGroup) ? "#ffcc66" : "#555",
-                                    color: isOrderPaid(job.orderGroup) ? "#000" : "#bbb",
-                                    border: "none",
-                                    padding: "6px 10px",
-                                    borderRadius: "6px",
-                                    fontWeight: 600,
-                                    cursor: isOrderPaid(job.orderGroup) ? "pointer" : "not-allowed"
-                                  }}
-                                  onClick={() => {
-                                    if (!isOrderPaid(job.orderGroup)) {
-                                      alert("Order must be paid before printing.")
-                                      return
-                                    }
+                      <td style={{ minWidth: "220px" }}>
+  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+    {job.status === "Waiting for Blanks" && (
+      <button
+        style={{
+          background: isOrderPaid(job.orderGroup) ? "#ffcc66" : "#555",
+          color: isOrderPaid(job.orderGroup) ? "#000" : "#bbb",
+          border: "none",
+          padding: "6px 10px",
+          borderRadius: "6px",
+          fontWeight: 600,
+          cursor: isOrderPaid(job.orderGroup) ? "pointer" : "not-allowed"
+        }}
+        onClick={() => {
+          if (!isOrderPaid(job.orderGroup)) {
+            alert("Order must be paid before printing.")
+            return
+          }
 
-                                    handleStatusChange(job.id, "Printing")
-                                  }}
-                                >
-                                  ▶ Start Printing
-                                </button>
-                              )}
+          handleStatusChange(job.id, "Printing")
+        }}
+      >
+        ▶ Start Printing
+      </button>
+    )}
 
-                          {job.status === "Printing" && (
-                            <button
-                              style={{
-                                background: "#4cd964",
-                                color: "#000",
-                                border: "none",
-                                padding: "6px 10px",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                              }}
-                              onClick={() => handleStatusChange(job.id, "Completed")}
-                            >
-                              ✔ Complete
-                            </button>
-                          )}
+    {job.status === "Printing" && (
+      <button
+        style={{
+          background: "#4cd964",
+          color: "#000",
+          border: "none",
+          padding: "6px 10px",
+          borderRadius: "6px",
+          fontWeight: 600,
+          cursor: "pointer"
+        }}
+        onClick={() => handleStatusChange(job.id, "Completed")}
+      >
+        ✔ Complete
+      </button>
+    )}
 
-                          {job.status === "Completed" && (
-                            <button
-                              style={{
-                                background: "#a78bfa",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 10px",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                              }}
-                              onClick={() => handleStatusChange(job.id, "Shipped")}
-                            >
-                              🚚 Ship
-                            </button>
-                          )}
+    {job.status === "Completed" && (
+      <button
+        style={{
+          background: "#a78bfa",
+          color: "#fff",
+          border: "none",
+          padding: "6px 10px",
+          borderRadius: "6px",
+          fontWeight: 600,
+          cursor: "pointer"
+        }}
+        onClick={() => handleStatusChange(job.id, "Shipped")}
+      >
+        🚚 Ship
+      </button>
+    )}
 
-                          <span style={{ fontWeight: 600 }}>{job.status}</span>
-                        </div>
-                      </td>
-
-                      <td
-                          style={{
-                            minWidth: "160px",
-                            textAlign: "center"
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteJob(job.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+    <button
+      type="button"
+      onClick={() => handleDeleteJob(job.id)}
+    >
+      Delete
+    </button>
+  </div>
+</td>
 
 
                     </tr>
