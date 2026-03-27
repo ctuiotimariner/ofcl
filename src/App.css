@@ -888,3 +888,31 @@ tbody tr:hover td {
   color: white;
 }
 
+.inputWithLabel {
+  display: flex;
+  align-items: center;
+  border: 1px solid #333;
+  background: #111;
+  color: #0f0;
+}
+
+.inputWithLabel span {
+  padding: 0 10px;
+  border-right: 1px solid #333;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.inputWithLabel input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
