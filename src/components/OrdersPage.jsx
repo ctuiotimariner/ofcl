@@ -33,66 +33,78 @@ function OrdersPage({
   const [orderItems, setOrderItems] = useState([])
   const [orderSearch, setOrderSearch] = useState("")
 
+  useEffect(() => {
+    setVendorData(null)
+  }, [vendor, productStyle, productColor, qty])
+
   async function getVendorData() {
-    if (!vendor || !productStyle || !productColor || !qty) {
-      alert("Select vendor and fill out style, color, and quantity first")
-      return
-    }
-
-    try {
-      const response = await fetch("http://localhost:5001/api/vendor/ss", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          vendor,
-          style: productStyle,
-          color: productColor,
-          qty: Number(qty),
-        }),
-      })
-
-      const data = await response.json()
-      setVendorData(data.data)
-    } catch (error) {
-      console.error("Vendor fetch error:", error)
-      alert("Could not load vendor data")
-    }
+  if (!vendor || !productStyle || !productColor || !qty) {
+    alert("Select vendor and fill out style, color, and quantity first")
+    return
   }
+
+  try {
+    console.log("SENDING:", {
+      vendor,
+      style: productStyle,
+      color: productColor,
+      qty: Number(qty),
+    })
+
+    const response = await fetch("http://localhost:5001/api/vendor/ss", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        vendor,
+        style: productStyle,
+        color: productColor,
+        qty: Number(qty),
+      }),
+    })
+
+    const data = await response.json()
+    console.log("RESPONSE DATA:", data)
+
+    setVendorData(data.data)
+  } catch (error) {
+    console.error("Vendor fetch error:", error)
+    alert("Could not load vendor data")
+  }
+}
 
   function handleAddItem() {
     if (!vendorData) {
-        alert("Click 'Get Live Price' before adding item")
-        return
-      }
+      alert("Click 'Get Live Price' before adding item")
+      return
+    }
+
     if (!garment || Number(qty) <= 0 || !method || !placement) return
 
     const unitCost = Number(vendorData?.price || 0)
-const itemQty = Number(qty || 0)
-const itemSellPrice = Number(sellPrice || 0)
+    const itemQty = Number(qty || 0)
+    const itemSellPrice = Number(sellPrice || 0)
 
-const profitEach = itemSellPrice - unitCost
-const totalProfit = profitEach * itemQty
+    const profitEach = itemSellPrice - unitCost
+    const totalProfit = profitEach * itemQty
 
-const newItem = {
-  vendor,
-  garment,
-  color: productColor,
-  qty: itemQty,
-  sizes,
-  placement,
-  designName,
-  method,
-  mockup,
-
-  unitPrice: unitCost,
-  totalPrice: unitCost * itemQty,
-  sellPrice: itemSellPrice,
-
-  profitEach,
-  totalProfit
-}
+    const newItem = {
+      vendor,
+      garment,
+      color: productColor,
+      qty: itemQty,
+      sizes,
+      placement,
+      designName,
+      method,
+      mockup,
+      unitPrice: unitCost,
+      totalPrice: unitCost * itemQty,
+      sellPrice: itemSellPrice,
+      profitEach,
+      totalProfit,
+    }
 
     setOrderItems((prev) => [...prev, newItem])
 
@@ -104,6 +116,7 @@ const newItem = {
     setDesignName("")
     setMethod("")
     setMockup(null)
+    setVendorData(null)
   }
 
   async function handleCreateOrder() {
@@ -126,6 +139,10 @@ const newItem = {
       delivered: false,
     }))
 
+    const totalOrderProfit = orderItems.reduce((sum, item) => {
+      return sum + Number(item.totalProfit || 0)
+    }, 0)
+
     const newOrder = {
       orderNumber,
       customerName,
@@ -134,6 +151,7 @@ const newItem = {
       dueDate,
       generalNotes,
       items: orderItems,
+      totalProfit: totalOrderProfit,
       paymentStatus: "Unpaid",
     }
 
@@ -158,9 +176,6 @@ const newItem = {
       alert(`Order failed: ${orderError.message}`)
       return
     }
-
-    console.log("INSERT JOBS SUCCESS:", jobData)
-    console.log("INSERT ORDER SUCCESS:", orderData)
 
     setJobs((prev) => [...prev, ...(jobData || newJobs)])
     setOrders((prev) => [...(orderData || []), ...prev])
@@ -261,49 +276,32 @@ const newItem = {
     )
   })
 
-  const totalOrderProfit = orderItems.reduce((sum, item) => {
-  return sum + Number(item.totalProfit || 0)
-}, 0)
-
-useEffect(() => {
-  setVendorData(null)
-}, [vendor, productStyle, productColor, qty])
-
-const isPriceReady = !!vendorData
-
-const isReadyToAdd =
-  vendor &&
-  Number(qty) > 0 &&
-  vendorData && vendorData.price
-
-const unitCost = Number(vendorData?.price || 0)
-const currentSellPrice = Number(sellPrice || 0)
-const currentProfitEach = currentSellPrice - unitCost
-const currentTotalProfit = currentProfitEach * Number(qty || 0)  
-
-
-
-
-
-
+  const isReadyToAdd =
+    !!vendor &&
+    Number(qty) > 0 &&
+    !!vendorData &&
+    !!vendorData.price
 
   return (
     <>
       <h2>Create Order</h2>
 
       {vendorData && (
-        <div>
-          <p><strong>Vendor:</strong> {vendorData.vendor}</p>
-          <p><strong>Product:</strong> {vendorData.product}</p>
-          <p><strong>Color:</strong> {vendorData.color}</p>
-          <p><strong>Qty:</strong> {qty}</p>
-          <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
-          <p>
-            <strong>Total:</strong>{" "}
-            ${(Number(vendorData.price) * Number(qty)).toFixed(2)}
-          </p>
-        </div>
-      )}
+  <div>
+    <p><strong>Vendor:</strong> {vendorData.vendor}</p>
+    <p><strong>Product:</strong> {vendorData.product}</p>
+    <p><strong>Color:</strong> {vendorData.color}</p>
+    <p><strong>Qty:</strong> {vendorData.qty}</p>
+
+    <p>
+      <strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}
+    </p>
+
+    <p>
+      <strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}
+    </p>
+  </div>
+)}
 
       <form onSubmit={(e) => e.preventDefault()}>
         <input
@@ -344,10 +342,9 @@ const currentTotalProfit = currentProfitEach * Number(qty || 0)
         />
       </form>
 
-      
+      <h3>Vendor Pricing</h3>
 
       <div>
-        <h3>Vendor Pricing</h3>
         <p>Using order vendor: {vendor || "No vendor selected"}</p>
 
         <input
@@ -368,7 +365,6 @@ const currentTotalProfit = currentProfitEach * Number(qty || 0)
           Get Live Price
         </button>
 
-
         <p
           style={{
             marginTop: "8px",
@@ -378,8 +374,6 @@ const currentTotalProfit = currentProfitEach * Number(qty || 0)
         >
           {vendorData ? "Live price ready" : "Live price not loaded"}
         </p>
-
-
       </div>
 
       <h3>Add Order Item</h3>
@@ -414,34 +408,6 @@ const currentTotalProfit = currentProfitEach * Number(qty || 0)
             onChange={(e) => setSellPrice(e.target.value)}
           />
         </div>
-
-        {sellPrice && vendorData && (
-  <p
-    style={{
-      marginTop: "8px",
-      fontWeight: 700,
-      color:
-        currentProfitEach <= 0
-          ? "#ff4d4f"
-          : currentProfitEach < 2
-          ? "#ffcc66"
-          : "#4cd964",
-    }}
-  >
-    {currentProfitEach <= 0
-      ? "Warning: No profit on this item"
-      : currentProfitEach < 2
-      ? "Low profit warning"
-      : "Profit looks healthy"}
-  </p>
-)}
-
-{sellPrice && vendorData && (
-  <p style={{ fontSize: "12px", opacity: 0.8 }}>
-    Profit Each: ${currentProfitEach.toFixed(2)} | Total: $
-    {(currentProfitEach * Number(qty || 0)).toFixed(2)}
-  </p>
-)}
 
         <input
           placeholder="Sizes / Notes"
@@ -485,75 +451,39 @@ const currentTotalProfit = currentProfitEach * Number(qty || 0)
         <button type="submit" disabled={!isReadyToAdd}>
           Add Item
         </button>
-
-
       </form>
 
       <div className="tableCard">
         <table>
           <thead>
-  <tr>
-    <th>Garment</th>
-    <th>Qty</th>
-    <th>Sizes</th>
-    <th>Placement</th>
-    <th>Design</th>
-    <th>Method</th>
-    <th>Unit Cost</th>
-    <th>Sell Price</th>
-    <th>Profit Each</th>
-    <th>Total Profit</th>
-  </tr>
-</thead>
+            <tr>
+              <th>Garment</th>
+              <th>Qty</th>
+              <th>Sizes</th>
+              <th>Placement</th>
+              <th>Design</th>
+              <th>Method</th>
+              <th>Unit Cost</th>
+              <th>Sell Price</th>
+            </tr>
+          </thead>
 
           <tbody>
             {orderItems.map((item, index) => (
-  <tr key={index}>
-    <td>{item.garment}</td>
-    <td>{item.qty}</td>
-    <td>{item.sizes}</td>
-    <td>{item.placement}</td>
-    <td>{item.designName}</td>
-    <td>{item.method}</td>
-    <td>${Number(item.unitPrice || 0).toFixed(2)}</td>
-    <td>${Number(item.sellPrice || 0).toFixed(2)}</td>
-
-    <td
-      style={{
-        color:
-          Number(item.profitEach) <= 0
-            ? "#ff4d4f"
-            : Number(item.profitEach) < 2
-            ? "#ffcc66"
-            : "#4cd964",
-        fontWeight: 700,
-      }}
-    >
-      ${Number(item.profitEach || 0).toFixed(2)}
-    </td>
-
-    <td
-      style={{
-        color:
-          Number(item.totalProfit) <= 0
-            ? "#ff4d4f"
-            : Number(item.totalProfit) < 20
-            ? "#ffcc66"
-            : "#4cd964",
-        fontWeight: 700,
-      }}
-    >
-      ${Number(item.totalProfit || 0).toFixed(2)}
-    </td>
-  </tr>
-))}
+              <tr key={index}>
+                <td>{item.garment}</td>
+                <td>{item.qty}</td>
+                <td>{item.sizes}</td>
+                <td>{item.placement}</td>
+                <td>{item.designName}</td>
+                <td>{item.method}</td>
+                <td>${Number(item.unitPrice || 0).toFixed(2)}</td>
+                <td>${Number(item.sellPrice || 0).toFixed(2)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      <p style={{ marginTop: "12px", fontWeight: 700 }}>
-        Total Order Profit: ${totalOrderProfit.toFixed(2)}
-      </p>
 
       <button type="button" onClick={handleCreateOrder}>
         Create Order

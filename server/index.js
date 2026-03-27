@@ -31,17 +31,17 @@ app.post("/api/vendor/ss", async (req, res) => {
       vendor,
       style,
       color,
-      qty
+      qty,
     })
 
     res.json({
       success: true,
-      data
+      data,
     })
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching vendor data"
+      message: "Error fetching vendor data",
     })
   }
 })
