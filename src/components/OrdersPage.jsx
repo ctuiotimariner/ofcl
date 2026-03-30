@@ -34,14 +34,20 @@ function OrdersPage({
   const [orderSearch, setOrderSearch] = useState("")
 
   useEffect(() => {
-    setVendorData(null)
-  }, [vendor, productStyle, productColor, qty])
+        const safeQty = Number(qty)
+
+        if (!vendor || !productStyle || !productColor || !safeQty) {
+          setVendorData(null)
+          return
+        }
+
+        getVendorData()
+      }, [vendor, productStyle, productColor, qty])
 
   async function getVendorData() {
   if (!vendor || !productStyle || !productColor || !qty) {
-    alert("Select vendor and fill out style, color, and quantity first")
-    return
-  }
+  return
+}
 
   try {
     console.log("SENDING:", {
@@ -143,6 +149,10 @@ function OrdersPage({
       return sum + Number(item.totalProfit || 0)
     }, 0)
 
+    const totalRevenue = orderItems.reduce((sum, item) => {
+  return sum + (Number(item.sellPrice) * Number(item.qty))
+}, 0)
+
     const newOrder = {
       orderNumber,
       customerName,
@@ -152,6 +162,7 @@ function OrdersPage({
       generalNotes,
       items: orderItems,
       totalProfit: totalOrderProfit,
+      totalRevenue: totalRevenue,
       paymentStatus: "Unpaid",
     }
 

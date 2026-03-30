@@ -114,6 +114,17 @@ function Sidebar({ currentPage, setCurrentPage, setRole, allowedPages }) {
       </button>
     )}
 
+            {allowedPages.includes("stats") && (
+      <button
+        onClick={() => setCurrentPage("stats")}
+        style={{
+          background: currentPage === "stats" ? "#333" : "transparent"
+        }}
+      >
+        Stats
+      </button>
+    )}
+
       <button
         onClick={() => {
           localStorage.removeItem('role')

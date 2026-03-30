@@ -11,6 +11,7 @@ import ProductionBoard from './components/ProductionBoard'
 import ScanStation from './components/ScanStation'
 import DashboardMain from "./components/DashboardMain"
 import { supabase } from './lib/supabase'
+import StatsPage from "./components/StatsPage"
 
 
 
@@ -58,7 +59,8 @@ const adminPages = [
   "scan",
   "inventory",
   "vendors",
-  "settings"
+  "settings",
+  "stats"
 ]
 
 const employeePages = [
@@ -601,6 +603,7 @@ return (
 
         {currentPage === 'vendors' && <h2>Vendors page coming later</h2>}
         {currentPage === 'settings' && <h2>Settings page coming later</h2>}
+        {currentPage === "stats" && <StatsPage />}
       </main>
     </div>
   )
