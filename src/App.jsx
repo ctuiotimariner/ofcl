@@ -58,7 +58,6 @@ const adminPages = [
   "production",
   "scan",
   "inventory",
-  "vendors",
   "settings",
   "stats"
 ]
@@ -264,22 +263,25 @@ if (overdueJobs.length > 0) {
   const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0)
   const lowStockCount = inventory.filter((item) => item.qty <= 5).length
 
+
   // Order progress
-  const orderProgress = {}
+const orderProgress = {}
 
-  jobs.forEach((job) => {
-    const group = job.orderGroup || 'No Group'
+jobs.forEach((job) => {
+  const group = job.orderGroup || 'No Group'
 
-    if (!orderProgress[group]) {
-      orderProgress[group] = { total: 0, completed: 0 }
-    }
+  if (!orderProgress[group]) {
+    orderProgress[group] = { total: 0, completed: 0 }
+  }
 
-    orderProgress[group].total++
+  orderProgress[group].total++
 
-    if (job.status === 'Completed' || job.status === 'Shipped') {
-      orderProgress[group].completed++
-    }
-  })
+  const finishedStatuses = ['Completed', 'Shipped', 'Will Call', 'Picked Up']
+
+  if (finishedStatuses.includes(job.status)) {
+    orderProgress[group].completed++
+  }
+})
 
   // ===== EFFECTS =====
   async function fetchJobs() {
@@ -525,6 +527,8 @@ return (
             setOrders={setOrders}
             setCurrentPage={setCurrentPage}
             setSelectedOrder={setSelectedOrder}
+            fetchOrders={fetchOrders}
+            fetchJobs={fetchJobs}
           />
         )}
 

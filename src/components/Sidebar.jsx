@@ -92,16 +92,7 @@ function Sidebar({ currentPage, setCurrentPage, setRole, allowedPages }) {
         </button>
       )}
 
-          {allowedPages.includes("vendors") && (
-      <button
-        onClick={() => setCurrentPage("vendors")}
-        style={{
-          background: currentPage === "vendors" ? "#333" : "transparent"
-        }}
-      >
-        Vendors
-      </button>
-    )}
+          
 
           {allowedPages.includes("settings") && (
       <button

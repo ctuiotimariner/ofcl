@@ -9,6 +9,8 @@ function OrdersPage({
   setOrders,
   setCurrentPage,
   setSelectedOrder,
+  fetchOrders,
+  fetchJobs,
 }) {
   const [orderNumber, setOrderNumber] = useState("")
   const [customerName, setCustomerName] = useState("")
@@ -188,7 +190,7 @@ function OrdersPage({
       return
     }
 
-await fetchOrders()
+
 await fetchJobs()
 
     setOrderItems([])
