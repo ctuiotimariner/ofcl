@@ -20,33 +20,80 @@ function JobsPage({
 }) {
   const [collapsedGroups, setCollapsedGroups] = useState({})
 
-  async function updateOrderStatusByOrderGroup(orderGroup, newStatus) {
-    const matchingOrder = orders?.find(
-      (order) =>
-        order.orderNumber?.trim().toLowerCase() ===
-        orderGroup?.trim().toLowerCase()
-    )
+ async function updateOrderStatusByOrderGroup(orderGroup) {
+  try {
+    const { data: relatedJobs, error: jobsError } = await supabase
+      .from("jobs")
+      .select("*")
+      .eq("orderGroup", orderGroup)
 
-    if (!matchingOrder) return
-
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", matchingOrder.id)
-
-    if (error) {
-      console.error("UPDATE ORDER STATUS ERROR:", error)
+    if (jobsError) {
+      console.error("FETCH RELATED JOBS ERROR:", jobsError)
       return
     }
 
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === matchingOrder.id
-          ? { ...order, status: newStatus }
-          : order
-      )
-    )
+    if (!relatedJobs || relatedJobs.length === 0) {
+      const { error: orderError } = await supabase
+        .from("orders")
+        .update({ status: "Email Received" })
+        .eq("orderNumber", orderGroup)
+
+      if (orderError) {
+        console.error("UPDATE ORDER STATUS ERROR:", orderError)
+      }
+
+      return
+    }
+
+    const statuses = relatedJobs.map((job) => job.status)
+
+    let finalStatus = "Email Received"
+
+    const allPickedUp = statuses.every((status) => status === "Picked Up")
+const allShipped = statuses.every((status) => status === "Shipped")
+const allWillCall = statuses.every((status) => status === "Will Call")
+const allCompleted = statuses.every((status) => status === "Completed")
+
+const hasPrinting = statuses.some((status) => status === "Printing")
+const hasWaitingForBlanks = statuses.some(
+  (status) => status === "Waiting for Blanks"
+)
+const hasWillCall = statuses.some((status) => status === "Will Call")
+const hasCompleted = statuses.some((status) => status === "Completed")
+
+if (allPickedUp) {
+  finalStatus = "Picked Up"
+} else if (allShipped) {
+  finalStatus = "Shipped"
+} else if (allWillCall) {
+  finalStatus = "Will Call"
+} else if (allCompleted) {
+  finalStatus = "Completed"
+} else if (hasPrinting) {
+  finalStatus = "Printing"
+} else if (hasWaitingForBlanks) {
+  finalStatus = "Waiting for Blanks"
+} else if (hasWillCall) {
+  finalStatus = "Will Call"
+} else if (hasCompleted) {
+  finalStatus = "Completed"
+}
+
+    const { error: orderError } = await supabase
+      .from("orders")
+      .update({ status: finalStatus })
+      .eq("orderNumber", orderGroup)
+
+    if (orderError) {
+      console.error("UPDATE ORDER STATUS ERROR:", orderError)
+      return
+    }
+
+    console.log("Order status updated:", orderGroup, finalStatus)
+  } catch (error) {
+    console.error("updateOrderStatusByOrderGroup failed:", error)
   }
+}
 
   async function handleShip(jobId, orderGroup) {
     const carrier = prompt("Enter carrier (UPS or FedEx):")
@@ -83,40 +130,40 @@ function JobsPage({
       )
     )
 
-    await updateOrderStatusByOrderGroup(orderGroup, "Shipped")
+    await updateOrderStatusByOrderGroup(orderGroup)
   }
 
   async function handleWillCall(jobId, orderGroup) {
-    const { error } = await supabase
-      .from("jobs")
-      .update({
-        status: "Will Call",
-        carrier: null,
-        trackingNumber: null,
-      })
-      .eq("id", jobId)
+  const { error } = await supabase
+    .from("jobs")
+    .update({
+      status: "Will Call",
+      carrier: null,
+      trackingNumber: null,
+    })
+    .eq("id", jobId)
 
-    if (error) {
-      console.error("WILL CALL ERROR:", error)
-      alert("Failed to mark job as Will Call")
-      return
-    }
-
-    setJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job.id === jobId
-          ? {
-              ...job,
-              status: "Will Call",
-              carrier: null,
-              trackingNumber: null,
-            }
-          : job
-      )
-    )
-
-    await updateOrderStatusByOrderGroup(orderGroup, "Will Call")
+  if (error) {
+    console.error("WILL CALL ERROR:", error)
+    alert("Failed to mark job as Will Call")
+    return
   }
+
+  setJobs((prevJobs) =>
+    prevJobs.map((job) =>
+      job.id === jobId
+        ? {
+            ...job,
+            status: "Will Call",
+            carrier: null,
+            trackingNumber: null,
+          }
+        : job
+    )
+  )
+
+  await updateOrderStatusByOrderGroup(orderGroup)
+}
 
   async function handlePickedUp(jobId, orderGroup) {
     const { error } = await supabase
@@ -147,7 +194,7 @@ function JobsPage({
       )
     )
 
-    await updateOrderStatusByOrderGroup(orderGroup, "Picked Up")
+    await updateOrderStatusByOrderGroup(orderGroup)
   }
 
   function getPaymentStatus(orderGroup) {

@@ -188,8 +188,8 @@ function OrdersPage({
       return
     }
 
-    setJobs((prev) => [...prev, ...(jobData || newJobs)])
-    setOrders((prev) => [...(orderData || []), ...prev])
+await fetchOrders()
+await fetchJobs()
 
     setOrderItems([])
     setOrderNumber("")
