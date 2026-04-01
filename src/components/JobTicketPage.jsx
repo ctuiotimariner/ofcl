@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 
+function formatSizes(sizes) {
+  if (!sizes) return "—"
+
+  if (typeof sizes === "string") return sizes
+
+  return Object.entries(sizes)
+    .filter(([_, value]) => Number(value) > 0)
+    .map(([size, value]) => `${size}:${value}`)
+    .join(", ")
+}
+
 
 function JobTicketPage({ orders, setOrders, jobs, selectedOrder, scannedOrderNumber }) {
   
@@ -87,7 +98,9 @@ const stage = getOrderStage(orderJobs)
 
   return (
     <>
-      <h2>Job Ticket</h2>
+       <div className="sectionCard">
+      <h3 className="sectionTitle">Job Ticket</h3>
+
       <input
         placeholder="Search orders..."
         value={search}
@@ -209,7 +222,7 @@ const stage = getOrderStage(orderJobs)
 
               <p><strong>Design:</strong> {item.designName || '—'}</p>
               <p><strong>Method:</strong> {item.method || '—'}</p>
-              <p><strong>Sizes:</strong> {item.sizes || '—'}</p>
+              <p><strong>Sizes:</strong> {formatSizes(item.sizes)}</p>
             </div>
           ))}
         </div>
@@ -232,7 +245,7 @@ const stage = getOrderStage(orderJobs)
               <tr key={index}>
                 <td>{item.garment}</td>
                 <td>{item.qty}</td>
-                <td>{item.sizes}</td>
+                <td>{formatSizes(item.sizes)}</td>
                 <td>{item.placement}</td>
                 <td>{item.designName}</td>
                 <td>{item.method}</td>
@@ -242,8 +255,9 @@ const stage = getOrderStage(orderJobs)
           </tbody>
         </table>
       </div>
-    </>
-  )
+     </div>
+  </>
+)
 }
 
 export default JobTicketPage

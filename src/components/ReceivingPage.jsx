@@ -33,8 +33,9 @@ function ReceivingPage({ jobs, setJobs }) {
   }
 
   return (
-    <>
-      <h2>Receiving</h2>
+  <>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Receiving</h3>
 
       <div className="tableCard">
         <table>
@@ -74,8 +75,9 @@ function ReceivingPage({ jobs, setJobs }) {
           </tbody>
         </table>
       </div>
-    </>
-  )
+    </div> {/* 👈 THIS WAS MISSING */}
+  </>
+)
 }
 
 export default ReceivingPage

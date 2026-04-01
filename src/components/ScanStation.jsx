@@ -102,8 +102,8 @@ if (playedSuccess) {
   }
 
   return (
-    <>
-      <h2 className="scanTitle">SCAN STATION</h2>
+     <div className="sectionCard">
+      <h3 className="sectionTitle">Scan</h3>
       <p>Scan a ticket to move its jobs to the next stage.</p>
 
       <form onSubmit={handleScan}>
@@ -126,7 +126,7 @@ if (playedSuccess) {
       </button>
 
       {scanMessage && <p className="scanSuccess">{scanMessage}</p>}
-    </>
+    </div>
   )
 }
 

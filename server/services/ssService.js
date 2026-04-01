@@ -7,7 +7,7 @@ async function getSSPrice({ vendor, style, color, qty }) {
   const safeQty = Number(qty) || 0
 
   if (!hasRealCredentials) {
-    const mockPrice = 2.45
+    const mockPrice = 2.50
 
     return {
       vendor: vendor || "S&S Activewear",
@@ -39,7 +39,7 @@ async function getSSPrice({ vendor, style, color, qty }) {
   } catch (error) {
     console.error("S&S API error:", error.message)
 
-    const mockPrice = 2.45
+    const mockPrice = 2.50
 
     return {
       vendor: vendor || "S&S Activewear",

@@ -18,8 +18,14 @@ function InventoryPage({
   handleChangeQty,
   handleDeleteItem,
 }) {
+
+
+
   return (
-    <>
+  <>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Inventory</h3>
+
       <div className="stats">
         <div className="card">
           <div className="label">Total SKUs</div>
@@ -69,7 +75,9 @@ function InventoryPage({
           onChange={(e) => setQty(e.target.value)}
         />
 
-        <button type="submit">Add Item</button>
+        <button type="submit" className="primaryButton">
+          Add Item
+        </button>
       </form>
 
       <input
@@ -92,7 +100,7 @@ function InventoryPage({
 
           <tbody>
             {filteredInventory.map((item, index) => (
-              <tr key={index} className={item.qty <= 5 ? 'low-stock' : ''}>
+              <tr key={index} className={item.qty <= 5 ? "low-stock" : ""}>
                 <td>{item.sku}</td>
                 <td>{item.name}</td>
                 <td>{item.size}</td>
@@ -124,8 +132,9 @@ function InventoryPage({
           </tbody>
         </table>
       </div>
-    </>
-  )
+    </div>
+  </>
+)
 }
 
 export default InventoryPage

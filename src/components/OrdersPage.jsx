@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { supabase } from "../lib/supabase"
 import { getOrderStatusFromJobs } from "../utils/statusHelpers"
 
+const EMPTY_SIZE_ROWS = [{ size: "", qty: "" }]
+
 function OrdersPage({
   orders,
   jobs,
@@ -24,9 +26,8 @@ function OrdersPage({
   const [productColor, setProductColor] = useState("")
 
   const [garment, setGarment] = useState("")
-  const [qty, setQty] = useState("")
   const [sellPrice, setSellPrice] = useState("")
-  const [sizes, setSizes] = useState("")
+  const [sizeRows, setSizeRows] = useState(EMPTY_SIZE_ROWS)
   const [placement, setPlacement] = useState("")
   const [designName, setDesignName] = useState("")
   const [method, setMethod] = useState("")
@@ -35,52 +36,94 @@ function OrdersPage({
   const [orderItems, setOrderItems] = useState([])
   const [orderSearch, setOrderSearch] = useState("")
 
-  useEffect(() => {
-        const safeQty = Number(qty)
-
-        if (!vendor || !productStyle || !productColor || !safeQty) {
-          setVendorData(null)
-          return
-        }
-
-        getVendorData()
-      }, [vendor, productStyle, productColor, qty])
-
-  async function getVendorData() {
-  if (!vendor || !productStyle || !productColor || !qty) {
-  return
+  function handleSizeRowChange(index, field, value) {
+  setSizeRows((prev) =>
+    prev.map((row, i) =>
+      i === index ? { ...row, [field]: value } : row
+    )
+  )
 }
 
-  try {
-    console.log("SENDING:", {
-      vendor,
-      style: productStyle,
-      color: productColor,
-      qty: Number(qty),
-    })
+function addSizeRow() {
+  setSizeRows((prev) => [...prev, { size: "", qty: "" }])
+}
 
-    const response = await fetch("http://localhost:5001/api/vendor/ss", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+function removeSizeRow(index) {
+  setSizeRows((prev) => {
+    if (prev.length === 1) return [{ size: "", qty: "" }]
+    return prev.filter((_, i) => i !== index)
+  })
+}
+
+  const totalQty = sizeRows.reduce(
+  (sum, row) => sum + Number(row.qty || 0),
+  0
+)
+
+function buildSizesObject() {
+  return sizeRows.reduce((acc, row) => {
+    const cleanSize = row.size.trim()
+    const cleanQty = Number(row.qty || 0)
+
+    if (cleanSize && cleanQty > 0) {
+      acc[cleanSize] = cleanQty
+    }
+
+    return acc
+  }, {})
+}
+
+  function formatSizes(sizeObject) {
+    return Object.entries(sizeObject || {})
+      .filter(([_, value]) => Number(value) > 0)
+      .map(([size, value]) => `${size}:${value}`)
+      .join(", ")
+  }
+
+  useEffect(() => {
+    const safeQty = Number(totalQty)
+
+    if (!vendor || !productStyle || !productColor || !safeQty) {
+      setVendorData(null)
+      return
+    }
+
+    getVendorData()
+  }, [vendor, productStyle, productColor, totalQty])
+
+  async function getVendorData() {
+    if (!vendor || !productStyle || !productColor || !totalQty) return
+
+    try {
+      console.log("SENDING:", {
         vendor,
         style: productStyle,
         color: productColor,
-        qty: Number(qty),
-      }),
-    })
+        qty: Number(totalQty),
+      })
 
-    const data = await response.json()
-    console.log("RESPONSE DATA:", data)
+      const response = await fetch("http://localhost:5001/api/vendor/ss", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          vendor,
+          style: productStyle,
+          color: productColor,
+          qty: Number(totalQty),
+        }),
+      })
 
-    setVendorData(data.data)
-  } catch (error) {
-    console.error("Vendor fetch error:", error)
-    alert("Could not load vendor data")
+      const data = await response.json()
+      console.log("RESPONSE DATA:", data)
+
+      setVendorData(data.data)
+    } catch (error) {
+      console.error("Vendor fetch error:", error)
+      alert("Could not load vendor data")
+    }
   }
-}
 
   function handleAddItem() {
     if (!vendorData) {
@@ -88,10 +131,15 @@ function OrdersPage({
       return
     }
 
-    if (!garment || Number(qty) <= 0 || !method || !placement) return
+    if (!garment || Number(totalQty) <= 0 || !method || !placement) return
 
     const unitCost = Number(vendorData?.price || 0)
-    const itemQty = Number(qty || 0)
+    const itemQty = Number(totalQty || 0)
+
+
+
+
+
     const itemSellPrice = Number(sellPrice || 0)
 
     const profitEach = itemSellPrice - unitCost
@@ -102,7 +150,7 @@ function OrdersPage({
       garment,
       color: productColor,
       qty: itemQty,
-      sizes,
+      sizes: buildSizesObject(),
       placement,
       designName,
       method,
@@ -117,9 +165,8 @@ function OrdersPage({
     setOrderItems((prev) => [...prev, newItem])
 
     setGarment("")
-    setQty("")
     setSellPrice("")
-    setSizes("")
+    setSizeRows(EMPTY_SIZE_ROWS)
     setPlacement("")
     setDesignName("")
     setMethod("")
@@ -152,8 +199,8 @@ function OrdersPage({
     }, 0)
 
     const totalRevenue = orderItems.reduce((sum, item) => {
-  return sum + (Number(item.sellPrice) * Number(item.qty))
-}, 0)
+      return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+    }, 0)
 
     const newOrder = {
       orderNumber,
@@ -164,14 +211,13 @@ function OrdersPage({
       generalNotes,
       items: orderItems,
       totalProfit: totalOrderProfit,
-      totalRevenue: totalRevenue,
+      totalRevenue,
       paymentStatus: "Unpaid",
     }
 
-    const { data: jobData, error: jobError } = await supabase
+    const { error: jobError } = await supabase
       .from("jobs")
       .insert(newJobs)
-      .select()
 
     if (jobError) {
       console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
@@ -179,10 +225,9 @@ function OrdersPage({
       return
     }
 
-    const { data: orderData, error: orderError } = await supabase
+    const { error: orderError } = await supabase
       .from("orders")
       .insert([newOrder])
-      .select()
 
     if (orderError) {
       console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
@@ -190,8 +235,10 @@ function OrdersPage({
       return
     }
 
-
-await fetchJobs()
+    await fetchJobs()
+    if (fetchOrders) {
+      await fetchOrders()
+    }
 
     setOrderItems([])
     setOrderNumber("")
@@ -203,6 +250,13 @@ await fetchJobs()
     setVendorData(null)
     setProductStyle("")
     setProductColor("")
+    setGarment("")
+    setSellPrice("")
+    setSizeRows(EMPTY_SIZE_ROWS)
+    setPlacement("")
+    setDesignName("")
+    setMethod("")
+    setMockup(null)
   }
 
   async function handleDeleteOrder(orderId, orderNumber) {
@@ -291,32 +345,18 @@ await fetchJobs()
 
   const isReadyToAdd =
     !!vendor &&
-    Number(qty) > 0 &&
+    Number(totalQty) > 0 &&
     !!vendorData &&
     !!vendorData.price
 
   return (
-    <>
-      <h2>Create Order</h2>
+  <>
+    <h2>Orders</h2>
 
-      {vendorData && (
-  <div>
-    <p><strong>Vendor:</strong> {vendorData.vendor}</p>
-    <p><strong>Product:</strong> {vendorData.product}</p>
-    <p><strong>Color:</strong> {vendorData.color}</p>
-    <p><strong>Qty:</strong> {vendorData.qty}</p>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Order Details</h3>
 
-    <p>
-      <strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}
-    </p>
-
-    <p>
-      <strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}
-    </p>
-  </div>
-)}
-
-      <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={(e) => e.preventDefault()} className="orderGrid">
         <input
           placeholder="Order Number"
           value={orderNumber}
@@ -349,17 +389,18 @@ await fetchJobs()
         />
 
         <input
+          className="fullWidth"
           placeholder="General Notes"
           value={generalNotes}
           onChange={(e) => setGeneralNotes(e.target.value)}
         />
       </form>
+    </div>
 
-      <h3>Vendor Pricing</h3>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Vendor Pricing</h3>
 
-      <div>
-        <p>Using order vendor: {vendor || "No vendor selected"}</p>
-
+      <div className="orderGrid">
         <input
           type="text"
           placeholder="Product Style"
@@ -374,22 +415,44 @@ await fetchJobs()
           onChange={(e) => setProductColor(e.target.value)}
         />
 
-        <button type="button" onClick={getVendorData}>
+        <button
+          type="button"
+          onClick={getVendorData}
+          className="primaryButton"
+        >
           Get Live Price
         </button>
-
-        <p
-          style={{
-            marginTop: "8px",
-            fontWeight: 600,
-            color: vendorData ? "#4cd964" : "#ffcc66",
-          }}
-        >
-          {vendorData ? "Live price ready" : "Live price not loaded"}
-        </p>
       </div>
 
-      <h3>Add Order Item</h3>
+      <p className="mutedText" style={{ marginTop: "10px" }}>
+        Using order vendor: {vendor || "No vendor selected"}
+      </p>
+
+      <p
+        className="mutedText"
+        style={{
+          marginTop: "8px",
+          fontWeight: 600,
+          color: vendorData ? "#4cd964" : "#ffcc66",
+        }}
+      >
+        {vendorData ? "Live price ready" : "Live price not loaded"}
+      </p>
+
+      {vendorData && (
+        <div style={{ marginTop: "14px" }}>
+          <p><strong>Vendor:</strong> {vendorData.vendor}</p>
+          <p><strong>Product:</strong> {vendorData.product}</p>
+          <p><strong>Color:</strong> {vendorData.color}</p>
+          <p><strong>Qty:</strong> {vendorData.qty}</p>
+          <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
+          <p><strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}</p>
+        </div>
+      )}
+    </div>
+
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Add Order Item</h3>
 
       <form
         onSubmit={(e) => {
@@ -397,76 +460,128 @@ await fetchJobs()
           handleAddItem()
         }}
       >
-        <input
-          placeholder="Garment"
-          value={garment}
-          onChange={(e) => setGarment(e.target.value)}
-        />
-
-        <div className="inputWithLabel">
-          <span>Qty</span>
+        <div className="orderGrid">
           <input
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(e.target.value)}
+            placeholder="Garment"
+            value={garment}
+            onChange={(e) => setGarment(e.target.value)}
           />
+
+          <div className="inputWithLabel">
+            <span>Qty</span>
+            <input type="number" value={totalQty} readOnly />
+          </div>
+
+          <div className="inputWithLabel">
+            <span>Sell Price</span>
+            <input
+              type="number"
+              step="0.01"
+              value={sellPrice}
+              onChange={(e) => setSellPrice(e.target.value)}
+            />
+          </div>
+
+          <input
+            placeholder="Placement"
+            value={placement}
+            onChange={(e) => setPlacement(e.target.value)}
+          />
+
+          <input
+            placeholder="Design Name"
+            value={designName}
+            onChange={(e) => setDesignName(e.target.value)}
+          />
+
+          <select value={method} onChange={(e) => setMethod(e.target.value)}>
+            <option value="">Print Method</option>
+            <option>Embroidery</option>
+            <option>DTF Printing</option>
+          </select>
         </div>
 
-        <div className="inputWithLabel">
-          <span>Sell Price</span>
-          <input
-            type="number"
-            step="0.01"
-            value={sellPrice}
-            onChange={(e) => setSellPrice(e.target.value)}
-          />
+        <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+          <div className="sizeBox">
+            <h4 className="sectionTitle" style={{ marginBottom: "10px" }}>
+              Size Breakdown
+            </h4>
+
+            <div className="sizeRowsWrap">
+              {sizeRows.map((row, index) => (
+                <div key={index} className="sizeRow">
+                  <input
+                    type="text"
+                    placeholder="Size"
+                    value={row.size}
+                    onChange={(e) =>
+                      handleSizeRowChange(index, "size", e.target.value.toUpperCase())
+                    }
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Qty"
+                    value={row.qty}
+                    onChange={(e) =>
+                      handleSizeRowChange(index, "qty", e.target.value)
+                    }
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => removeSizeRow(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+
+              <button type="button" onClick={addSizeRow}>
+                + Add Size
+              </button>
+            </div>
+          </div>
         </div>
 
-        <input
-          placeholder="Sizes / Notes"
-          value={sizes}
-          onChange={(e) => setSizes(e.target.value)}
-        />
-
-        <input
-          placeholder="Placement"
-          value={placement}
-          onChange={(e) => setPlacement(e.target.value)}
-        />
-
-        <input
-          placeholder="Design Name"
-          value={designName}
-          onChange={(e) => setDesignName(e.target.value)}
-        />
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const file = e.target.files[0]
-            if (!file) return
-
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              setMockup(reader.result)
-            }
-            reader.readAsDataURL(file)
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            alignItems: "center",
+            flexWrap: "wrap",
           }}
-        />
+        >
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0]
+              if (!file) return
 
-        <select value={method} onChange={(e) => setMethod(e.target.value)}>
-          <option value="">Print Method</option>
-          <option>Embroidery</option>
-          <option>DTF Printing</option>
-        </select>
+              const reader = new FileReader()
+              reader.onloadend = () => {
+                setMockup(reader.result)
+              }
+              reader.readAsDataURL(file)
+            }}
+          />
 
-        <button type="submit" disabled={!isReadyToAdd}>
-          Add Item
-        </button>
+          <button
+            type="submit"
+            disabled={!isReadyToAdd}
+            className="primaryButton"
+          >
+            Add Item
+          </button>
+        </div>
       </form>
+    </div>
 
-      <div className="tableCard">
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Order Items</h3>
+
+      <div className="tableCard" style={{ marginTop: 0 }}>
         <table>
           <thead>
             <tr>
@@ -486,7 +601,7 @@ await fetchJobs()
               <tr key={index}>
                 <td>{item.garment}</td>
                 <td>{item.qty}</td>
-                <td>{item.sizes}</td>
+                <td>{formatSizes(item.sizes)}</td>
                 <td>{item.placement}</td>
                 <td>{item.designName}</td>
                 <td>{item.method}</td>
@@ -498,11 +613,18 @@ await fetchJobs()
         </table>
       </div>
 
-      <button type="button" onClick={handleCreateOrder}>
+      <button
+        type="button"
+        onClick={handleCreateOrder}
+        className="primaryButton"
+        style={{ marginTop: "16px" }}
+      >
         Create Order
       </button>
+    </div>
 
-      <h3 style={{ marginTop: "30px" }}>Saved Orders</h3>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Saved Orders</h3>
 
       <input
         placeholder="Search orders..."
@@ -586,8 +708,9 @@ await fetchJobs()
           </tbody>
         </table>
       </div>
-    </>
-  )
+    </div>
+  </>
+)
 }
 
 export default OrdersPage

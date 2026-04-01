@@ -106,26 +106,39 @@ useEffect(() => {
   const departmentData = useMemo(() => {
     return departments.map((dept) => {
 
-      const printing = sortJobsByPriority(
-        jobs.filter((job) => {
-          const methodMatches =
-            String(job.method || "").trim().toLowerCase() ===
-            String(dept.method || "").trim().toLowerCase()
+     const printing = sortJobsByPriority(
+  jobs.filter((job) => {
+    const methodMatches =
+      String(job.method || "").trim().toLowerCase() ===
+      String(dept.method || "").trim().toLowerCase()
 
-          return methodMatches && job.status === "Printing"
-        })
-      )
+    return methodMatches && job.status === "Printing"
+  })
+)
 
-      const queue = sortJobsByPriority(
-        jobs.filter((job) => {
-          const methodMatches =
-            String(job.method || "").trim().toLowerCase() ===
-            String(dept.method || "").trim().toLowerCase()
+const queue = sortJobsByPriority(
+  jobs.filter((job) => {
+    const methodMatches =
+      String(job.method || "").trim().toLowerCase() ===
+      String(dept.method || "").trim().toLowerCase()
 
-          return methodMatches && job.status === "Waiting for Blanks"
-        })
-      )
+    return methodMatches && job.status === "Waiting for Blanks"
+  })
+)
 
+const standby = sortJobsByPriority(
+  jobs.filter((job) => {
+    const methodMatches =
+      String(job.method || "").trim().toLowerCase() ===
+      String(dept.method || "").trim().toLowerCase()
+
+    return (
+      methodMatches &&
+      (job.status === "Email Received" ||
+        job.status === "Waiting Approval")
+    )
+  })
+)
       const printingCount = printing.length
       const queueCount = queue.length
 
@@ -156,6 +169,7 @@ useEffect(() => {
         method: dept.method,
         printing,
         queue,
+        standby,
         printingCount,
         queueCount,
         totalQty: totalPieces,
@@ -312,6 +326,7 @@ useEffect(() => {
         Full Screen Mode
       </button>
 
+<div className="sectionCard">
       <div className="productionScreen">
         <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
           
@@ -375,29 +390,57 @@ useEffect(() => {
                 )}
               </div>
 
-              {/* RIGHT - QUEUE */}
-              <div>
-                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
-                  ⏭ NEXT UP
-                </h2>
+              {/* RIGHT SIDE */}
+<div>
+  {/* NEXT UP */}
+  <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
+    ⏭ NEXT UP
+  </h2>
 
-                {activeDepartment.queue.length === 0 && (
-                  <p>No upcoming jobs</p>
-                )}
+  {activeDepartment.queue.length === 0 && (
+    <p>No upcoming jobs</p>
+  )}
 
-                {activeDepartment.queue.slice(0, 6).map((job) =>
-                  renderJobCard(job)
-                )}
-              </div>
+  {activeDepartment.queue.slice(0, 5).map((job) =>
+    renderJobCard(job)
+  )}
 
-            </div>
+  {/* ON DECK */}
+  <div style={{ marginTop: "30px" }}>
+    <h2 style={{ fontSize: "24px", marginBottom: "10px", opacity: 0.8 }}>
+      📦 ON DECK
+    </h2>
+
+    {activeDepartment.standby.length === 0 && (
+      <p style={{ opacity: 0.6 }}>No standby jobs</p>
+    )}
+
+    {activeDepartment.standby.slice(0, 5).map((job) => (
+      <div
+        key={job.id}
+        style={{
+          padding: "10px",
+          marginBottom: "10px",
+          borderRadius: "8px",
+          border: "1px solid rgba(0,255,153,0.2)",
+          background: "rgba(255,255,255,0.03)",
+          fontSize: "14px"
+        }}
+      >
+        <strong>{job.orderGroup}</strong> — {job.qty} pcs
+      </div>
+    ))}
+  </div>
+</div>
+
+                        </div>
 
         </div>
       </div>
-    </>
-  )
+    </div>
+  </>
+)
 }
-
 
 
 export default ProductionBoard

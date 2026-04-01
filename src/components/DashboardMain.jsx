@@ -32,8 +32,9 @@ const fixedDueTodayJobs = jobs.filter((job) => {
 
 
   return (
-    <div>
-      <h2>Dashboard</h2>
+     <>
+    <div className="sectionCard">
+      <h3 className="sectionTitle">Dashboard</h3>
 
       <div
   style={{
@@ -131,7 +132,7 @@ const fixedDueTodayJobs = jobs.filter((job) => {
             </p>
         </div>
 
-      <div className="card" style={{ marginTop: "20px" }}>
+            <div className="card" style={{ marginTop: "20px" }}>
         <div className="label">
           <img src="/icons/work.png" className="pixelIcon" />
           Today’s Jobs
@@ -142,24 +143,25 @@ const fixedDueTodayJobs = jobs.filter((job) => {
         ) : (
           <div style={{ marginTop: "10px" }}>
             {fixedDueTodayJobs.map((job) => (
-                <div
+              <div
                 key={job.id}
                 className="todayJob"
                 style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    borderRadius: "8px",
-                    background: "rgba(255,255,255,0.05)"
+                  padding: "10px",
+                  marginBottom: "10px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.05)"
                 }}
-                >
+              >
                 {job.orderGroup} - {job.method} - {job.qty}
-                </div>
+              </div>
             ))}
-            </div>
+          </div>
         )}
       </div>
     </div>
-  )
+  </>
+)
 }
 
 export default DashboardMain

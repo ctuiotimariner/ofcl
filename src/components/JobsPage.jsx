@@ -239,7 +239,8 @@ if (allPickedUp) {
 
   return (
     <>
-      <h2>Jobs</h2>
+      <div className="sectionCard">
+      <h3 className="sectionTitle">Jobs</h3>
 
       <div className="productionBoard">
         <div className="stageCard blanks">
@@ -392,7 +393,14 @@ if (allPickedUp) {
                         <td>{job.garment}</td>
                         <td>{job.qty}</td>
                         <td>{job.dueDate}</td>
-                        <td>{job.sizes}</td>
+                        <td>
+                          {typeof job?.sizes === "string"
+                            ? job.sizes
+                            : Object.entries(job?.sizes || {})
+                                .filter(([_, value]) => Number(value) > 0)
+                                .map(([size, value]) => `${size}:${value}`)
+                                .join(", ")}
+                        </td>
                         <td>{job.placement}</td>
                         <td>{job.designName}</td>
 
@@ -558,9 +566,10 @@ if (allPickedUp) {
             ))}
           </tbody>
         </table>
-      </div>
-    </>
-  )
+            </div>
+    </div>
+  </>
+)
 }
 
 export default JobsPage
