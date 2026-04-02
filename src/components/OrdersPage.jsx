@@ -20,10 +20,12 @@ function OrdersPage({
   const [poNumber, setPoNumber] = useState("")
   const [dueDate, setDueDate] = useState("")
   const [generalNotes, setGeneralNotes] = useState("")
+  const [orderType, setOrderType] = useState("") 
 
   const [vendorData, setVendorData] = useState(null)
   const [productStyle, setProductStyle] = useState("")
   const [productColor, setProductColor] = useState("")
+
 
   const [garment, setGarment] = useState("")
   const [sellPrice, setSellPrice] = useState("")
@@ -33,8 +35,14 @@ function OrdersPage({
   const [method, setMethod] = useState("")
   const [mockup, setMockup] = useState(null)
 
+
   const [orderItems, setOrderItems] = useState([])
   const [orderSearch, setOrderSearch] = useState("")
+
+
+
+
+
 
   function handleSizeRowChange(index, field, value) {
   setSizeRows((prev) =>
@@ -125,233 +133,361 @@ function buildSizesObject() {
     }
   }
 
-  function handleAddItem() {
-    if (!vendorData) {
-      alert("Click 'Get Live Price' before adding item")
-      return
-    }
-
-    if (!garment || Number(totalQty) <= 0 || !method || !placement) return
-
-    const unitCost = Number(vendorData?.price || 0)
-    const itemQty = Number(totalQty || 0)
 
 
 
 
 
-    const itemSellPrice = Number(sellPrice || 0)
 
-    const profitEach = itemSellPrice - unitCost
-    const totalProfit = profitEach * itemQty
 
-    const newItem = {
-      vendor,
-      garment,
-      color: productColor,
-      qty: itemQty,
-      sizes: buildSizesObject(),
-      placement,
-      designName,
-      method,
-      mockup,
-      unitPrice: unitCost,
-      totalPrice: unitCost * itemQty,
-      sellPrice: itemSellPrice,
-      profitEach,
-      totalProfit,
-    }
 
-    setOrderItems((prev) => [...prev, newItem])
+function handleAddItem() {
+              const needsVendorPricing = orderType === "Full Production"
 
-    setGarment("")
-    setSellPrice("")
-    setSizeRows(EMPTY_SIZE_ROWS)
-    setPlacement("")
-    setDesignName("")
-    setMethod("")
-    setMockup(null)
-    setVendorData(null)
-  }
+              if (needsVendorPricing && !vendorData) {
+                alert("Click 'Get Live Price' before adding item")
+                return
+              }
 
-  async function handleCreateOrder() {
-    if (!orderNumber || !customerName || orderItems.length === 0) return
+              if (!garment || Number(totalQty) <= 0 || !method || !placement) return
 
-    const newJobs = orderItems.map((item) => ({
-      orderGroup: orderNumber,
-      client: customerName,
-      garment: item.garment,
-      qty: item.qty,
-      sizes: item.sizes,
-      placement: item.placement,
-      designName: item.designName,
-      method: item.method,
-      mockup: item.mockup,
-      status: "Waiting for Blanks",
-      dueDate,
-      vendor,
-      poNumber,
-      delivered: false,
-    }))
+              const unitCost = Number(vendorData?.price || 0)
+              const itemQty = Number(totalQty || 0)
+              const itemSellPrice = Number(sellPrice || 0)
 
-    const totalOrderProfit = orderItems.reduce((sum, item) => {
-      return sum + Number(item.totalProfit || 0)
-    }, 0)
+              const profitEach = itemSellPrice - unitCost
+              const totalProfit = profitEach * itemQty
 
-    const totalRevenue = orderItems.reduce((sum, item) => {
-      return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
-    }, 0)
+              const newItem = {
+                vendor,
+                garment,
+                color: productColor,
+                qty: itemQty,
+                sizes: buildSizesObject(),
+                placement,
+                designName,
+                method,
+                mockup,
+                unitPrice: unitCost,
+                totalPrice: unitCost * itemQty,
+                sellPrice: itemSellPrice,
+                profitEach,
+                totalProfit,
+              }
 
-    const newOrder = {
-      orderNumber,
-      customerName,
-      vendor,
-      poNumber,
-      dueDate,
-      generalNotes,
-      items: orderItems,
-      totalProfit: totalOrderProfit,
-      totalRevenue,
-      paymentStatus: "Unpaid",
-    }
+              setOrderItems((prev) => [...prev, newItem])
 
-    const { error: jobError } = await supabase
-      .from("jobs")
-      .insert(newJobs)
+              setGarment("")
+              setSellPrice("")
+              setSizeRows(EMPTY_SIZE_ROWS)
+              setPlacement("")
+              setDesignName("")
+              setMethod("")
+              setMockup(null)
+              setVendorData(null)
+            }
 
-    if (jobError) {
-      console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
-      alert(`Jobs failed: ${jobError.message}`)
-      return
-    }
 
-    const { error: orderError } = await supabase
-      .from("orders")
-      .insert([newOrder])
 
-    if (orderError) {
-      console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
-      alert(`Order failed: ${orderError.message}`)
-      return
-    }
 
-    await fetchJobs()
-    if (fetchOrders) {
-      await fetchOrders()
-    }
 
-    setOrderItems([])
-    setOrderNumber("")
-    setCustomerName("")
-    setVendor("")
-    setPoNumber("")
-    setDueDate("")
-    setGeneralNotes("")
-    setVendorData(null)
-    setProductStyle("")
-    setProductColor("")
-    setGarment("")
-    setSellPrice("")
-    setSizeRows(EMPTY_SIZE_ROWS)
-    setPlacement("")
-    setDesignName("")
-    setMethod("")
-    setMockup(null)
-  }
+
+
+
+
+
+
+
+async function handleCreateOrder() {
+
+                  const needsVendorPricing = orderType === "Full Production"
+
+
+
+  
+
+
+
+
+                  if (
+                    !orderNumber ||
+                    !customerName ||
+                    !orderType ||
+                    orderItems.length === 0 ||
+                    (needsVendorPricing && !vendor)
+                  ) {
+  console.log("STOPPED BY VALIDATION")
+                    return
+                  }
+  console.log("PASSED VALIDATION")
+
+
+                  const newJobs = orderItems.map((item) => ({
+                    orderGroup: orderNumber,
+                    client: customerName,
+                    orderType,
+                    garment: item.garment,
+                    qty: item.qty,
+                    sizes: item.sizes,
+                    placement: item.placement,
+                    designName: item.designName,
+                    method: item.method,
+                    mockup: item.mockup,
+                    status: "Waiting for Blanks",
+                    dueDate: dueDate || null,
+                    vendor,
+                    poNumber,
+                    delivered: false,
+                  }))
+
+                  const totalOrderProfit = orderItems.reduce((sum, item) => {
+                    return sum + Number(item.totalProfit || 0)
+                  }, 0)
+
+                  
+                  const totalRevenue = orderItems.reduce((sum, item) => {
+                    return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+                  }, 0)
+
+                  const newOrder = {
+                    orderNumber,
+                    customerName,
+                    orderType,
+                    vendor,
+                    poNumber,
+                    dueDate: dueDate || null,
+                    generalNotes,
+                    items: orderItems,
+                    totalProfit: totalOrderProfit,
+                    totalRevenue,
+                    paymentStatus: "Unpaid",
+                  }
+
+                  const { error: jobError } = await supabase
+                    .from("jobs")
+                    .insert(newJobs)
+
+                  if (jobError) {
+                    console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
+                    alert(`Jobs failed: ${jobError.message}`)
+                    return
+                  }
+
+                  const { error: orderError } = await supabase
+                    .from("orders")
+                    .insert([newOrder])
+
+                  if (orderError) {
+                    console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
+                    alert(`Order failed: ${orderError.message}`)
+                    return
+                  }
+
+                  await fetchJobs()
+                  if (fetchOrders) {
+                    await fetchOrders()
+                  }
+
+                  setOrderItems([])
+                  setOrderNumber("")
+                  setCustomerName("")
+                  setOrderType("")
+                  setVendor("")
+                  setPoNumber("")
+                  setDueDate("")
+                  setGeneralNotes("")
+                  setVendorData(null)
+                  setProductStyle("")
+                  setProductColor("")
+                  setGarment("")
+                  setSellPrice("")
+                  setSizeRows(EMPTY_SIZE_ROWS)
+                  setPlacement("")
+                  setDesignName("")
+                  setMethod("")
+                  setMockup(null)
+                }
+
+
+
+
+
+
+
+
+
+
+
+
 
   async function handleDeleteOrder(orderId, orderNumber) {
-    const confirmed = window.confirm("Delete this order and all related jobs?")
-    if (!confirmed) return
+                        const confirmed = window.confirm("Delete this order and all related jobs?")
+                        if (!confirmed) return
 
-    const { error: jobsError } = await supabase
-      .from("jobs")
-      .delete()
-      .eq("orderGroup", orderNumber)
+                        const { error: jobsError } = await supabase
+                          .from("jobs")
+                          .delete()
+                          .eq("orderGroup", orderNumber)
 
-    if (jobsError) {
-      console.error("DELETE JOBS ERROR:", jobsError)
-      alert("Failed to delete related jobs")
-      return
-    }
+                        if (jobsError) {
+                          console.error("DELETE JOBS ERROR:", jobsError)
+                          alert("Failed to delete related jobs")
+                          return
+                        }
 
-    const { error: orderError } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", orderId)
+                        const { error: orderError } = await supabase
+                          .from("orders")
+                          .delete()
+                          .eq("id", orderId)
 
-    if (orderError) {
-      console.error("DELETE ORDER ERROR:", orderError)
-      alert("Failed to delete order")
-      return
-    }
+                        if (orderError) {
+                          console.error("DELETE ORDER ERROR:", orderError)
+                          alert("Failed to delete order")
+                          return
+                        }
 
-    setOrders((prev) => prev.filter((order) => order.id !== orderId))
-    setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
-  }
+                        setOrders((prev) => prev.filter((order) => order.id !== orderId))
+                        setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
+                      }
+
+
+
+
+
+
+
+
+
 
   async function handleMarkPaid(orderId) {
-    const { error } = await supabase
-      .from("orders")
-      .update({ paymentStatus: "Paid" })
-      .eq("id", orderId)
+                      const { error } = await supabase
+                        .from("orders")
+                        .update({ paymentStatus: "Paid" })
+                        .eq("id", orderId)
 
-    if (error) {
-      console.error("MARK PAID ERROR:", error)
-      alert("Failed to update payment status")
-      return
-    }
+                      if (error) {
+                        console.error("MARK PAID ERROR:", error)
+                        alert("Failed to update payment status")
+                        return
+                      }
 
-    const { data, error: fetchError } = await supabase
-      .from("orders")
-      .select("*")
-      .order("id", { ascending: false })
+                      const { data, error: fetchError } = await supabase
+                        .from("orders")
+                        .select("*")
+                        .order("id", { ascending: false })
 
-    if (fetchError) {
-      console.error("REFETCH ORDERS ERROR:", fetchError)
-      return
-    }
+                      if (fetchError) {
+                        console.error("REFETCH ORDERS ERROR:", fetchError)
+                        return
+                      }
 
-    setOrders(data || [])
-  }
+                      setOrders(data || [])
+                    }
+
+
+
+
+
+
+
+
 
   function getOrderStatusBadge(status) {
-    switch (status) {
-      case "Waiting for Blanks":
-        return "status-badge status-waiting"
-      case "Printing":
-        return "status-badge status-printing"
-      case "Completed":
-        return "status-badge status-completed"
-      case "Will Call":
-        return "status-badge status-will-call"
-      case "Picked Up":
-        return "status-badge status-picked-up"
-      case "Shipped":
-        return "status-badge status-shipped"
-      default:
-        return "status-badge"
-    }
-  }
+                  switch (status) {
+                    case "Waiting for Blanks":
+                      return "status-badge status-waiting"
+                    case "Printing":
+                      return "status-badge status-printing"
+                    case "Completed":
+                      return "status-badge status-completed"
+                    case "Will Call":
+                      return "status-badge status-will-call"
+                    case "Picked Up":
+                      return "status-badge status-picked-up"
+                    case "Shipped":
+                      return "status-badge status-shipped"
+                    default:
+                      return "status-badge"
+                  }
+                }
+
+
+
+
+
+
+
+
 
   const filteredOrders = orders.filter((order) => {
-    const search = orderSearch.toLowerCase()
+                            const search = orderSearch.toLowerCase()
 
-    return (
-      order.orderNumber.toLowerCase().includes(search) ||
-      order.customerName.toLowerCase().includes(search) ||
-      order.vendor.toLowerCase().includes(search)
-    )
-  })
+                            return (
+                              (order.orderNumber || "").toLowerCase().includes(search) ||
+                              (order.customerName || "").toLowerCase().includes(search) ||
+                              (order.vendor || "").toLowerCase().includes(search)
+                            )
+                          })
 
-  const isReadyToAdd =
-    !!vendor &&
-    Number(totalQty) > 0 &&
-    !!vendorData &&
-    !!vendorData.price
+
+
+
+
+
+const needsVendorPricing = orderType === "Full Production"
+
+
+
+
+
+
+
+
+
+
+const isReadyToAdd =
+                !!garment &&
+                Number(totalQty) > 0 &&
+                !!method &&
+                !!placement &&
+                (
+                  !needsVendorPricing ||
+                  (!!vendorData && !!vendorData.price)
+                )
+
+
+
+
+
+
+
+
+
+
+
+const isReadyToCreate =
+                    !!orderNumber &&
+                    !!customerName &&
+                    !!orderType &&
+                    orderItems.length > 0 &&
+                    (
+                      !needsVendorPricing ||
+                      !!vendor
+                    )
+
+
+
+
+
+
+
+
+
+
+
 
   return (
   <>
-    <h2>Orders</h2>
 
     <div className="sectionCard">
       <h3 className="sectionTitle">Order Details</h3>
@@ -363,17 +499,31 @@ function buildSizesObject() {
           onChange={(e) => setOrderNumber(e.target.value)}
         />
 
-        <input
-          placeholder="Customer Name"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-        />
+         <input
+            placeholder="Customer Name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+
+        <select
+          className="inputField"
+          value={orderType}
+          onChange={(e) => setOrderType(e.target.value)}
+        >
+          <option value="" disabled>
+            Order Type
+          </option>
+          <option value="Full Production">Full Production</option>
+          <option value="Customer Supplied">Customer Supplied</option>
+          <option value="Split Ship">Split Ship</option>
+        </select>
 
         <select value={vendor} onChange={(e) => setVendor(e.target.value)}>
           <option value="">Select Vendor</option>
           <option value="S&S Activewear">S&S Activewear</option>
           <option value="SanMar">SanMar</option>
           <option value="AS Colour">AS Colour</option>
+          <option value="Other">Other</option>
         </select>
 
         <input
@@ -397,60 +547,61 @@ function buildSizesObject() {
       </form>
     </div>
 
-    <div className="sectionCard">
-      <h3 className="sectionTitle">Vendor Pricing</h3>
+{orderType === "Full Production" && (     
+         <div className="sectionCard">
+              <h3 className="sectionTitle">Vendor Pricing</h3>
 
-      <div className="orderGrid">
-        <input
-          type="text"
-          placeholder="Product Style"
-          value={productStyle}
-          onChange={(e) => setProductStyle(e.target.value)}
-        />
+              <div className="orderGrid">
+                <input
+                  type="text"
+                  placeholder="Product Style"
+                  value={productStyle}
+                  onChange={(e) => setProductStyle(e.target.value)}
+                />
 
-        <input
-          type="text"
-          placeholder="Color"
-          value={productColor}
-          onChange={(e) => setProductColor(e.target.value)}
-        />
+                <input
+                  type="text"
+                  placeholder="Color"
+                  value={productColor}
+                  onChange={(e) => setProductColor(e.target.value)}
+                />
 
-        <button
-          type="button"
-          onClick={getVendorData}
-          className="primaryButton"
-        >
-          Get Live Price
-        </button>
-      </div>
+                <button
+                  type="button"
+                  onClick={getVendorData}
+                  className="primaryButton"
+                >
+                  Get Live Price
+                </button>
+              </div>
 
-      <p className="mutedText" style={{ marginTop: "10px" }}>
-        Using order vendor: {vendor || "No vendor selected"}
-      </p>
+              <p className="mutedText" style={{ marginTop: "10px" }}>
+                Using order vendor: {vendor || "No vendor selected"}
+              </p>
 
-      <p
-        className="mutedText"
-        style={{
-          marginTop: "8px",
-          fontWeight: 600,
-          color: vendorData ? "#4cd964" : "#ffcc66",
-        }}
-      >
-        {vendorData ? "Live price ready" : "Live price not loaded"}
-      </p>
+              <p
+                className="mutedText"
+                style={{
+                  marginTop: "8px",
+                  fontWeight: 600,
+                  color: vendorData ? "#4cd964" : "#ffcc66",
+                }}
+              >
+                {vendorData ? "Live price ready" : "Live price not loaded"}
+              </p>
 
-      {vendorData && (
-        <div style={{ marginTop: "14px" }}>
-          <p><strong>Vendor:</strong> {vendorData.vendor}</p>
-          <p><strong>Product:</strong> {vendorData.product}</p>
-          <p><strong>Color:</strong> {vendorData.color}</p>
-          <p><strong>Qty:</strong> {vendorData.qty}</p>
-          <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
-          <p><strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}</p>
-        </div>
-      )}
-    </div>
-
+              {vendorData && (
+                <div style={{ marginTop: "14px" }}>
+                  <p><strong>Vendor:</strong> {vendorData.vendor}</p>
+                  <p><strong>Product:</strong> {vendorData.product}</p>
+                  <p><strong>Color:</strong> {vendorData.color}</p>
+                  <p><strong>Qty:</strong> {vendorData.qty}</p>
+                  <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
+                  <p><strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}</p>
+                </div>
+              )}
+            </div>
+          )}
     <div className="sectionCard">
       <h3 className="sectionTitle">Add Order Item</h3>
 
@@ -618,6 +769,8 @@ function buildSizesObject() {
         onClick={handleCreateOrder}
         className="primaryButton"
         style={{ marginTop: "16px" }}
+        disabled={!isReadyToCreate}
+
       >
         Create Order
       </button>
