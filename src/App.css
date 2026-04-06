@@ -1240,7 +1240,7 @@ h3 {
 
 .roleButtons button:hover {
   border-color: #00ff99;
-  color: #252525;
+  color: #000000;
 
   box-shadow:
     0 0 8px rgba(0, 255, 153, 0.4),

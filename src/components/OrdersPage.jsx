@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import { supabase } from "../lib/supabase"
 import { getOrderStatusFromJobs } from "../utils/statusHelpers"
 
+
+
+
 const EMPTY_SIZE_ROWS = [{ size: "", qty: "" }]
 
 function OrdersPage({
@@ -21,7 +24,7 @@ function OrdersPage({
   const [dueDate, setDueDate] = useState("")
   const [generalNotes, setGeneralNotes] = useState("")
   const [orderType, setOrderType] = useState("") 
-
+  const [productsData, setProductsData] = useState([])
   const [vendorData, setVendorData] = useState(null)
   const [productStyle, setProductStyle] = useState("")
   const [productColor, setProductColor] = useState("")
@@ -39,7 +42,9 @@ function OrdersPage({
   const [orderItems, setOrderItems] = useState([])
   const [orderSearch, setOrderSearch] = useState("")
 
-
+useEffect(() => {
+  loadProducts()
+}, [])
 
 
 
@@ -507,7 +512,17 @@ const summaryMargin =
     : 0
 
 
+async function loadProducts() {
+  try {
+    const response = await fetch("http://localhost:5001/api/products")
+    const data = await response.json()
 
+    console.log("PRODUCTS FROM BACKEND:", data)
+    setProductsData(data)
+  } catch (error) {
+    console.error("Failed to load products:", error)
+  }
+}
 
 
 
@@ -519,6 +534,8 @@ const summaryMargin =
 
   return (
   <>
+
+  
 
     <div className="sectionCard">
       <h3 className="sectionTitle">Order Details</h3>

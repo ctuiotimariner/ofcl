@@ -3,6 +3,7 @@ const cors = require("cors")
 const dotenv = require("dotenv")
 
 const { getSSPrice } = require("./services/ssService")
+const productRoutes = require("./routes/products")
 
 dotenv.config()
 
@@ -11,6 +12,8 @@ const PORT = process.env.PORT || 5001
 
 app.use(cors())
 app.use(express.json())
+
+app.use("/api", productRoutes)
 
 app.get("/", (req, res) => {
   res.send("OFCL backend server is running")
