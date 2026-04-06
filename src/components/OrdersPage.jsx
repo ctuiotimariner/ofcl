@@ -202,13 +202,6 @@ async function handleCreateOrder() {
 
                   const needsVendorPricing = orderType === "Full Production"
 
-
-
-  
-
-
-
-
                   if (
                     !orderNumber ||
                     !customerName ||
@@ -216,11 +209,11 @@ async function handleCreateOrder() {
                     orderItems.length === 0 ||
                     (needsVendorPricing && !vendor)
                   ) {
-  console.log("STOPPED BY VALIDATION")
+ 
                     return
                   }
-  console.log("PASSED VALIDATION")
 
+                  
 
                   const newJobs = orderItems.map((item) => ({
                     orderGroup: orderNumber,
@@ -244,10 +237,28 @@ async function handleCreateOrder() {
                     return sum + Number(item.totalProfit || 0)
                   }, 0)
 
-                  
-                  const totalRevenue = orderItems.reduce((sum, item) => {
-                    return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
-                  }, 0)
+                  const totalCost = orderItems.reduce((sum, item) => {
+  return sum + Number(item.unitPrice || 0) * Number(item.qty || 0)
+}, 0)
+
+const totalRevenue = orderItems.reduce((sum, item) => {
+  return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+}, 0)
+
+const profit = totalRevenue - totalCost
+
+const margin = totalRevenue > 0
+  ? (profit / totalRevenue) * 100
+  : 0
+
+if (margin < 30) {
+  const proceed = window.confirm(
+    `⚠️ Low Margin Alert\n\nMargin: ${margin.toFixed(1)}%\n\nProceed anyway?`
+  )
+
+  if (!proceed) return
+}               
+            
 
                   const newOrder = {
                     orderNumber,
@@ -262,6 +273,11 @@ async function handleCreateOrder() {
                     totalRevenue,
                     paymentStatus: "Unpaid",
                   }
+
+
+
+
+
 
                   const { error: jobError } = await supabase
                     .from("jobs")
@@ -474,6 +490,21 @@ const isReadyToCreate =
                       !needsVendorPricing ||
                       !!vendor
                     )
+
+  const summaryTotalCost = orderItems.reduce((sum, item) => {
+  return sum + Number(item.unitPrice || 0) * Number(item.qty || 0)
+}, 0)
+
+const summaryTotalRevenue = orderItems.reduce((sum, item) => {
+  return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+}, 0)
+
+const summaryProfit = summaryTotalRevenue - summaryTotalCost
+
+const summaryMargin =
+  summaryTotalRevenue > 0
+    ? (summaryProfit / summaryTotalRevenue) * 100
+    : 0
 
 
 
@@ -763,6 +794,71 @@ const isReadyToCreate =
           </tbody>
         </table>
       </div>
+
+
+
+
+
+
+<div
+  className="orderSummaryGrid"
+  style={{
+    marginTop: "16px",
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: "12px",
+  }}
+>
+  <div className="summaryCard">
+    <div className="summaryLabel">Total Price</div>
+    <div className="summaryValue">
+      ${summaryTotalRevenue.toFixed(2)}
+    </div>
+  </div>
+
+  <div className="summaryCard">
+    <div className="summaryLabel">Total Cost</div>
+    <div className="summaryValue">
+      ${summaryTotalCost.toFixed(2)}
+    </div>
+  </div>
+
+  <div
+    className={`summaryCard ${
+      summaryProfit <= 0
+        ? "dangerSummary"
+        : summaryProfit < 100
+        ? "warnSummary"
+        : "goodSummary"
+    }`}
+  >
+    <div className="summaryLabel">Profit</div>
+    <div className="summaryValue">
+      ${summaryProfit.toFixed(2)}
+    </div>
+  </div>
+
+  <div
+    className={`summaryCard ${
+      summaryMargin < 30
+        ? "dangerSummary"
+        : summaryMargin < 50
+        ? "warnSummary"
+        : "goodSummary"
+    }`}
+  >
+    <div className="summaryLabel">Margin</div>
+    <div className="summaryValue">
+      {summaryMargin.toFixed(1)}%
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
 
       <button
         type="button"

@@ -2,7 +2,12 @@ function RoleScreen({ onSelectRole }) {
   return (
     <div className="roleScreen">
       <div className="roleCard">
-        <h1>Welcome to OFCL PRNT</h1>
+         <img
+          src="/ofcl-prnt.png"
+          alt="OFCL PRNT"
+          className="roleLogo"
+        />
+        
         <p>Select your role to enter the dashboard</p>
 
         <div className="roleButtons">
