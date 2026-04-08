@@ -3,20 +3,42 @@ const router = express.Router()
 const path = require("path")
 const { readProductsFile } = require("../utils/readExcel")
 
+const filePath = path.join(__dirname, "../data/products.csv")
+
 router.get("/products", (req, res) => {
   try {
-    const filePath = path.join(__dirname, "../data/products.csv")
-    console.log("READING FILE:", filePath)
+    const data = readProductsFile(filePath)
+    res.json(data.slice(0, 100))
+  } catch (error) {
+    console.error("PRODUCT ERROR:", error)
+    res.status(500).json({ error: "Failed to load products" })
+  }
+})
+
+router.get("/products/search", (req, res) => {
+  try {
+    const { style, color } = req.query
 
     const data = readProductsFile(filePath)
 
-    res.json(data)
+    let filtered = data
+
+    if (style) {
+      filtered = filtered.filter(
+        (item) => String(item.styleName).toLowerCase() === String(style).toLowerCase()
+      )
+    }
+
+    if (color) {
+      filtered = filtered.filter(
+        (item) => String(item.colorName).toLowerCase().includes(String(color).toLowerCase())
+      )
+    }
+
+    res.json(filtered.slice(0, 200))
   } catch (error) {
-    console.error("PRODUCT ERROR FULL:", error)
-    res.status(500).json({
-      error: "Failed to load products",
-      details: error.message,
-    })
+    console.error("PRODUCT SEARCH ERROR:", error)
+    res.status(500).json({ error: "Failed to search products" })
   }
 })
 
