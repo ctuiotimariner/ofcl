@@ -1,4 +1,4 @@
-server/data/products.csv
+backend/data/
 # Logs
 logs
 *.log
