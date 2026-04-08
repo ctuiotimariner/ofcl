@@ -1,4 +1,5 @@
 const fs = require("fs")
+const path = require("path")
 
 function readProductsFile(filePath) {
   const file = fs.readFileSync(filePath, "utf-8")
@@ -18,10 +19,34 @@ function readProductsFile(filePath) {
     return obj
   })
 
-  console.log("ROWS FOUND:", data.length)
-  console.log("FIRST ROW:", data[0])
-
   return data
 }
 
-module.exports = { readProductsFile }
+function getPriceFromCSV(style, color, qty) {
+  const filePath = path.join(__dirname, "../data/products.csv")
+
+  const products = readProductsFile(filePath)
+
+  const match = products.find(p =>
+    p.styleName?.toLowerCase().includes(style?.toLowerCase()) &&
+    p.colorName?.toLowerCase().includes(color?.toLowerCase())
+  )
+
+  console.log("MATCH FOUND:", match)
+
+  const price = match ? Number(match.piecePrice) : 0
+console.log("FINAL PRICE:", price)
+  return {
+    vendor: "S&S Activewear",
+    product: style,
+    color,
+    price,
+    qty,
+    total: price * qty,
+  }
+}
+
+module.exports = {
+  readProductsFile,
+  getPriceFromCSV,
+}

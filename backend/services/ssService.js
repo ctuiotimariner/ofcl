@@ -1,4 +1,5 @@
 const axios = require("axios")
+const { getPriceFromCSV } = require("../utils/readExcel")
 
 async function getSSPrice({ vendor, style, color, qty }) {
   const hasRealCredentials =
@@ -6,22 +7,20 @@ async function getSSPrice({ vendor, style, color, qty }) {
 
   const safeQty = Number(qty) || 0
 
+  // 🔹 NO API → use CSV
   if (!hasRealCredentials) {
-    const mockPrice = 2.50
+    console.log("NO API → USING CSV")
+
+    const csvData = await getPriceFromCSV(style, color, safeQty)
 
     return {
-      vendor: vendor || "S&S Activewear",
-      product: style || "Gildan 5000",
-      color: color || "Black",
-      sizes: ["S", "M", "L", "XL"],
-      price: mockPrice,
-      qty: safeQty,
-      total: safeQty * mockPrice,
-      source: "mock",
+      ...csvData,
+      source: "csv",
     }
   }
 
   try {
+    // 🔹 TRY REAL API
     const response = await axios.get(
       `${process.env.SS_BASE_URL}/products`,
       {
@@ -29,27 +28,30 @@ async function getSSPrice({ vendor, style, color, qty }) {
           username: process.env.SS_ACCOUNT_NUMBER,
           password: process.env.SS_API_KEY,
         },
+        params: { style, color },
       }
     )
 
-    return {
-      source: "ss_api",
-      data: response.data,
-    }
-  } catch (error) {
-    console.error("S&S API error:", error.message)
-
-    const mockPrice = 2.50
+    const price = response.data?.price || 0
 
     return {
       vendor: vendor || "S&S Activewear",
-      product: style || "Gildan 5000",
-      color: color || "Black",
-      sizes: ["S", "M", "L", "XL"],
-      price: mockPrice,
+      product: style,
+      color,
+      price,
       qty: safeQty,
-      total: safeQty * mockPrice,
-      source: "mock",
+      total: safeQty * price,
+      source: "api",
+    }
+  } catch (error) {
+    console.error("API FAILED → USING CSV:", error.message)
+
+    // 🔻 FALLBACK TO CSV
+    const csvData = await getPriceFromCSV(style, color, safeQty)
+
+    return {
+      ...csvData,
+      source: "csv",
     }
   }
 }

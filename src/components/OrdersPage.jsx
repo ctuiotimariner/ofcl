@@ -28,6 +28,8 @@ function OrdersPage({
   const [vendorData, setVendorData] = useState(null)
   const [productStyle, setProductStyle] = useState("")
   const [productColor, setProductColor] = useState("")
+  const [markupPercent, setMarkupPercent] = useState(40)
+  const [vendorQty, setVendorQty] = useState("")
 
 
   const [garment, setGarment] = useState("")
@@ -46,8 +48,21 @@ useEffect(() => {
   loadProducts()
 }, [])
 
+function getAutoSellPrice(cost, markup) {
+  const safeCost = Number(cost) || 0
+  const safeMarkup = Number(markup) || 0
 
+  return Number((safeCost * (1 + safeMarkup / 100)).toFixed(2))
+}
 
+function getMinSellPrice(cost, targetMargin = 30) {
+  const safeCost = Number(cost) || 0
+  const marginDecimal = targetMargin / 100
+
+  if (safeCost === 0) return 0
+
+  return Number((safeCost / (1 - marginDecimal)).toFixed(2))
+}
 
   function handleSizeRowChange(index, field, value) {
   setSizeRows((prev) =>
@@ -94,26 +109,39 @@ function buildSizesObject() {
   }
 
   useEffect(() => {
-    const safeQty = Number(totalQty)
+  const safeQty = Number(vendorQty)
 
-    if (!vendor || !productStyle || !productColor || !safeQty) {
-      setVendorData(null)
-      return
-    }
+  if (!vendor || !productStyle || !productColor || !safeQty) {
+    setVendorData(null)
+    return
+  }
 
-    getVendorData()
-  }, [vendor, productStyle, productColor, totalQty])
+  getVendorData()
+}, [vendor, productStyle, productColor, vendorQty])
+
+
+
+  useEffect(() => {
+  if (!vendorData?.price) return
+
+  const autoSellPrice = getAutoSellPrice(vendorData.price, markupPercent)
+  setSellPrice(autoSellPrice)
+}, [markupPercent, vendorData])
+
+
+
+
 
   async function getVendorData() {
-    if (!vendor || !productStyle || !productColor || !totalQty) return
+    if (!vendor || !productStyle || !productColor || !vendorQty) return
 
     try {
       console.log("SENDING:", {
-        vendor,
-        style: productStyle,
-        color: productColor,
-        qty: Number(totalQty),
-      })
+      vendor,
+      style: productStyle,
+      color: productColor,
+      qty: Number(vendorQty),
+    })
 
       const response = await fetch("http://localhost:3001/api/vendor/ss", {
         method: "POST",
@@ -124,14 +152,30 @@ function buildSizesObject() {
           vendor,
           style: productStyle,
           color: productColor,
-          qty: Number(totalQty),
+          qty: Number(vendorQty),
         }),
       })
 
       const data = await response.json()
-      console.log("RESPONSE DATA:", data)
+console.log("RESPONSE DATA:", data)
 
-      setVendorData(data.data)
+if (!data?.data) {
+  alert("Vendor data not found")
+  return
+}
+
+const vendorResult = data.data
+
+setVendorData(vendorResult)
+setGarment(`${productStyle} - ${productColor}`)
+
+// 🔥 AUTO PRICING
+const unitCost = Number(vendorResult.price || 0)
+const autoSellPrice = getAutoSellPrice(unitCost, markupPercent)
+
+setSellPrice(autoSellPrice)
+
+
     } catch (error) {
       console.error("Vendor fetch error:", error)
       alert("Could not load vendor data")
@@ -156,6 +200,11 @@ function handleAddItem() {
 
               if (!garment || Number(totalQty) <= 0 || !method || !placement) return
 
+              if (Number(totalQty) !== Number(vendorQty)) {
+                alert("Size breakdown qty must match vendor qty")
+                return
+              }
+
               const unitCost = Number(vendorData?.price || 0)
               const itemQty = Number(totalQty || 0)
               const itemSellPrice = Number(sellPrice || 0)
@@ -164,21 +213,28 @@ function handleAddItem() {
               const totalProfit = profitEach * itemQty
 
               const newItem = {
-                vendor,
-                garment,
-                color: productColor,
-                qty: itemQty,
-                sizes: buildSizesObject(),
-                placement,
-                designName,
-                method,
-                mockup,
-                unitPrice: unitCost,
-                totalPrice: unitCost * itemQty,
-                sellPrice: itemSellPrice,
-                profitEach,
-                totalProfit,
-              }
+  vendor,
+  garment,
+  color: productColor,
+  qty: totalQty,
+  sizes: buildSizesObject(),
+  placement,
+  designName,
+  method,
+  mockup,
+
+  unitCost: Number(vendorData?.price || 0),
+  totalCost: Number(vendorData?.price || 0) * totalQty,
+
+  sellPrice: Number(sellPrice || 0),
+  totalPrice: Number(sellPrice || 0) * totalQty,
+
+  markup: Number(markupPercent || 0),
+
+  profitEach: Number(sellPrice || 0) - Number(vendorData?.price || 0),
+  totalProfit:
+    (Number(sellPrice || 0) - Number(vendorData?.price || 0)) * totalQty,
+}
 
               setOrderItems((prev) => [...prev, newItem])
 
@@ -190,6 +246,7 @@ function handleAddItem() {
               setMethod("")
               setMockup(null)
               setVendorData(null)
+              setVendorQty("")
             }
 
 
@@ -239,15 +296,15 @@ async function handleCreateOrder() {
                   }))
 
                   const totalOrderProfit = orderItems.reduce((sum, item) => {
-                    return sum + Number(item.totalProfit || 0)
-                  }, 0)
+  return sum + Number(item.totalProfit || 0)
+}, 0)
 
-                  const totalCost = orderItems.reduce((sum, item) => {
-  return sum + Number(item.unitPrice || 0) * Number(item.qty || 0)
+const totalCost = orderItems.reduce((sum, item) => {
+  return sum + Number(item.totalCost || 0)
 }, 0)
 
 const totalRevenue = orderItems.reduce((sum, item) => {
-  return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+  return sum + Number(item.totalPrice || 0)
 }, 0)
 
 const profit = totalRevenue - totalCost
@@ -262,7 +319,7 @@ if (margin < 30) {
   )
 
   if (!proceed) return
-}               
+}          
             
 
                   const newOrder = {
@@ -312,12 +369,14 @@ if (margin < 30) {
                   setOrderItems([])
                   setOrderNumber("")
                   setCustomerName("")
+                  setVendorQty("")
                   setOrderType("")
                   setVendor("")
                   setPoNumber("")
                   setDueDate("")
                   setGeneralNotes("")
                   setVendorData(null)
+                  setVendorQty("")
                   setProductStyle("")
                   setProductColor("")
                   setGarment("")
@@ -497,14 +556,16 @@ const isReadyToCreate =
                     )
 
   const summaryTotalCost = orderItems.reduce((sum, item) => {
-  return sum + Number(item.unitPrice || 0) * Number(item.qty || 0)
+  return sum + Number(item.totalCost || 0)
 }, 0)
 
 const summaryTotalRevenue = orderItems.reduce((sum, item) => {
-  return sum + Number(item.sellPrice || 0) * Number(item.qty || 0)
+  return sum + Number(item.totalPrice || 0)
 }, 0)
 
-const summaryProfit = summaryTotalRevenue - summaryTotalCost
+const summaryProfit = orderItems.reduce((sum, item) => {
+  return sum + Number(item.totalProfit || 0)
+}, 0)
 
 const summaryMargin =
   summaryTotalRevenue > 0
@@ -524,6 +585,23 @@ const response = await fetch("http://localhost:3001/api/products")
     console.error("Failed to load products:", error)
   }
 }
+
+
+
+function getMarginColor(margin) {
+  if (margin < 30) return "#ff4d4f"
+  if (margin < 50) return "#ffcc66"
+  return "#4cd964"
+}
+
+
+
+const minSellPrice30 = getMinSellPrice(vendorData?.price, 30)
+
+
+
+
+
 
 
 
@@ -615,6 +693,13 @@ const response = await fetch("http://localhost:3001/api/products")
                   onChange={(e) => setProductColor(e.target.value)}
                 />
 
+                <input
+                  type="number"
+                  placeholder="Qty"
+                  value={vendorQty}
+                  onChange={(e) => setVendorQty(e.target.value)}
+                />
+
                 <button
                   type="button"
                   onClick={getVendorData}
@@ -647,6 +732,9 @@ const response = await fetch("http://localhost:3001/api/products")
                   <p><strong>Qty:</strong> {vendorData.qty}</p>
                   <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
                   <p><strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}</p>
+                  <p style={{ marginTop: "8px", color: "#ffcc66" }}>
+                    <strong>Min Sell (30% margin):</strong> ${minSellPrice30.toFixed(2)}
+                  </p>
                 </div>
               )}
             </div>
@@ -671,6 +759,15 @@ const response = await fetch("http://localhost:3001/api/products")
             <span>Qty</span>
             <input type="number" value={totalQty} readOnly />
           </div>
+
+          <div className="inputWithLabel">
+            <span>Markup %</span>
+            <input
+              type="number"
+              value={markupPercent}
+              onChange={(e) => setMarkupPercent(e.target.value)}
+            />
+          </div>      
 
           <div className="inputWithLabel">
             <span>Sell Price</span>
@@ -805,7 +902,7 @@ const response = await fetch("http://localhost:3001/api/products")
                 <td>{item.placement}</td>
                 <td>{item.designName}</td>
                 <td>{item.method}</td>
-                <td>${Number(item.unitPrice || 0).toFixed(2)}</td>
+                <td>${Number(item.unitCost || 0).toFixed(2)}</td>
                 <td>${Number(item.sellPrice || 0).toFixed(2)}</td>
               </tr>
             ))}
