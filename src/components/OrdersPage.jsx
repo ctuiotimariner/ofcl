@@ -30,6 +30,7 @@ function OrdersPage({
   const [productColor, setProductColor] = useState("")
   const [markupPercent, setMarkupPercent] = useState(40)
   const [vendorQty, setVendorQty] = useState("")
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false)
 
 
   const [garment, setGarment] = useState("")
@@ -576,10 +577,13 @@ const summaryMargin =
 async function loadProducts() {
   try {
     console.log("USING 3001 PRODUCTS API")
-const response = await fetch("http://localhost:3001/api/products")
+    const response = await fetch("http://localhost:3001/api/products")
     const data = await response.json()
 
+    console.log("TOTAL PRODUCTS LOADED:", data.length)
     console.log("PRODUCTS FROM BACKEND:", data)
+    console.log("ONE PRODUCT CLEAN:", JSON.stringify(data[0], null, 2))
+
     setProductsData(data)
   } catch (error) {
     console.error("Failed to load products:", error)
@@ -602,7 +606,36 @@ const minSellPrice30 = getMinSellPrice(vendorData?.price, 30)
 
 
 
+const filteredProducts = [
+  ...new Map(
+    productsData
+      .filter((p) => {
+        const search = productStyle.toLowerCase()
 
+        if (!search) return true
+
+        return (
+          String(p.styleName || "").toLowerCase().includes(search) ||
+          String(p.brandName || "").toLowerCase().includes(search)
+        )
+      })
+      .map((p) => [p.styleName, p])
+  ).values(),
+]
+
+
+
+const filteredColorObjects = [
+  ...new Map(
+    productsData
+      .filter(
+        (p) =>
+          String(p.styleName || "").toLowerCase() ===
+          String(productStyle || "").toLowerCase()
+      )
+      .map((p) => [p.colorName, p])
+  ).values(),
+]
 
 
 
@@ -674,55 +707,113 @@ const minSellPrice30 = getMinSellPrice(vendorData?.price, 30)
       </form>
     </div>
 
-{orderType === "Full Production" && (     
-         <div className="sectionCard">
-              <h3 className="sectionTitle">Vendor Pricing</h3>
+{orderType === "Full Production" && (
+  <div className="sectionCard">
+    <h3 className="sectionTitle">Vendor Pricing</h3>
 
-              <div className="orderGrid">
-                <input
-                  type="text"
-                  placeholder="Product Style"
-                  value={productStyle}
-                  onChange={(e) => setProductStyle(e.target.value)}
-                />
+    <div className="orderGrid">
 
-                <input
-                  type="text"
-                  placeholder="Color"
-                  value={productColor}
-                  onChange={(e) => setProductColor(e.target.value)}
-                />
+      {/* PRODUCT STYLE WITH DROPDOWN */}
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          placeholder="Product Style"
+          value={productStyle}
+          onChange={(e) => {
+            setProductStyle(e.target.value)
+            setProductColor("")
+            setShowProductSuggestions(true)
+          }}
+        />
 
-                <input
-                  type="number"
-                  placeholder="Qty"
-                  value={vendorQty}
-                  onChange={(e) => setVendorQty(e.target.value)}
-                />
-
-                <button
-                  type="button"
-                  onClick={getVendorData}
-                  className="primaryButton"
-                >
-                  Get Live Price
-                </button>
-              </div>
-
-              <p className="mutedText" style={{ marginTop: "10px" }}>
-                Using order vendor: {vendor || "No vendor selected"}
-              </p>
-
-              <p
-                className="mutedText"
+        {showProductSuggestions && productStyle && filteredProducts.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              background: "#111",
+              border: "1px solid #333",
+              zIndex: 10,
+              maxHeight: "180px",
+              overflowY: "auto",
+            }}
+          >
+            {filteredProducts.map((p, i) => (
+              <div
+                key={i}
                 style={{
-                  marginTop: "8px",
-                  fontWeight: 600,
-                  color: vendorData ? "#4cd964" : "#ffcc66",
+                  padding: "8px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #222",
+                }}
+                onClick={() => {
+                  setProductStyle(p.styleName || "")
+                  setProductColor("") // 👈 clear old color
+                  setGarment(p.styleName) // 👈 no color here
+                  setShowProductSuggestions(false)
                 }}
               >
-                {vendorData ? "Live price ready" : "Live price not loaded"}
-              </p>
+                {p.brandName} {p.styleName}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* COLOR */}
+      <select
+  value={productColor}
+  onChange={(e) => setProductColor(e.target.value)}
+>
+  <option value="">Select Color</option>
+
+  {filteredColorObjects.map((p, i) => (
+    <option key={i} value={p.colorName}>
+      {p.colorName}
+    </option>
+  ))}
+</select>
+
+      {/* QTY */}
+      <input
+        type="number"
+        placeholder="Qty"
+        value={vendorQty}
+        onChange={(e) => setVendorQty(e.target.value)}
+      />
+    </div>
+
+    {/* BUTTON */}
+   <button
+          type="button"
+          onClick={getVendorData}
+          className="primaryButton"
+          disabled={!vendor}
+          style={{ marginTop: "12px", opacity: !vendor ? 0.5 : 1 }}
+        >
+          Get Price
+        </button>
+
+              {!vendor && (
+            <p style={{ color: "#ff48d1", marginTop: "6px" }}>
+              ⚠️ Select a vendor to get pricing
+            </p>
+          )}
+
+              <p
+  className="mutedText"
+  style={{
+    marginTop: "8px",
+    fontWeight: 600,
+    color: vendorData ? "#4cd964" : "#ffcc66",
+  }}
+>
+  {vendorData
+    ? `Price loaded (${vendorData.source === "api" ? "Live API" : "CSV"})`
+    : "Price not loaded"}
+</p>
 
               {vendorData && (
                 <div style={{ marginTop: "14px" }}>
@@ -732,13 +823,16 @@ const minSellPrice30 = getMinSellPrice(vendorData?.price, 30)
                   <p><strong>Qty:</strong> {vendorData.qty}</p>
                   <p><strong>Unit Price:</strong> ${Number(vendorData.price).toFixed(2)}</p>
                   <p><strong>Total:</strong> ${Number(vendorData.total).toFixed(2)}</p>
+
                   <p style={{ marginTop: "8px", color: "#ffcc66" }}>
                     <strong>Min Sell (30% margin):</strong> ${minSellPrice30.toFixed(2)}
                   </p>
                 </div>
               )}
             </div>
-          )}
+)}
+
+
     <div className="sectionCard">
       <h3 className="sectionTitle">Add Order Item</h3>
 

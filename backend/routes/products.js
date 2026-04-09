@@ -8,7 +8,7 @@ const filePath = path.join(__dirname, "../data/products.csv")
 router.get("/products", (req, res) => {
   try {
     const data = readProductsFile(filePath)
-    res.json(data.slice(0, 100))
+    res.json(data)
   } catch (error) {
     console.error("PRODUCT ERROR:", error)
     res.status(500).json({ error: "Failed to load products" })
