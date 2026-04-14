@@ -134,12 +134,14 @@ button {
 
 input,
 select {
-  padding: 10px 12px;
-  border: 2px solid #333;
-  background: #141414;
-  color: inherit;
-  font: inherit;
-  box-shadow: inset 2px 2px 0 #0a0a0a;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: white;
+  box-sizing: border-box;
 }
 
 input:focus,
@@ -170,33 +172,42 @@ button:disabled {
 }
 
 /* ===== LABELED INPUTS ===== */
-.inputWithLabel {
+.sectionCard .inputWithLabel {
   display: flex;
-  align-items: center;
-  min-height: 42px;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  min-height: auto;
   overflow: visible;
-  border: 1px solid #333;
-  background: #111;
 }
 
-.inputWithLabel span {
-  padding: 0 10px;
-  border-right: 1px solid #333;
+.sectionCard .inputWithLabel span {
   font-size: 12px;
-  opacity: 0.7;
+  color: #8a8a8a;
+  line-height: 1.2;
+  text-align: left;
+  padding: 0;
+  margin: 0 0 2px 2px;
+  border: none;
+  opacity: 1;
   white-space: nowrap;
 }
 
-.inputWithLabel input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  padding: 8px 10px 8px 14px;
-  color: white;
+.sectionCard .inputWithLabel input,
+.sectionCard .inputWithLabel select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: #fff;
   box-sizing: border-box;
-  font: inherit;
+  box-shadow: none;
 }
+
+
 
 .inputWithLabel input[type="number"] {
   appearance: textfield;
@@ -984,18 +995,20 @@ h3 {
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
 }
 
+
 /* ===== NEW CLEAN UI UPGRADE ===== */
 
 .sectionCard {
+  max-width: 1200px;
+  margin: 0 auto 32px auto;
+  padding: 20px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(46, 255, 123, 0.15);
   box-shadow: 0 0 12px rgba(46, 255, 123, 0.08);
-  padding: 18px;
-  margin-bottom: 24px;
 }
 
 .sectionTitle {
-  margin-bottom: 14px;
+  margin: 0 0 14px;
   color: #2eff7b;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1004,7 +1017,7 @@ h3 {
 
 .orderGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1012,11 +1025,30 @@ h3 {
   grid-column: 1 / -1;
 }
 
+.inputWithLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputWithLabel span {
+  font-size: 12px;
+  color: #aaa;
+}
+
+input,
+select {
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 6px;
+}
+
 .sizeBox {
   border: 1px solid rgba(46, 255, 123, 0.15);
   background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
   padding: 12px;
-  min-width: 300px;
+  height: fit-content;
 }
 
 .primaryButton {
@@ -1029,29 +1061,29 @@ h3 {
   font-size: 12px;
 }
 
-@media (max-width: 1100px) {
-  .orderGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .sizeBox {
-    min-width: 100%;
-  }
-}
-
 .orderSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
   margin-top: 16px;
 }
 
 .summaryCard {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.02)
+  );
   border: 1px solid rgba(0, 255, 153, 0.18);
   border-radius: 14px;
   padding: 18px;
   box-shadow:
     0 0 12px rgba(0, 255, 153, 0.08),
     inset 0 0 10px rgba(0, 255, 153, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .summaryCard:hover {
@@ -1073,7 +1105,7 @@ h3 {
   font-size: 28px;
   font-weight: 800;
   line-height: 1;
-  text-shadow: 0 0 10px rgba(255,255,255,0.08);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
 }
 
 .goodSummary {
@@ -1081,6 +1113,11 @@ h3 {
   box-shadow:
     0 0 18px rgba(0, 255, 153, 0.18),
     inset 0 0 12px rgba(0, 255, 153, 0.04);
+}
+
+.goodSummary .summaryValue {
+  color: #00ff99;
+  text-shadow: 0 0 10px rgba(0, 255, 153, 0.22);
 }
 
 .warnSummary {
@@ -1107,25 +1144,10 @@ h3 {
   text-shadow: 0 0 10px rgba(255, 77, 79, 0.22);
 }
 
-.goodSummary .summaryValue {
-  color: #00ff99;
-  text-shadow: 0 0 10px rgba(0, 255, 153, 0.22);
-}
-
-@media (max-width: 1100px) {
-  .orderSummaryGrid {
-    grid-template-columns: 1fr 1fr !important;
-  }
-}
-
-@media (max-width: 700px) {
-  .orderSummaryGrid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .summaryValue {
-    font-size: 24px;
-  }
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .roleScreen {
@@ -1138,7 +1160,6 @@ h3 {
     #050505;
 }
 
-/* 🔥 GLOW ANIMATION */
 @keyframes glowPulse {
   0% {
     box-shadow:
@@ -1157,14 +1178,38 @@ h3 {
   }
 }
 
+@keyframes borderPulse {
+  0% {
+    border-color: #00ff99;
+  }
+  50% {
+    border-color: #00ffaa;
+  }
+  100% {
+    border-color: #00ff99;
+  }
+}
+
+@keyframes logoPulse {
+  0% {
+    filter: drop-shadow(0 0 6px rgba(0, 255, 153, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(0, 255, 153, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgba(0, 255, 153, 0.4));
+  }
+}
+
 .roleCard {
   background: rgba(10, 10, 10, 0.95);
   border: 2px solid #00ff99;
   padding: 40px 44px;
   text-align: center;
-
-  animation: glowPulse 3s ease-in-out infinite;
-
+  animation:
+    glowPulse 3s ease-in-out infinite,
+    borderPulse 2.5s ease-in-out infinite;
   box-shadow:
     0 0 12px rgba(0, 255, 153, 0.2),
     inset 0 0 8px rgba(0, 255, 153, 0.05);
@@ -1177,16 +1222,10 @@ h3 {
   display: block;
   margin: 0 auto 16px;
   animation: logoPulse 4s ease-in-out infinite;
-
-
   image-rendering: pixelated;
-
-  /* REMOVE the box look */
   background: none;
   padding: 0;
   box-shadow: none;
-
-  /* 🔥 CLEAN glow */
   filter:
     drop-shadow(0 0 6px rgba(0, 255, 153, 0.4))
     drop-shadow(0 0 18px rgba(0, 255, 153, 0.2));
@@ -1205,19 +1244,6 @@ h3 {
   padding: 0 !important;
 }
 
-@keyframes logoPulse {
-  0% {
-    filter: drop-shadow(0 0 6px rgba(0, 255, 153, 0.4));
-  }
-  50% {
-    filter: drop-shadow(0 0 12px rgba(0, 255, 153, 0.6));
-  }
-  100% {
-    filter: drop-shadow(0 0 6px rgba(0, 255, 153, 0.4));
-  }
-}
-
-
 .roleButtons {
   display: flex;
   gap: 12px;
@@ -1233,40 +1259,237 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 700;
-
   box-shadow: 0 0 0 transparent;
   transition: all 0.2s ease;
 }
 
 .roleButtons button:hover {
   border-color: #00ff99;
-  color: #000000;
-
+  color: #000;
   box-shadow:
     0 0 8px rgba(0, 255, 153, 0.4),
     inset 0 0 6px rgba(0, 255, 153, 0.2);
-
   transform: translateY(-2px);
-}
-
-@keyframes borderPulse {
-  0% {
-    border-color: #00ff99;
-  }
-  50% {
-    border-color: #00ffaa;
-  }
-  100% {
-    border-color: #00ff99;
-  }
-}
-
-.roleCard {
-  animation: glowPulse 3s ease-in-out infinite,
-             borderPulse 2.5s ease-in-out infinite;
 }
 
 p {
   border: none !important;
   outline: none !important;
+}
+
+@media (max-width: 1100px) {
+  .orderGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .orderSummaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sizeBox {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .orderSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryValue {
+    font-size: 24px;
+  }
+}
+/* ===== ORDERS PAGE: ADD ORDER ITEM FINAL FIX ===== */
+
+.sectionCard .orderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sectionCard .inputWithLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  min-height: auto;
+  overflow: visible;
+}
+
+.sectionCard .inputWithLabel span {
+  font-size: 12px;
+  color: #8a8a8a;
+  padding: 0;
+  border: none;
+  opacity: 1;
+  line-height: 1.2;
+}
+
+.sectionCard .inputWithLabel input,
+.sectionCard .inputWithLabel select,
+.sectionCard input,
+.sectionCard select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: #fff;
+  box-sizing: border-box;
+  box-shadow: none;
+}
+
+.sectionCard .inputWithLabel input:focus,
+.sectionCard .inputWithLabel select:focus,
+.sectionCard input:focus,
+.sectionCard select:focus {
+  outline: none;
+  border-color: #2eff7b;
+}
+
+.sectionCard .sizeBox {
+  border: 1px solid rgba(46, 255, 123, 0.18);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 14px;
+  height: fit-content;
+}
+
+.sectionCard .orderSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .sectionCard .orderGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionCard .orderSummaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .sectionCard .orderSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ORDERS PAGE: ADD ORDER ITEM CLEAN FIX ===== */
+
+.sectionCard .orderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sectionCard .inputWithLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  min-height: auto;
+  overflow: visible;
+}
+
+.sectionCard .inputWithLabel span {
+  font-size: 12px;
+  color: #8a8a8a;
+  line-height: 1.2;
+  text-align: left;
+  padding: 0;
+  margin: 0 0 2px 2px;
+  border: none;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+.sectionCard .inputWithLabel input,
+.sectionCard .inputWithLabel select,
+.sectionCard input,
+.sectionCard select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: #fff;
+  box-sizing: border-box;
+  box-shadow: none;
+}
+
+.sectionCard .inputWithLabel input:focus,
+.sectionCard .inputWithLabel select:focus,
+.sectionCard input:focus,
+.sectionCard select:focus {
+  outline: none;
+  border-color: #2eff7b;
+}
+
+.sectionCard .stackField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionCard .stackField input {
+  width: 100%;
+}
+
+.sectionCard .helperText {
+  font-size: 12px;
+  color: #4cd964;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-left: 2px;
+}
+
+.sectionCard .fileField input[type="file"] {
+  height: 42px;
+  padding: 8px 10px;
+  line-height: normal;
+}
+
+.sectionCard .sizeBox {
+  border: 1px solid rgba(46, 255, 123, 0.18);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 14px;
+  height: fit-content;
+}
+
+.sectionCard .orderSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .sectionCard .orderGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionCard .orderSummaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .sectionCard .orderSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.sectionCard input:focus,
+.sectionCard select:focus {
+  border-color: #2eff7b;
+  box-shadow: 0 0 8px rgba(46, 255, 123, 0.3);
 }
