@@ -4,82 +4,19 @@ import {
   sortJobsByPriority,
   getPriorityLabel
 } from "../utils/productionHelpers"
-import { supabase } from "../lib/supabase"
 
-function ProductionBoard() {
-
-
+function ProductionBoard({ jobs = [] }) {
   const params = new URLSearchParams(window.location.search)
   const departmentParam = params.get("dept")
 
-const departments = [
-  { name: "Embroidery", method: "Embroidery" },
-  { name: "DTF Printing", method: "DTF Printing" }
-]
+  const departments = [
+    { name: "Embroidery", method: "Embroidery" },
+    { name: "DTF Printing", method: "DTF Printing" }
+  ]
 
   const [currentDeptIndex, setCurrentDeptIndex] = useState(1)
   const [fade, setFade] = useState(true)
-  const [jobs, setJobs] = useState([])
-
   const [audioReady, setAudioReady] = useState(false)
-  const sound = new Audio("/notify.mp3")
-
-async function fetchJobs() {
-  const { data, error } = await supabase.from("jobs").select("*")
-
-  if (error) {
-    console.error("Supabase error:", error)
-  } else {
-    console.log("ALL JOBS:", data)
-
-    data?.forEach((job, index) => {
-      console.log(`JOB ${index + 1}`, {
-        orderGroup: job.orderGroup,
-        method: job.method,
-        status: job.status,
-        qty: job.qty
-      })
-    })
-
-    setJobs(data || [])
-  }
-}
-
-useEffect(() => {
-  fetchJobs()
-
-  const channel = supabase
-    .channel("production-jobs-live")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "jobs"
-      },
-      (payload) => {
-        console.log("🔥 Realtime change:", payload)
-
-        if (payload.eventType === "INSERT") {
-          console.log("🆕 NEW JOB RECEIVED")
-
-          const audio = new Audio("/notify.mp3")
-            audio.play().catch(() => {})
-        }
-
-        fetchJobs()
-      }
-    )
-    .subscribe((status) => {
-  console.log("📡 Realtime status:", status)
-})
-
-  return () => {
-    supabase.removeChannel(channel)
-  }
-}, [])
-
-
 
   useEffect(() => {
     if (!departmentParam) return
@@ -95,50 +32,70 @@ useEffect(() => {
     }
   }, [departmentParam])
 
+  useEffect(() => {
+    const sound = new Audio("/notify.mp3")
+
+    const unlock = () => {
+      sound
+        .play()
+        .then(() => {
+          sound.pause()
+          sound.currentTime = 0
+          setAudioReady(true)
+          console.log("Audio ready")
+        })
+        .catch(() => {})
+
+      window.removeEventListener("click", unlock)
+    }
+
+    window.addEventListener("click", unlock)
+
+    return () => window.removeEventListener("click", unlock)
+  }, [])
+
   function enterFullscreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen()
     }
   }
 
-  
-
   const departmentData = useMemo(() => {
     return departments.map((dept) => {
+      const printing = sortJobsByPriority(
+        jobs.filter((job) => {
+          const methodMatches =
+            String(job.method || "").trim().toLowerCase() ===
+            String(dept.method || "").trim().toLowerCase()
 
-     const printing = sortJobsByPriority(
-  jobs.filter((job) => {
-    const methodMatches =
-      String(job.method || "").trim().toLowerCase() ===
-      String(dept.method || "").trim().toLowerCase()
+          return methodMatches && job.status === "Printing"
+        })
+      )
 
-    return methodMatches && job.status === "Printing"
-  })
-)
+      const queue = sortJobsByPriority(
+        jobs.filter((job) => {
+          const methodMatches =
+            String(job.method || "").trim().toLowerCase() ===
+            String(dept.method || "").trim().toLowerCase()
 
-const queue = sortJobsByPriority(
-  jobs.filter((job) => {
-    const methodMatches =
-      String(job.method || "").trim().toLowerCase() ===
-      String(dept.method || "").trim().toLowerCase()
+          return methodMatches && job.status === "Waiting for Blanks"
+        })
+      )
 
-    return methodMatches && job.status === "Waiting for Blanks"
-  })
-)
+      const standby = sortJobsByPriority(
+        jobs.filter((job) => {
+          const methodMatches =
+            String(job.method || "").trim().toLowerCase() ===
+            String(dept.method || "").trim().toLowerCase()
 
-const standby = sortJobsByPriority(
-  jobs.filter((job) => {
-    const methodMatches =
-      String(job.method || "").trim().toLowerCase() ===
-      String(dept.method || "").trim().toLowerCase()
+          return (
+            methodMatches &&
+            (job.status === "Email Received" ||
+              job.status === "Waiting Approval")
+          )
+        })
+      )
 
-    return (
-      methodMatches &&
-      (job.status === "Email Received" ||
-        job.status === "Waiting Approval")
-    )
-  })
-)
       const printingCount = printing.length
       const queueCount = queue.length
 
@@ -182,6 +139,7 @@ const standby = sortJobsByPriority(
 
   useEffect(() => {
     if (departmentParam) return
+    if (!departmentData.length) return
 
     const interval = setInterval(() => {
       setFade(false)
@@ -272,16 +230,6 @@ const standby = sortJobsByPriority(
     )
   }
 
-  function renderSection(title, jobList, emptyMessage, isActivePrint = false) {
-    return (
-      <>
-        <h3>{title}</h3>
-        {jobList.length === 0 && <p>{emptyMessage}</p>}
-        {jobList.map((job) => renderJobCard(job, isActivePrint))}
-      </>
-    )
-  }
-
   if (!activeDepartment) return null
 
   const progressPercent = activeDepartment.totalPieces
@@ -289,23 +237,6 @@ const standby = sortJobsByPriority(
         (activeDepartment.printingPieces / activeDepartment.totalPieces) * 100
       )
     : 0
-
-useEffect(() => {
-  const unlock = () => {
-    sound.play().then(() => {
-      sound.pause()
-      sound.currentTime = 0
-      setAudioReady(true)
-      console.log("Audio ready")
-    }).catch(() => {})
-
-    window.removeEventListener("click", unlock)
-  }
-
-  window.addEventListener("click", unlock)
-
-  return () => window.removeEventListener("click", unlock)
-}, [])
 
   return (
     <>
@@ -326,11 +257,10 @@ useEffect(() => {
         Full Screen Mode
       </button>
 
-<div className="sectionCard">
-      <div className="productionScreen">
-        <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
-          
-          <div
+      <div className="sectionCard">
+        <div className="productionScreen">
+          <div className={`productionSection ${fade ? "fadeIn" : "fadeOut"}`}>
+            <div
               className="departmentStats"
               style={{
                 display: "flex",
@@ -340,42 +270,41 @@ useEffect(() => {
                 marginBottom: "20px"
               }}
             >
-          
-            <span>PRINTING: {activeDepartment.printingCount}</span>
-            <span>QUEUE: {activeDepartment.queueCount}</span>
-            <span>PIECES: {activeDepartment.totalQty}</span>
-            <span className={activeDepartment.overdueCount ? "overdueStat" : ""}>
-              OVERDUE: {activeDepartment.overdueCount}
-            </span>
-          </div>
+              <span>PRINTING: {activeDepartment.printingCount}</span>
+              <span>QUEUE: {activeDepartment.queueCount}</span>
+              <span>PIECES: {activeDepartment.totalQty}</span>
+              <span className={activeDepartment.overdueCount ? "overdueStat" : ""}>
+                OVERDUE: {activeDepartment.overdueCount}
+              </span>
+            </div>
 
-          <div className="progressContainer">
+            <div className="progressContainer">
+              <div
+                className={`progressBar ${progressPercent >= 90 ? "nearComplete" : ""}`}
+                style={{
+                  width: `${progressPercent}%`,
+                  background:
+                    progressPercent < 30
+                      ? "linear-gradient(90deg, #ff5c5c, #ff1f1f)"
+                      : progressPercent < 70
+                      ? "linear-gradient(90deg, #ffcc66, #ffaa00)"
+                      : "linear-gradient(90deg, #6ee787, #00ff9c)"
+                }}
+              />
+            </div>
+
+            <div className="progressText">
+              {progressPercent}% COMPLETE
+            </div>
+
             <div
-              className={`progressBar ${progressPercent >= 90 ? "nearComplete" : ""}`}
               style={{
-                width: `${progressPercent}%`,
-                background:
-                  progressPercent < 30
-                    ? "linear-gradient(90deg, #ff5c5c, #ff1f1f)"
-                    : progressPercent < 70
-                    ? "linear-gradient(90deg, #ffcc66, #ffaa00)"
-                    : "linear-gradient(90deg, #6ee787, #00ff9c)"
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "20px",
+                marginTop: "20px"
               }}
-            />
-          </div>
-
-          <div className="progressText">
-            {progressPercent}% COMPLETE
-          </div>
-
-          <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "20px",
-              marginTop: "20px"
-            }}>
-
-              {/* LEFT - PRINTING */}
+            >
               <div>
                 <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
                   🔥 PRINTING NOW
@@ -390,57 +319,52 @@ useEffect(() => {
                 )}
               </div>
 
-              {/* RIGHT SIDE */}
-<div>
-  {/* NEXT UP */}
-  <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
-    ⏭ NEXT UP
-  </h2>
+              <div>
+                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
+                  ⏭ NEXT UP
+                </h2>
 
-  {activeDepartment.queue.length === 0 && (
-    <p>No upcoming jobs</p>
-  )}
+                {activeDepartment.queue.length === 0 && (
+                  <p>No upcoming jobs</p>
+                )}
 
-  {activeDepartment.queue.slice(0, 5).map((job) =>
-    renderJobCard(job)
-  )}
+                {activeDepartment.queue.slice(0, 5).map((job) =>
+                  renderJobCard(job)
+                )}
 
-  {/* ON DECK */}
-  <div style={{ marginTop: "30px" }}>
-    <h2 style={{ fontSize: "24px", marginBottom: "10px", opacity: 0.8 }}>
-      📦 ON DECK
-    </h2>
+                <div style={{ marginTop: "30px" }}>
+                  <h2 style={{ fontSize: "24px", marginBottom: "10px", opacity: 0.8 }}>
+                    📦 ON DECK
+                  </h2>
 
-    {activeDepartment.standby.length === 0 && (
-      <p style={{ opacity: 0.6 }}>No standby jobs</p>
-    )}
+                  {activeDepartment.standby.length === 0 && (
+                    <p style={{ opacity: 0.6 }}>No standby jobs</p>
+                  )}
 
-    {activeDepartment.standby.slice(0, 5).map((job) => (
-      <div
-        key={job.id}
-        style={{
-          padding: "10px",
-          marginBottom: "10px",
-          borderRadius: "8px",
-          border: "1px solid rgba(0,255,153,0.2)",
-          background: "rgba(255,255,255,0.03)",
-          fontSize: "14px"
-        }}
-      >
-        <strong>{job.orderGroup}</strong> — {job.qty} pcs
-      </div>
-    ))}
-  </div>
-</div>
+                  {activeDepartment.standby.slice(0, 5).map((job) => (
+                    <div
+                      key={job.id}
+                      style={{
+                        padding: "10px",
+                        marginBottom: "10px",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(0,255,153,0.2)",
+                        background: "rgba(255,255,255,0.03)",
+                        fontSize: "14px"
+                      }}
+                    >
+                      <strong>{job.orderGroup}</strong> — {job.qty} pcs
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                        </div>
-
+          </div>
         </div>
       </div>
-    </div>
-  </>
-)
+    </>
+  )
 }
-
 
 export default ProductionBoard

@@ -26,6 +26,10 @@ function Sidebar({ currentPage, setCurrentPage, setRole, allowedPages }) {
       </button>
       )}
 
+      <button onClick={() => setCurrentPage("purchaseOrders")}>
+        PURCHASE ORDERS
+      </button>
+
       {allowedPages.includes("jobs") && (
         <button 
           onClick={() => setCurrentPage("jobs")}

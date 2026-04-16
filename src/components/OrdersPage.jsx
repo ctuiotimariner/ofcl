@@ -388,34 +388,117 @@ function OrdersPage({
   }
 
   async function handleDeleteOrder(orderId, orderNumber) {
-    const confirmed = window.confirm("Delete this order and all related jobs?")
-    if (!confirmed) return
+  const confirmed = window.confirm(
+    "Delete this order, related jobs, and related purchase orders?"
+  )
+  if (!confirmed) return
 
-    const { error: jobsError } = await supabase
-      .from("jobs")
-      .delete()
-      .eq("orderGroup", orderNumber)
+  // 1. Delete related jobs
+  const { error: jobsError } = await supabase
+    .from("jobs")
+    .delete()
+    .eq("orderGroup", orderNumber)
 
-    if (jobsError) {
-      console.error("DELETE JOBS ERROR:", jobsError)
-      alert("Failed to delete related jobs")
-      return
-    }
-
-    const { error: orderError } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", orderId)
-
-    if (orderError) {
-      console.error("DELETE ORDER ERROR:", orderError)
-      alert("Failed to delete order")
-      return
-    }
-
-    setOrders((prev) => prev.filter((order) => order.id !== orderId))
-    setJobs((prev) => prev.filter((job) => job.orderGroup !== orderNumber))
+  if (jobsError) {
+    console.error("DELETE JOBS ERROR:", jobsError)
+    alert("Failed to delete related jobs")
+    return
   }
+
+  // 2. Delete related purchase orders
+  const { error: poError } = await supabase
+    .from("purchase_orders")
+    .delete()
+    .eq("order_group", orderNumber)
+
+  if (poError) {
+    console.error("DELETE PURCHASE ORDERS ERROR:", poError)
+    alert("Failed to delete related purchase orders")
+    return
+  }
+
+  // 3. Delete the order itself
+  const { error: orderError } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", orderId)
+
+  if (orderError) {
+    console.error("DELETE ORDER ERROR:", orderError)
+    alert(`Failed to delete order: ${orderError.message}`)
+    return
+  }
+
+  // 4. Refresh UI
+  if (fetchOrders) {
+    await fetchOrders()
+  }
+
+  if (fetchJobs) {
+    await fetchJobs()
+  }
+
+  alert("Order deleted")
+}
+
+async function handleCreatePOFromOrder(order) {
+  try {
+    const poNumber = `OFCL-PO-${Date.now()}`
+
+    const { data: newPO, error: poError } = await supabase
+      .from("purchase_orders")
+      .insert({
+        po_number: poNumber,
+        vendor: order.vendor || "S&S Activewear",
+        order_group: order.orderNumber,
+        customer_name: order.customerName,
+        status: "Ordered"
+      })
+      .select()
+      .single()
+
+    if (poError) {
+      console.error("PO ERROR:", poError)
+      alert("Failed to create PO")
+      return
+    }
+
+    const poItems = []
+
+    order.items.forEach((item) => {
+      Object.entries(item.sizes || {}).forEach(([size, qty]) => {
+        if (qty > 0) {
+          poItems.push({
+            purchase_order_id: newPO.id,
+            garment: item.garment,
+            style: item.garment,
+            color: item.color || "",
+            size: size,
+            qty_ordered: qty,
+            qty_received: 0,
+            status: "Pending"
+          })
+        }
+      })
+    })
+
+    const { error: itemsError } = await supabase
+      .from("purchase_order_items")
+      .insert(poItems)
+
+    if (itemsError) {
+      console.error("PO ITEMS ERROR:", itemsError)
+      alert("Failed to create PO items")
+      return
+    }
+
+    alert(`PO Created: ${poNumber}`)
+
+  } catch (err) {
+    console.error(err)
+    alert("Something went wrong")
+  }
+}
 
   async function handleMarkPaid(orderId) {
     const { error } = await supabase
@@ -1299,6 +1382,13 @@ function getMissingFields() {
                         onClick={() => handleDeleteOrder(order.id, order.orderNumber)}
                       >
                         Delete
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCreatePOFromOrder(order)}
+                      >
+                        Create PO
                       </button>
                     </div>
                   </td>
