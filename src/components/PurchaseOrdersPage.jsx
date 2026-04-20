@@ -5,6 +5,7 @@ function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState([])
   const [selectedPO, setSelectedPO] = useState(null)
   const [poItems, setPOItems] = useState([])
+  const [vendorOrderNumber, setVendorOrderNumber] = useState("")
 
   useEffect(() => {
     fetchPurchaseOrders()
@@ -26,6 +27,7 @@ function PurchaseOrdersPage() {
 
   async function openPO(po) {
     setSelectedPO(po)
+    setVendorOrderNumber(po.vendor_order_number || "")
 
     const { data, error } = await supabase
       .from("purchase_order_items")
@@ -39,6 +41,33 @@ function PurchaseOrdersPage() {
     }
 
     setPOItems(data || [])
+  }
+
+  async function saveVendorOrderNumber() {
+    if (!selectedPO) return
+
+    const { data, error } = await supabase
+      .from("purchase_orders")
+      .update({
+        vendor_order_number: vendorOrderNumber
+      })
+      .eq("id", selectedPO.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error saving vendor PO number:", error)
+      alert("Failed to save vendor PO number")
+      return
+    }
+
+    setSelectedPO(data)
+
+    setPurchaseOrders((prev) =>
+      prev.map((po) => (po.id === data.id ? data : po))
+    )
+
+    alert("Vendor PO number saved")
   }
 
   return (
@@ -85,6 +114,33 @@ function PurchaseOrdersPage() {
       {selectedPO && (
         <div className="sectionCard" style={{ marginTop: "20px" }}>
           <h3>{selectedPO.po_number}</h3>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: "bold"
+              }}
+            >
+              Vendor PO Number
+            </label>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <input
+                type="text"
+                value={vendorOrderNumber}
+                onChange={(e) => setVendorOrderNumber(e.target.value)}
+                placeholder="Enter vendor PO number"
+                className="scanInput"
+                style={{ maxWidth: "320px" }}
+              />
+
+              <button type="button" onClick={saveVendorOrderNumber}>
+                Save Vendor PO
+              </button>
+            </div>
+          </div>
 
           <div className="tableCard">
             <table>

@@ -24,18 +24,46 @@ function readProductsFile(filePath) {
 
 function getPriceFromCSV(style, color, qty) {
   const filePath = path.join(__dirname, "../data/products.csv")
-
   const products = readProductsFile(filePath)
 
-  const match = products.find(p =>
-    p.styleName?.toLowerCase().includes(style?.toLowerCase()) &&
-    p.colorName?.toLowerCase().includes(color?.toLowerCase())
-  )
+  const safeStyle = String(style || "").trim().toLowerCase()
+  const safeColor = String(color || "").trim().toLowerCase()
 
-  console.log("MATCH FOUND:", match)
+  const exactMatches = products.filter((p) => {
+    const rowStyle = String(p.styleName || "").trim().toLowerCase()
+    const rowColor = String(p.colorName || "").trim().toLowerCase()
 
-  const price = match ? Number(match.piecePrice) : 0
-console.log("FINAL PRICE:", price)
+    return rowStyle === safeStyle && rowColor === safeColor
+  })
+
+  console.log("EXACT MATCHES FOUND:", exactMatches.length)
+  console.log("EXACT MATCH SAMPLE:", exactMatches.slice(0, 5))
+
+  let chosenRow = null
+
+  if (exactMatches.length > 0) {
+    chosenRow = exactMatches.find((row) => Number(row.piecePrice) > 0) || null
+  } else {
+    const fallbackMatches = products.filter((p) => {
+      const rowStyle = String(p.styleName || "").trim().toLowerCase()
+      const rowColor = String(p.colorName || "").trim().toLowerCase()
+
+      return rowStyle.includes(safeStyle) && rowColor.includes(safeColor)
+    })
+
+    console.log("FALLBACK MATCHES FOUND:", fallbackMatches.length)
+    console.log("FALLBACK MATCH SAMPLE:", fallbackMatches.slice(0, 5))
+
+    if (fallbackMatches.length > 0) {
+      chosenRow =
+        fallbackMatches.find((row) => Number(row.piecePrice) > 0) || null
+    }
+  }
+
+  console.log("CHOSEN CSV ROW:", chosenRow)
+
+  const price = chosenRow ? Number(chosenRow.piecePrice || 0) : 0
+
   return {
     vendor: "S&S Activewear",
     product: style,
