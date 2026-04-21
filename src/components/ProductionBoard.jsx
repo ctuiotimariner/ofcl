@@ -16,7 +16,6 @@ function ProductionBoard({ jobs = [] }) {
 
   const [currentDeptIndex, setCurrentDeptIndex] = useState(1)
   const [fade, setFade] = useState(true)
-  const [audioReady, setAudioReady] = useState(false)
 
   useEffect(() => {
     if (!departmentParam) return
@@ -32,28 +31,6 @@ function ProductionBoard({ jobs = [] }) {
     }
   }, [departmentParam])
 
-  useEffect(() => {
-    const sound = new Audio("/notify.mp3")
-
-    const unlock = () => {
-      sound
-        .play()
-        .then(() => {
-          sound.pause()
-          sound.currentTime = 0
-          setAudioReady(true)
-          console.log("Audio ready")
-        })
-        .catch(() => {})
-
-      window.removeEventListener("click", unlock)
-    }
-
-    window.addEventListener("click", unlock)
-
-    return () => window.removeEventListener("click", unlock)
-  }, [])
-
   function enterFullscreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen()
@@ -62,77 +39,139 @@ function ProductionBoard({ jobs = [] }) {
 
   const departmentData = useMemo(() => {
     return departments.map((dept) => {
-      const printing = sortJobsByPriority(
-        jobs.filter((job) => {
-          const methodMatches =
-            String(job.method || "").trim().toLowerCase() ===
-            String(dept.method || "").trim().toLowerCase()
+      const methodMatches = (job) =>
+        String(job.method || "").trim().toLowerCase() ===
+        String(dept.method || "").trim().toLowerCase()
 
-          return methodMatches && job.status === "Printing"
-        })
-      )
+      let nextUp = []
+      let printing = []
+      let onDeck = []
+      let finishing = []
+      let ready = []
 
-      const queue = sortJobsByPriority(
-        jobs.filter((job) => {
-          const methodMatches =
-            String(job.method || "").trim().toLowerCase() ===
-            String(dept.method || "").trim().toLowerCase()
-
-          return methodMatches && job.status === "Waiting for Blanks"
-        })
-      )
-
-      const standby = sortJobsByPriority(
-        jobs.filter((job) => {
-          const methodMatches =
-            String(job.method || "").trim().toLowerCase() ===
-            String(dept.method || "").trim().toLowerCase()
-
-          return (
-            methodMatches &&
-            (job.status === "Email Received" ||
-              job.status === "Waiting Approval")
+      if (dept.method === "DTF Printing") {
+        nextUp = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "DTF Next Up"
           )
-        })
-      )
+        )
 
+        printing = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "DTF Printing"
+          )
+        )
+
+        onDeck = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "DTF On Deck"
+          )
+        )
+
+        finishing = sortJobsByPriority(
+          jobs.filter(
+            (job) =>
+              methodMatches(job) &&
+              (job.status === "Heat Press Next Up" ||
+                job.status === "Heat Pressing")
+          )
+        )
+
+        ready = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "Ready for Shipping"
+          )
+        )
+      }
+
+      if (dept.method === "Embroidery") {
+        nextUp = sortJobsByPriority(
+          jobs.filter(
+            (job) =>
+              methodMatches(job) &&
+              (job.status === "Embroidery Next Up" ||
+                job.status === "Ready for Embroidery")
+          )
+        )
+
+        printing = sortJobsByPriority(
+          jobs.filter(
+            (job) =>
+              methodMatches(job) &&
+              (job.status === "Embroidery Printing" ||
+                job.status === "Embroidery")
+          )
+        )
+
+        onDeck = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "Embroidery On Deck"
+          )
+        )
+
+        finishing = sortJobsByPriority(
+          jobs.filter(
+            (job) =>
+              methodMatches(job) &&
+              (job.status === "Embroidery Finish" ||
+                job.status === "Trimming" ||
+                job.status === "Embroidery QC")
+          )
+        )
+
+        ready = sortJobsByPriority(
+          jobs.filter(
+            (job) => methodMatches(job) && job.status === "Ready for Shipping"
+          )
+        )
+      }
+
+      const nextUpCount = nextUp.length
       const printingCount = printing.length
-      const queueCount = queue.length
+      const onDeckCount = onDeck.length
+      const finishingCount = finishing.length
+      const readyCount = ready.length
 
-      const printingPieces = printing.reduce(
+      const activePieces = [...nextUp, ...printing, ...onDeck, ...finishing].reduce(
         (sum, job) => sum + Number(job.qty || 0),
         0
       )
 
-      const totalPieces = [...printing, ...queue].reduce(
+      const totalPieces = [...nextUp, ...printing, ...onDeck, ...finishing, ...ready].reduce(
         (sum, job) => sum + Number(job.qty || 0),
         0
       )
 
-      const overdueCount = [...printing, ...queue].filter((job) => {
-        if (!job.dueDate) return false
+      const overdueCount = [...nextUp, ...printing, ...onDeck, ...finishing].filter(
+        (job) => {
+          if (!job.dueDate) return false
 
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
 
-        const due = new Date(job.dueDate)
-        due.setHours(0, 0, 0, 0)
+          const due = new Date(job.dueDate)
+          due.setHours(0, 0, 0, 0)
 
-        return due < today
-      }).length
+          return due < today
+        }
+      ).length
 
       return {
         name: dept.name,
         method: dept.method,
+        nextUp,
         printing,
-        queue,
-        standby,
+        onDeck,
+        finishing,
+        ready,
+        nextUpCount,
         printingCount,
-        queueCount,
-        totalQty: totalPieces,
-        overdueCount,
-        printingPieces,
-        totalPieces
+        onDeckCount,
+        finishingCount,
+        readyCount,
+        activePieces,
+        totalPieces,
+        overdueCount
       }
     })
   }, [jobs])
@@ -186,6 +225,12 @@ function ProductionBoard({ jobs = [] }) {
     }
   }
 
+  function getFinishTitle() {
+    if (activeDepartment.method === "DTF Printing") return "🟣 HEAT PRESS"
+    if (activeDepartment.method === "Embroidery") return "🧵 FINISH"
+    return "✅ FINISH"
+  }
+
   function renderJobCard(job, isActivePrint = false) {
     return (
       <div
@@ -213,6 +258,7 @@ function ProductionBoard({ jobs = [] }) {
             <p><strong>Placement:</strong> {job.placement}</p>
             <p><strong>Qty:</strong> {job.qty}</p>
             <p><strong>Design:</strong> {job.designName}</p>
+            <p><strong>Status:</strong> {job.status}</p>
             <p className={`dueDate ${getDueStatus(job)}`}>
               <strong>Due:</strong> {job.dueDate || "N/A"}
             </p>
@@ -234,7 +280,7 @@ function ProductionBoard({ jobs = [] }) {
 
   const progressPercent = activeDepartment.totalPieces
     ? Math.round(
-        (activeDepartment.printingPieces / activeDepartment.totalPieces) * 100
+        (activeDepartment.activePieces / activeDepartment.totalPieces) * 100
       )
     : 0
 
@@ -267,12 +313,17 @@ function ProductionBoard({ jobs = [] }) {
                 justifyContent: "space-around",
                 fontSize: "20px",
                 fontWeight: 600,
-                marginBottom: "20px"
+                marginBottom: "20px",
+                flexWrap: "wrap",
+                gap: "12px"
               }}
             >
+              <span>NEXT UP: {activeDepartment.nextUpCount}</span>
               <span>PRINTING: {activeDepartment.printingCount}</span>
-              <span>QUEUE: {activeDepartment.queueCount}</span>
-              <span>PIECES: {activeDepartment.totalQty}</span>
+              <span>ON DECK: {activeDepartment.onDeckCount}</span>
+              <span>FINISH: {activeDepartment.finishingCount}</span>
+              <span>READY: {activeDepartment.readyCount}</span>
+              <span>PIECES: {activeDepartment.totalPieces}</span>
               <span className={activeDepartment.overdueCount ? "overdueStat" : ""}>
                 OVERDUE: {activeDepartment.overdueCount}
               </span>
@@ -294,25 +345,35 @@ function ProductionBoard({ jobs = [] }) {
             </div>
 
             <div className="progressText">
-              {progressPercent}% COMPLETE
+              {progressPercent}% ACTIVE FLOW
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "repeat(5, 1fr)",
                 gap: "20px",
                 marginTop: "20px"
               }}
             >
               <div>
-                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
+                <h2 style={{ fontSize: "24px", marginBottom: "10px" }}>
+                  ⏭ NEXT UP
+                </h2>
+
+                {activeDepartment.nextUp.length === 0 && <p>No upcoming jobs</p>}
+
+                {activeDepartment.nextUp.slice(0, 5).map((job) =>
+                  renderJobCard(job)
+                )}
+              </div>
+
+              <div>
+                <h2 style={{ fontSize: "24px", marginBottom: "10px" }}>
                   🔥 PRINTING NOW
                 </h2>
 
-                {activeDepartment.printing.length === 0 && (
-                  <p>No active jobs</p>
-                )}
+                {activeDepartment.printing.length === 0 && <p>No active jobs</p>}
 
                 {activeDepartment.printing.slice(0, 6).map((job) =>
                   renderJobCard(job, true)
@@ -320,46 +381,47 @@ function ProductionBoard({ jobs = [] }) {
               </div>
 
               <div>
-                <h2 style={{ fontSize: "28px", marginBottom: "10px" }}>
-                  ⏭ NEXT UP
+                <h2 style={{ fontSize: "24px", marginBottom: "10px" }}>
+                  📦 ON DECK
                 </h2>
 
-                {activeDepartment.queue.length === 0 && (
-                  <p>No upcoming jobs</p>
+                {activeDepartment.onDeck.length === 0 && (
+                  <p style={{ opacity: 0.6 }}>No on deck jobs</p>
                 )}
 
-                {activeDepartment.queue.slice(0, 5).map((job) =>
+                {activeDepartment.onDeck.slice(0, 5).map((job) =>
                   renderJobCard(job)
                 )}
+              </div>
 
-                <div style={{ marginTop: "30px" }}>
-                  <h2 style={{ fontSize: "24px", marginBottom: "10px", opacity: 0.8 }}>
-                    📦 ON DECK
-                  </h2>
+              <div>
+                <h2 style={{ fontSize: "24px", marginBottom: "10px" }}>
+                  {getFinishTitle()}
+                </h2>
 
-                  {activeDepartment.standby.length === 0 && (
-                    <p style={{ opacity: 0.6 }}>No standby jobs</p>
-                  )}
+                {activeDepartment.finishing.length === 0 && (
+                  <p style={{ opacity: 0.6 }}>No finish jobs</p>
+                )}
 
-                  {activeDepartment.standby.slice(0, 5).map((job) => (
-                    <div
-                      key={job.id}
-                      style={{
-                        padding: "10px",
-                        marginBottom: "10px",
-                        borderRadius: "8px",
-                        border: "1px solid rgba(0,255,153,0.2)",
-                        background: "rgba(255,255,255,0.03)",
-                        fontSize: "14px"
-                      }}
-                    >
-                      <strong>{job.orderGroup}</strong> — {job.qty} pcs
-                    </div>
-                  ))}
-                </div>
+                {activeDepartment.finishing.slice(0, 5).map((job) =>
+                  renderJobCard(job)
+                )}
+              </div>
+
+              <div>
+                <h2 style={{ fontSize: "24px", marginBottom: "10px" }}>
+                  ✅ READY TO SHIP
+                </h2>
+
+                {activeDepartment.ready.length === 0 && (
+                  <p style={{ opacity: 0.6 }}>No ready jobs</p>
+                )}
+
+                {activeDepartment.ready.slice(0, 5).map((job) =>
+                  renderJobCard(job)
+                )}
               </div>
             </div>
-
           </div>
         </div>
       </div>

@@ -136,6 +136,21 @@ function ReceivingPage() {
       return
     }
 
+    // ✅ If fully received, update jobs too
+      if (newQtyReceived >= qtyOrdered) {
+        const { error: jobError } = await supabase
+          .from("jobs")
+            .update({
+              delivered: true,
+              status: "DTF Next Up"
+            })
+          .eq("orderGroup", selectedPO.order_group)
+
+        if (jobError) {
+          console.error("UPDATE JOBS ERROR:", jobError)
+        }
+      }
+
     const updatedItems = poItems.map((poItem) =>
       poItem.id === item.id
         ? {

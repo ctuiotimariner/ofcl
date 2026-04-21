@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { QRCodeCanvas } from 'qrcode.react'
+import { useState, useEffect } from "react"
+import { QRCodeCanvas } from "qrcode.react"
 
 function formatSizes(sizes) {
   if (!sizes) return "—"
@@ -12,252 +12,296 @@ function formatSizes(sizes) {
     .join(", ")
 }
 
-
-function JobTicketPage({ orders, setOrders, jobs, selectedOrder, scannedOrderNumber }) {
-  
+function JobTicketPage({
+  orders,
+  setOrders,
+  jobs,
+  selectedOrder,
+  scannedOrderNumber
+}) {
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
-  if (!selectedOrder) return
+    if (!selectedOrder) return
 
-  const foundIndex = orders.findIndex(
-    (order) =>
-      order.orderNumber.toLowerCase() === selectedOrder.toLowerCase()
-  )
-
-  if (foundIndex !== -1) {
-    setSelectedOrderIndex(foundIndex)
-  }
-}, [selectedOrder, orders])
-
-
-  useEffect(() => {
-  if (!scannedOrderNumber) return
-
-  const foundIndex = orders.findIndex(
-    (order) =>
-      order.orderNumber.toLowerCase() === scannedOrderNumber.toLowerCase()
-  )
-
-  if (foundIndex !== -1) {
-    setSelectedOrderIndex(foundIndex)
-  }
-}, [scannedOrderNumber, orders])
-
-
-const filteredOrders = orders.filter((order) => {
-  if (!order) return false
-
-  return `${order.orderNumber} ${order.customerName}`
-    .toLowerCase()
-    .includes(search.toLowerCase())
-})
-
-const order = orders[selectedOrderIndex]
-
-if (!order) return <h2>No saved orders yet</h2>
-
-  const orderJobs = jobs.filter(
-  (job) => job.orderGroup === order.orderNumber
-)
-  if (!order) {
-    return <h2>No saved orders yet</h2>
-  }
-
-function handleDeleteOrder(orderId) {
-  const confirmed = window.confirm('Delete this order?')
-
-  if (!confirmed) return
-
-  setOrders((prev) => {
-    const updatedOrders = prev.filter((order) => order.id !== orderId)
-
-    setSelectedOrderIndex((currentIndex) =>
-      updatedOrders.length === 0
-        ? 0
-        : Math.min(currentIndex, updatedOrders.length - 1)
+    const foundIndex = orders.findIndex(
+      (order) =>
+        order.orderNumber.toLowerCase() === selectedOrder.toLowerCase()
     )
 
-    return updatedOrders
+    if (foundIndex !== -1) {
+      setSelectedOrderIndex(foundIndex)
+    }
+  }, [selectedOrder, orders])
+
+  useEffect(() => {
+    if (!scannedOrderNumber) return
+
+    const foundIndex = orders.findIndex(
+      (order) =>
+        order.orderNumber.toLowerCase() === scannedOrderNumber.toLowerCase()
+    )
+
+    if (foundIndex !== -1) {
+      setSelectedOrderIndex(foundIndex)
+    }
+  }, [scannedOrderNumber, orders])
+
+  const filteredOrders = orders.filter((order) => {
+    if (!order) return false
+
+    return `${order.orderNumber} ${order.customerName}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
   })
-}
 
-function getOrderStage(orderJobs) {
-  const statuses = orderJobs.map((job) => job.status)
+  const order = orders[selectedOrderIndex]
 
-  if (statuses.every((s) => s === "Shipped")) return 5
-  if (statuses.every((s) => s === "Completed" || s === "Shipped")) return 4
-  if (statuses.some((s) => s === "Printing")) return 3
-  if (statuses.some((s) => s === "Waiting for Blanks")) return 2
-  return 1
-}
+  if (!order) return <h2>No saved orders yet</h2>
 
-const stage = getOrderStage(orderJobs)
+  const orderJobs = jobs.filter((job) => job.orderGroup === order.orderNumber)
 
+  function handleDeleteOrder(orderId) {
+    const confirmed = window.confirm("Delete this order?")
+    if (!confirmed) return
+
+    setOrders((prev) => {
+      const updatedOrders = prev.filter((order) => order.id !== orderId)
+
+      setSelectedOrderIndex((currentIndex) =>
+        updatedOrders.length === 0
+          ? 0
+          : Math.min(currentIndex, updatedOrders.length - 1)
+      )
+
+      return updatedOrders
+    })
+  }
+
+  function getOrderStage(orderJobs) {
+    if (!orderJobs || orderJobs.length === 0) return 1
+
+    const statuses = orderJobs.map((job) => job.status)
+
+    if (statuses.every((s) => s === "Picked Up")) return 8
+    if (statuses.every((s) => s === "Shipped")) return 8
+    if (statuses.every((s) => s === "Ready for Shipping")) return 7
+    if (statuses.some((s) => s === "Heat Pressing")) return 6
+    if (statuses.some((s) => s === "Heat Press Next Up")) return 5
+    if (statuses.some((s) => s === "DTF On Deck")) return 4
+    if (statuses.some((s) => s === "DTF Printing")) return 3
+    if (statuses.some((s) => s === "DTF Next Up")) return 2
+    if (statuses.some((s) => s === "Waiting for Blanks")) return 1
+
+    return 1
+  }
+
+  const stage = getOrderStage(orderJobs)
+
+  const timelineSteps = [
+    "Blanks",
+    "DTF Next",
+    "DTF Printing",
+    "DTF On Deck",
+    "Heat Press Next",
+    "Heat Pressing",
+    "Ready to Ship",
+    "Shipped"
+  ]
 
   return (
     <>
-       <div className="sectionCard">
-      <h3 className="sectionTitle">Job Ticket</h3>
+      <div className="sectionCard">
+        <h3 className="sectionTitle">Job Ticket</h3>
 
-      <input
-        placeholder="Search orders..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
+        <input
+          placeholder="Search orders..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
             marginBottom: "20px",
             padding: "8px",
             borderRadius: "6px"
-        }}
-      />
+          }}
+        />
 
-      <div style={{ marginBottom: '20px' }}>
-  <h3>Select Order</h3>
+        <div style={{ marginBottom: "20px" }}>
+          <h3>Select Order</h3>
 
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-    {filteredOrders.map((savedOrder, index) => (
-      <button
-        key={savedOrder.id}
-        type="button"
-        onClick={() => setSelectedOrderIndex(index)}
-        style={{
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.15)',
-          background:
-            index === selectedOrderIndex
-              ? 'rgba(255,255,255,0.16)'
-              : 'rgba(255,255,255,0.06)',
-          color: 'inherit',
-          cursor: 'pointer',
-        }}
-      >
-        {savedOrder.orderNumber}
-      </button>
-    ))}
-  </div>
-</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            {filteredOrders.map((savedOrder) => {
+              const actualIndex = orders.findIndex(
+                (order) => order.id === savedOrder.id
+              )
 
-      <button type="button" onClick={() => window.print()}>
-        Print / Save PDF
-      </button>
-
-      <div className="tableCard" style={{ marginTop: '20px' }}>
-
-        <div className="ticketTopLayout">
-  <div>
-    <h3>{order.orderNumber}</h3>
-
-    <div className="timelineWrap">
-      <div className="timelineRow">
-        <div className={`timelineDot ${stage >= 1 ? 'active' : ''}`}></div>
-        <div className={`timelineLine ${stage >= 2 ? 'active' : ''}`}></div>
-
-        <div className={`timelineDot ${stage >= 2 ? 'active' : ''}`}></div>
-        <div className={`timelineLine ${stage >= 3 ? 'active' : ''}`}></div>
-
-        <div className={`timelineDot ${stage >= 3 ? 'active' : ''}`}></div>
-        <div className={`timelineLine ${stage >= 4 ? 'active' : ''}`}></div>
-
-        <div className={`timelineDot ${stage >= 4 ? 'active' : ''}`}></div>
-        <div className={`timelineLine ${stage >= 5 ? 'active' : ''}`}></div>
-
-        <div className={`timelineDot ${stage >= 5 ? 'active' : ''}`}></div>
-      </div>
-
-      <div className="timelineLabels">
-        <span className={stage >= 1 ? 'active' : ''}>Email</span>
-        <span className={stage >= 2 ? 'active' : ''}>Blanks</span>
-        <span className={stage >= 3 ? 'active' : ''}>Printing</span>
-        <span className={stage >= 4 ? 'active' : ''}>Completed</span>
-        <span className={stage >= 5 ? 'active' : ''}>Shipped</span>
-      </div>
-    </div>
-
-    <button
-      type="button"
-      onClick={() => handleDeleteOrder(order.id)}
-      style={{ marginBottom: '15px' }}
-    >
-      Delete Order
-    </button>
-
-    <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-      <QRCodeCanvas value={order.orderNumber} size={120} />
-    </div>
-
-    <p><strong>Customer:</strong> {order.customerName}</p>
-    <p><strong>Vendor:</strong> {order.vendor}</p>
-    <p><strong>PO Number:</strong> {order.poNumber}</p>
-    <p><strong>Due Date:</strong> {order.dueDate}</p>
-    <p><strong>Notes:</strong> {order.generalNotes || '—'}</p>
-  </div>
-
-  <div className="ticketMockupBox">
-    {order.items[0]?.mockup && (
-      <img
-        src={order.items[0].mockup}
-        alt="mockup"
-        className="ticketMockupImage"
-      />
-    )}
-  </div>
-</div>
-
-
-        <h3 style={{ marginTop: '24px' }}>Placement Guide</h3>
-
-        <div className="placementGuide">
-          {order.items.map((item, index) => (
-            <div key={index} className="placementCard">
-              <h4>{item.garment}</h4>
-
-              <p>
-                <strong>Placement:</strong>{' '}
-                <span className="placementTag">
-                  {item.placement || '—'}
-                </span>
-              </p>
-
-              <p><strong>Design:</strong> {item.designName || '—'}</p>
-              <p><strong>Method:</strong> {item.method || '—'}</p>
-              <p><strong>Sizes:</strong> {formatSizes(item.sizes)}</p>
-            </div>
-          ))}
+              return (
+                <button
+                  key={savedOrder.id}
+                  type="button"
+                  onClick={() => setSelectedOrderIndex(actualIndex)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background:
+                      actualIndex === selectedOrderIndex
+                        ? "rgba(255,255,255,0.16)"
+                        : "rgba(255,255,255,0.06)",
+                    color: "inherit",
+                    cursor: "pointer"
+                  }}
+                >
+                  {savedOrder.orderNumber}
+                </button>
+              )
+            })}
+          </div>
         </div>
-        <h3 style={{ marginTop: '20px' }}>Items</h3>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Garment</th>
-              <th>Qty</th>
-              <th>Sizes</th>
-              <th>Placement</th>
-              <th>Design</th>
-              <th>Method</th>
-            </tr>
-          </thead>
+        <button type="button" onClick={() => window.print()}>
+          Print / Save PDF
+        </button>
 
-          <tbody>
+        <div className="tableCard" style={{ marginTop: "20px" }}>
+          <div className="ticketTopLayout">
+            <div>
+              <h3>{order.orderNumber}</h3>
+
+              <div className="timelineWrap">
+                <div className="timelineRow">
+                  {timelineSteps.map((_, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "contents"
+                      }}
+                    >
+                      <div
+                        className={`timelineDot ${stage >= index + 1 ? "active" : ""}`}
+                      ></div>
+
+                      {index < timelineSteps.length - 1 && (
+                        <div
+                          className={`timelineLine ${stage >= index + 2 ? "active" : ""}`}
+                        ></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  className="timelineLabels"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${timelineSteps.length}, 1fr)`,
+                    gap: "6px"
+                  }}
+                >
+                  {timelineSteps.map((label, index) => (
+                    <span
+                      key={label}
+                      className={stage >= index + 1 ? "active" : ""}
+                      style={{
+                        textAlign: "center",
+                        fontSize: "12px"
+                      }}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteOrder(order.id)}
+                style={{ marginBottom: "15px" }}
+              >
+                Delete Order
+              </button>
+
+              <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+                <QRCodeCanvas value={order.orderNumber} size={120} />
+              </div>
+
+              <p><strong>Customer:</strong> {order.customerName}</p>
+              <p><strong>Vendor:</strong> {order.vendor || "—"}</p>
+              <p><strong>Due Date:</strong> {order.dueDate || "—"}</p>
+              <p><strong>Order Type:</strong> {order.orderType || "—"}</p>
+              <p><strong>Payment:</strong> {order.paymentStatus || "Unpaid"}</p>
+              <p><strong>Notes:</strong> {order.generalNotes || "—"}</p>
+
+              {orderJobs.length > 0 && (
+                <div style={{ marginTop: "16px" }}>
+                  <p><strong>Current Job Status:</strong> {orderJobs[0]?.status || "—"}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="ticketMockupBox">
+              {order.items?.[0]?.mockup && (
+                <img
+                  src={order.items[0].mockup}
+                  alt="mockup"
+                  className="ticketMockupImage"
+                />
+              )}
+            </div>
+          </div>
+
+          <h3 style={{ marginTop: "24px" }}>Placement Guide</h3>
+
+          <div className="placementGuide">
             {order.items.map((item, index) => (
-              <tr key={index}>
-                <td>{item.garment}</td>
-                <td>{item.qty}</td>
-                <td>{formatSizes(item.sizes)}</td>
-                <td>{item.placement}</td>
-                <td>{item.designName}</td>
-                <td>{item.method}</td>
-                
-              </tr>
+              <div key={index} className="placementCard">
+                <h4>{item.garment}</h4>
+
+                <p>
+                  <strong>Placement:</strong>{" "}
+                  <span className="placementTag">
+                    {item.placement || "—"}
+                  </span>
+                </p>
+
+                <p><strong>Design:</strong> {item.designName || "—"}</p>
+                <p><strong>Method:</strong> {item.method || "—"}</p>
+                <p><strong>Sizes:</strong> {formatSizes(item.sizes)}</p>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+
+          <h3 style={{ marginTop: "20px" }}>Items</h3>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Garment</th>
+                <th>Qty</th>
+                <th>Sizes</th>
+                <th>Placement</th>
+                <th>Design</th>
+                <th>Method</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {order.items.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.garment}</td>
+                  <td>{item.qty}</td>
+                  <td>{formatSizes(item.sizes)}</td>
+                  <td>{item.placement}</td>
+                  <td>{item.designName}</td>
+                  <td>{item.method}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-     </div>
-  </>
-)
+    </>
+  )
 }
 
 export default JobTicketPage

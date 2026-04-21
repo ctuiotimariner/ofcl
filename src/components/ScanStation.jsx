@@ -32,11 +32,15 @@ function ScanStation({
   }, [])
 
   function getNextStatus(status) {
-    if (status === "Waiting for Blanks") return "Printing"
-    if (status === "Printing") return "Completed"
-    if (status === "Completed") return "Shipped"
-    return status
-  }
+  if (status === "Waiting for Blanks") return "DTF Next Up"
+  if (status === "DTF Next Up") return "DTF Printing"
+  if (status === "DTF Printing") return "DTF On Deck"
+  if (status === "DTF On Deck") return "Heat Press Next Up"
+  if (status === "Heat Press Next Up") return "Heat Pressing"
+  if (status === "Heat Pressing") return "Ready for Shipping"
+  if (status === "Ready for Shipping") return "Shipped"
+  return status
+}
 
   async function handleScan(e) {
     e.preventDefault()
@@ -87,18 +91,40 @@ function ScanStation({
 
     let playedSuccess = false
 
-    const updatedJobs = matchingJobs.map((job) => {
-      const nextStatus = getNextStatus(job.status)
+const updatedJobs = matchingJobs.map((job) => {
+  const nextStatus = getNextStatus(job.status)
 
-      if (nextStatus === "Completed") {
-        playedSuccess = true
-      }
+  if (nextStatus === "Ready for Shipping") {
+    playedSuccess = true
+  }
 
-      return {
-        ...job,
-        status: nextStatus
-      }
-    })
+  return {
+    ...job,
+    status: nextStatus
+  }
+})
+
+for (const job of updatedJobs) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ status: job.status })
+    .eq("id", job.id)
+
+  if (error) {
+    console.error("Supabase update error:", error)
+    playSound("alert")
+    alert("Failed to update job status in database")
+    return
+  }
+}
+
+setJobs((prevJobs) =>
+  prevJobs.map((job) => {
+    const updatedJob = updatedJobs.find((j) => j.id === job.id)
+    return updatedJob ? updatedJob : job
+  })
+)
+
 
     for (const job of updatedJobs) {
       const { error } = await supabase

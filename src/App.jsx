@@ -85,19 +85,19 @@ function App() {
   }
 
   async function fetchJobs() {
-    const { data, error } = await supabase
-      .from("jobs")
-      .select(
-        "id, orderGroup, client, orderType, garment, qty, sizes, placement, designName, method, status, dueDate, vendor, poNumber, delivered"
-      )
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(
+      "id, orderGroup, client, orderType, garment, qty, sizes, placement, designName, method, mockup, status, dueDate, vendor, delivered"
+    )
 
-    if (error) {
-      console.error("FETCH JOBS ERROR:", error)
-      return
-    }
-
-    setJobs(data || [])
+  if (error) {
+    console.error("FETCH JOBS ERROR:", error)
+    return
   }
+
+  setJobs(data || [])
+}
 
   async function fetchOrders() {
     const { data, error } = await supabase
