@@ -13,6 +13,8 @@ import DashboardMain from "./components/DashboardMain"
 import { supabase } from "./lib/supabase"
 import StatsPage from "./components/StatsPage"
 import PurchaseOrdersPage from "./components/PurchaseOrdersPage"
+import LabelPrintPage from "./components/LabelPrintPage"
+
 
 function App() {
   const [inventory, setInventory] = useState(() => {
@@ -511,6 +513,13 @@ function App() {
             setSelectedOrder={setSelectedOrder}
             fetchOrders={fetchOrders}
             fetchJobs={fetchJobs}
+          />
+        )}
+
+        {currentPage === "labelPrint" && (
+          <LabelPrintPage
+            orders={orders}
+            selectedOrder={selectedOrder}
           />
         )}
 

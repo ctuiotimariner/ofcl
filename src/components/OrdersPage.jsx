@@ -394,6 +394,13 @@ function OrdersPage({
       await fetchOrders()
     }
 
+    const newOrderNumber = orderNumber
+
+      setSelectedOrder(newOrderNumber)
+      setCurrentPage("labelPrint")
+
+      return
+
     setOrderItems([])
     setOrderNumber("")
     setCustomerName("")
