@@ -34,6 +34,8 @@ function App() {
   const [qty, setQty] = useState(0)
   const [sku, setSku] = useState("")
   const [search, setSearch] = useState("")
+  const [loadingJobs, setLoadingJobs] = useState(false)
+  const [loadingOrders, setLoadingOrders] = useState(false)
 
   const [role, setRole] = useState(() => {
     return localStorage.getItem("role") || ""
@@ -77,6 +79,8 @@ function App() {
   const [jobs, setJobs] = useState([])
   const [orders, setOrders] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const searchParams = new URLSearchParams(window.location.search)
+  const printLabelOrder = searchParams.get("printLabel")
   const [jobSearch, setJobSearch] = useState("")
 
   const skuInputRef = useRef(null)
@@ -87,34 +91,43 @@ function App() {
   }
 
   async function fetchJobs() {
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(
-      "id, orderGroup, client, orderType, garment, qty, sizes, placement, designName, method, mockup, status, dueDate, vendor, delivered"
-    )
+    if (loadingJobs) return
+    setLoadingJobs(true)
 
-  if (error) {
-    console.error("FETCH JOBS ERROR:", error)
-    return
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("id, orderGroup, client, status, dueDate, method, delivered")
+      .order("id", { ascending: false })
+      .limit(200)
+
+    if (error) {
+      console.error("FETCH JOBS ERROR:", error)
+      setLoadingJobs(false)
+      return
+    }
+
+    setJobs(data || [])
+    setLoadingJobs(false)
   }
 
-  setJobs(data || [])
-}
-
   async function fetchOrders() {
+    if (loadingOrders) return
+    setLoadingOrders(true)
+
     const { data, error } = await supabase
       .from("orders")
-      .select(
-        "id, orderNumber, customerName, orderType, vendor, poNumber, dueDate, generalNotes, items, totalProfit, totalRevenue, paymentStatus, status"
-      )
+      .select("id, orderNumber, customerName, dueDate, items, status")
       .order("id", { ascending: false })
+      .limit(200)
 
     if (error) {
       console.error("FETCH ORDERS ERROR:", error)
+      setLoadingOrders(false)
       return
     }
 
     setOrders(data || [])
+    setLoadingOrders(false)
   }
 
   useEffect(() => {
@@ -133,7 +146,7 @@ function App() {
           table: "jobs",
         },
         () => {
-          fetchJobs()
+          setTimeout(() => fetchJobs(), 300)
         }
       )
       .subscribe()
@@ -154,7 +167,7 @@ function App() {
           table: "orders",
         },
         () => {
-          fetchOrders()
+          setTimeout(() => fetchOrders(), 300)
         }
       )
       .subscribe()
@@ -471,6 +484,15 @@ function App() {
     if (diffDays <= 2) return "job-due-soon"
 
     return ""
+  }
+
+  if (printLabelOrder) {
+    return (
+      <LabelPrintPage
+        orders={orders}
+        selectedOrder={printLabelOrder}
+      />
+    )
   }
 
   if (!role) {

@@ -307,111 +307,123 @@ function OrdersPage({
   }
 
   async function handleCreateOrder() {
-    const needsVendorPricing = orderType === "Full Production"
+  const needsVendorPricing = orderType === "Full Production"
 
-    if (
-      !orderNumber ||
-      !customerName ||
-      !orderType ||
-      orderItems.length === 0 ||
-      (needsVendorPricing && !vendor)
-    ) {
-      return
-    }
-
-    const newJobs = orderItems.map((item) => ({
-      orderGroup: orderNumber,
-      client: customerName,
-      orderType,
-      garment: item.garment,
-      productType: item.productType,
-      qty: item.qty,
-      sizes: item.sizes,
-      placement: item.placement,
-      designName: item.designName,
-      method: item.method,
-      mockup: item.mockup,
-      status: "Waiting for Blanks",
-      dueDate: dueDate || null,
-      vendor,
-      delivered: false,
-    }))
-
-    const totalOrderProfit = orderItems.reduce((sum, item) => {
-      return sum + Number(item.totalProfit || 0)
-    }, 0)
-
-    const totalCost = orderItems.reduce((sum, item) => {
-      return sum + Number(item.totalCost || 0)
-    }, 0)
-
-    const totalRevenue = orderItems.reduce((sum, item) => {
-      return sum + Number(item.totalPrice || 0)
-    }, 0)
-
-    const profit = totalRevenue - totalCost
-    const margin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0
-
-    if (margin < 30) {
-      const proceed = window.confirm(
-        `⚠️ Low Margin Alert\n\nMargin: ${margin.toFixed(1)}%\n\nProceed anyway?`
-      )
-
-      if (!proceed) return
-    }
-
-    const newOrder = {
-      orderNumber,
-      customerName,
-      orderType,
-      vendor,
-      dueDate: dueDate || null,
-      generalNotes,
-      items: orderItems,
-      totalProfit: totalOrderProfit,
-      totalRevenue,
-      paymentStatus: "Unpaid",
-    }
-
-    const { error: jobError } = await supabase.from("jobs").insert(newJobs)
-
-    if (jobError) {
-      console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
-      alert(`Jobs failed: ${jobError.message}`)
-      return
-    }
-
-    const { error: orderError } = await supabase.from("orders").insert([newOrder])
-
-    if (orderError) {
-      console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
-      alert(`Order failed: ${orderError.message}`)
-      return
-    }
-
-    await fetchJobs()
-    if (fetchOrders) {
-      await fetchOrders()
-    }
-
-    const newOrderNumber = orderNumber
-
-      setSelectedOrder(newOrderNumber)
-      setCurrentPage("labelPrint")
-
-      return
-
-    setOrderItems([])
-    setOrderNumber("")
-    setCustomerName("")
-    setOrderType("")
-    setVendor("")
-    
-    setDueDate("")
-    setGeneralNotes("")
-    setMarkupPercent(40)
-    resetItemForm("shirt")
+  if (
+    !orderNumber ||
+    !customerName ||
+    !orderType ||
+    orderItems.length === 0 ||
+    (needsVendorPricing && !vendor)
+  ) {
+    return
   }
+
+  const newJobs = orderItems.map((item) => ({
+    orderGroup: orderNumber,
+    client: customerName,
+    orderType,
+    garment: item.garment,
+    productType: item.productType,
+    qty: item.qty,
+    sizes: item.sizes,
+    placement: item.placement,
+    designName: item.designName,
+    method: item.method,
+    mockup: item.mockup,
+    status: "Waiting for Blanks",
+    dueDate: dueDate || null,
+    vendor,
+    delivered: false,
+  }))
+
+  const totalOrderProfit = orderItems.reduce((sum, item) => {
+    return sum + Number(item.totalProfit || 0)
+  }, 0)
+
+  const totalCost = orderItems.reduce((sum, item) => {
+    return sum + Number(item.totalCost || 0)
+  }, 0)
+
+  const totalRevenue = orderItems.reduce((sum, item) => {
+    return sum + Number(item.totalPrice || 0)
+  }, 0)
+
+  const profit = totalRevenue - totalCost
+  const margin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0
+
+  if (margin < 30) {
+    const proceed = window.confirm(
+      `⚠️ Low Margin Alert\n\nMargin: ${margin.toFixed(1)}%\n\nProceed anyway?`
+    )
+
+    if (!proceed) return
+  }
+
+  const newOrder = {
+    orderNumber,
+    customerName,
+    orderType,
+    vendor,
+    dueDate: dueDate || null,
+    generalNotes,
+    items: orderItems,
+    totalProfit: totalOrderProfit,
+    totalRevenue,
+    paymentStatus: "Unpaid",
+  }
+
+  const { error: jobError } = await supabase.from("jobs").insert(newJobs)
+
+  if (jobError) {
+    console.error("INSERT JOBS ERROR FULL:", JSON.stringify(jobError, null, 2))
+    alert(`Jobs failed: ${jobError.message}`)
+    return
+  }
+
+  const { error: orderError } = await supabase.from("orders").insert([newOrder])
+
+  if (orderError) {
+    console.error("INSERT ORDER ERROR FULL:", JSON.stringify(orderError, null, 2))
+    alert(`Order failed: ${orderError.message}`)
+    return
+  }
+
+  await fetchJobs()
+  if (fetchOrders) {
+    await fetchOrders()
+  }
+
+  const newOrderNumber = orderNumber
+
+  setOrderItems([])
+setOrderNumber("")
+setCustomerName("")
+setOrderType("")
+setVendor("")
+setDueDate("")
+setGeneralNotes("")
+setProductStyle("")
+setProductColor("")
+setGarment("")
+setPlacement("")
+setDesignName("")
+setMockup("")
+setMethod("")
+setSellPrice("")
+setMarkupPercent("30")
+setVendorData(null)
+setProductType("shirt")
+setSizeRows([{ size: "M", qty: "" }])
+
+  setSelectedOrder(newOrderNumber)
+
+  window.open(
+    `${window.location.origin}?printLabel=${encodeURIComponent(newOrderNumber)}`,
+    "_blank",
+    "width=500,height=700"
+  )
+}
 
   async function handleDeleteOrder(orderId, orderNumber) {
     const confirmed = window.confirm(
