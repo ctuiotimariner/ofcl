@@ -142,6 +142,25 @@ function ScanStation({ orders, jobs, setJobs }) {
       return
     }
 
+   const hasWaitingJobs = matchingJobs.some(
+  (job) => job.status === "Waiting for Blanks"
+)
+
+if (hasWaitingJobs) {
+  playSound("alert")
+  setActiveOrderNumber(foundOrder.orderNumber)
+  setActiveCustomer(foundOrder.customerName || "")
+  setActiveStatus("Waiting for Blanks")
+  setActiveNextStatus("DTF Next Up")
+  setMessageType("error")
+  setScanMessage("MUST RECEIVE FIRST")
+  setScanValue("")
+  setIsBusy(false)
+  inputRef.current?.focus()
+  clearMessageLater()
+  return
+}
+
     const updatedJobs = matchingJobs.map((job) => ({
       ...job,
       status: getNextStatus(job.status),
@@ -187,8 +206,14 @@ function ScanStation({ orders, jobs, setJobs }) {
       playSound("scan")
     }
 
-    setMessageType("success")
-    setScanMessage(`UPDATED TO ${primaryJob.status.toUpperCase()}`)
+    if (hasWaitingJobs) {
+      setMessageType("success")
+      setScanMessage(`RECEIVED → ${primaryJob.status.toUpperCase()}`)
+    } else {
+      setMessageType("success")
+      setScanMessage(`UPDATED TO ${primaryJob.status.toUpperCase()}`)
+    }
+
     setScanValue("")
     setIsBusy(false)
     inputRef.current?.focus()
@@ -350,7 +375,6 @@ function ScanStation({ orders, jobs, setJobs }) {
           margin: 0 auto 10px auto;
           border: 2px solid rgba(255,255,255,0.2);
           background: rgba(255,255,255,0.06);
-          box-shadow: none;
         }
 
         .processStep.done .processDot {
@@ -417,7 +441,9 @@ function ScanStation({ orders, jobs, setJobs }) {
           </div>
 
           <div className="scanNextLine">
-            {activeNextStatus
+            {activeStatus === "Waiting for Blanks"
+              ? "Must be received on Receiving Page first"
+              : activeNextStatus
               ? `Next: ${activeNextStatus}`
               : activeStatus === "Shipped"
               ? "Final stage reached"
@@ -438,7 +464,7 @@ function ScanStation({ orders, jobs, setJobs }) {
           </form>
 
           <div className="scanHint">
-            Scan the printed barcode. This page stays here and updates the process only.
+            Jobs still waiting for blanks must be marked received on the Receiving Page first.
           </div>
         </div>
 
