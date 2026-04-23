@@ -321,7 +321,7 @@ function JobsPage({
           onChange={(e) => setJobSearch(e.target.value)}
         />
 
-        <div className="tableCard">
+        <div className="tableCard jobsTable">
           <table>
             <thead>
               <tr>

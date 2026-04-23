@@ -1,4 +1,5 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { supabase } from "../lib/supabase"
 import { QRCodeCanvas } from "qrcode.react"
 import Barcode from "react-barcode"
 
@@ -19,22 +20,47 @@ function getTotalQty(order) {
 }
 
 function LabelPrintPage({ orders, selectedOrder }) {
+  const [poData, setPOData] = useState(null)
+
   const order = orders.find(
     (o) => o.orderNumber?.toLowerCase() === selectedOrder?.toLowerCase()
   )
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    window.print()
+    async function fetchPO() {
+      if (!selectedOrder) return
 
-    // 🔥 close popup after print
-    setTimeout(() => {
-      window.close()
+      const { data, error } = await supabase
+        .from("purchase_orders")
+        .select("*")
+        .eq("order_group", selectedOrder)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        console.error("PO fetch error:", error)
+        setPOData(null)
+        return
+      }
+
+      setPOData(data)
+    }
+
+    fetchPO()
+  }, [selectedOrder])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.print()
+
+      setTimeout(() => {
+        window.close()
+      }, 500)
     }, 500)
-  }, 500)
 
-  return () => clearTimeout(timer)
-}, [])
+    return () => clearTimeout(timer)
+  }, [])
 
   if (!order) {
     return <h2 style={{ padding: "20px" }}>No order found</h2>
@@ -101,15 +127,15 @@ function LabelPrintPage({ orders, selectedOrder }) {
         }
 
         .orderNumber {
-            font-size: 30px;
-            letter-spacing: 1px;
-            font-weight: 900;
-            text-align: center;
-            line-height: 1.1;
-            margin-bottom: 10px;
-            word-break: break-word;
-            text-transform: uppercase;
-            }
+          font-size: 30px;
+          letter-spacing: 1px;
+          font-weight: 900;
+          text-align: center;
+          line-height: 1.1;
+          margin-bottom: 10px;
+          word-break: break-word;
+          text-transform: uppercase;
+        }
 
         .customerName {
           text-align: center;
@@ -240,6 +266,12 @@ function LabelPrintPage({ orders, selectedOrder }) {
             </div>
             <div>
               <strong>Method:</strong> {order.items?.[0]?.method}
+            </div>
+            <div>
+              <strong>Vendor:</strong> {poData?.vendor || order.vendor || "-"}
+            </div>
+            <div>
+              <strong>PO:</strong> {poData?.vendor_order_number || "-"}
             </div>
 
             <div className="qtyLine">

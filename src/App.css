@@ -9,26 +9,34 @@
 
 /* ===== APP LAYOUT ===== */
 .appLayout {
-  display: flex;
   min-height: 100vh;
 }
 
 .mainContent {
-  flex: 1;
+  margin-left: 240px;
+  min-height: 100vh;
   padding: 30px;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ===== SIDEBAR ===== */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 240px;
-  background: #111;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-right: 4px solid #2eff7b;
-  box-shadow: 4px 0 0 #000;
+  height: 100vh;
+  padding: 20px 16px;
+  background: #000;
+  border-right: 2px solid #00ff99;
+  z-index: 1000;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.sidebar button + button {
+  margin-top: 10px;
 }
 
 .sidebar h2 {
@@ -38,6 +46,11 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   text-shadow: 2px 2px 0 #000;
+  position: sticky;
+  top: 0;
+  background: #000;
+  padding-bottom: 8px;
+  z-index: 2;
 }
 
 .sidebar button {
@@ -46,24 +59,30 @@
   padding: 12px 14px;
   border-radius: 0;
   border: 2px solid #3a3a3a;
-  background: #1b1b1b;
+  background: #111;
   color: #f5f5f5;
   font-weight: 700;
   text-transform: uppercase;
   box-shadow: 3px 3px 0 #000;
+  transition: 0.15s;
 }
 
 .sidebar button:hover {
-  background: #2a2a2a;
+  background: #1c1c1c;
   border-color: #2eff7b;
   transform: translate(-1px, -1px);
 }
 
 .sidebar button.activeTab {
-  background: #2eff7b;
-  color: #101010;
+  background: #2eff7b !important;
+  color: #000 !important;
   border-color: #c8ff00;
   box-shadow: 3px 3px 0 #000;
+}
+
+.sidebar button:focus {
+  outline: none;
+  background: #1c1c1c;
 }
 
 /* ===== ROLE SCREEN ===== */
@@ -73,18 +92,23 @@
   align-items: center;
   justify-content: center;
   background:
-    linear-gradient(180deg, rgba(46, 255, 123, 0.06), transparent),
-    #0b0b0b;
+    radial-gradient(circle at center, rgba(0, 255, 153, 0.05), transparent 50%),
+    #050505;
 }
 
 .roleCard {
   width: 100%;
   max-width: 460px;
-  padding: 32px;
-  background: #151515;
-  border: 3px solid #2eff7b;
-  box-shadow: 6px 6px 0 #000;
+  padding: 40px 44px;
+  background: rgba(10, 10, 10, 0.95);
+  border: 2px solid #00ff99;
   text-align: center;
+  box-shadow:
+    0 0 12px rgba(0, 255, 153, 0.2),
+    inset 0 0 8px rgba(0, 255, 153, 0.05);
+  animation:
+    glowPulse 3s ease-in-out infinite,
+    borderPulse 2.5s ease-in-out infinite;
 }
 
 .roleCard h1 {
@@ -92,6 +116,35 @@
   color: #2eff7b;
   text-transform: uppercase;
   text-shadow: 2px 2px 0 #000;
+}
+
+.roleCard p {
+  color: #bbb;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 6px rgba(0, 255, 153, 0.15);
+  letter-spacing: 0.5px;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.roleLogo {
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 16px;
+  animation: logoPulse 4s ease-in-out infinite;
+  image-rendering: pixelated;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+  filter:
+    drop-shadow(0 0 6px rgba(0, 255, 153, 0.4))
+    drop-shadow(0 0 18px rgba(0, 255, 153, 0.2));
 }
 
 .roleButtons {
@@ -102,20 +155,25 @@
 }
 
 .roleButtons button {
-  padding: 12px 18px;
-  border: 2px solid #3a3a3a;
-  background: #1f1f1f;
-  color: inherit;
+  padding: 12px 20px;
+  border: 1px solid #444;
+  background: #111;
+  color: #ddd;
   cursor: pointer;
   font-weight: 700;
   text-transform: uppercase;
-  box-shadow: 3px 3px 0 #000;
+  letter-spacing: 1px;
+  box-shadow: 0 0 0 transparent;
+  transition: all 0.2s ease;
 }
 
 .roleButtons button:hover {
-  background: #2eff7b;
-  color: #101010;
-  border-color: #c8ff00;
+  border-color: #00ff99;
+  color: #000;
+  box-shadow:
+    0 0 8px rgba(0, 255, 153, 0.4),
+    inset 0 0 6px rgba(0, 255, 153, 0.2);
+  transform: translateY(-2px);
 }
 
 /* ===== FORMS ===== */
@@ -140,7 +198,7 @@ select {
   border-radius: 8px;
   border: 1px solid #2a2a2a;
   background: #111;
-  color: white;
+  color: #fff;
   box-sizing: border-box;
 }
 
@@ -171,31 +229,67 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ===== LABELED INPUTS ===== */
-.sectionCard .inputWithLabel {
+p {
+  border: none !important;
+  outline: none !important;
+}
+
+/* ===== SECTION CARDS ===== */
+.sectionCard {
+  max-width: 1100px;
+  margin: 0 auto 32px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(46, 255, 123, 0.15);
+  box-shadow: 0 0 12px rgba(46, 255, 123, 0.08);
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  color: #2eff7b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(46, 255, 123, 0.25);
+}
+
+.orderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.orderGrid .fullWidth {
+  grid-column: 1 / -1;
+}
+
+.inputWithLabel {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border: none;
-  background: transparent;
-  min-height: auto;
-  overflow: visible;
 }
 
-.sectionCard .inputWithLabel span {
+.inputWithLabel span {
   font-size: 12px;
   color: #8a8a8a;
   line-height: 1.2;
   text-align: left;
   padding: 0;
   margin: 0 0 2px 2px;
-  border: none;
-  opacity: 1;
   white-space: nowrap;
 }
 
+.sectionCard .inputWithLabel,
 .sectionCard .inputWithLabel input,
-.sectionCard .inputWithLabel select {
+.sectionCard .inputWithLabel select,
+.sectionCard input,
+.sectionCard select {
+  overflow: visible;
+}
+
+.sectionCard .inputWithLabel input,
+.sectionCard .inputWithLabel select,
+.sectionCard input,
+.sectionCard select {
   width: 100%;
   height: 42px;
   padding: 0 12px;
@@ -207,7 +301,14 @@ button:disabled {
   box-shadow: none;
 }
 
-
+.sectionCard .inputWithLabel input:focus,
+.sectionCard .inputWithLabel select:focus,
+.sectionCard input:focus,
+.sectionCard select:focus {
+  outline: none;
+  border-color: #2eff7b;
+  box-shadow: 0 0 8px rgba(46, 255, 123, 0.3);
+}
 
 .inputWithLabel input[type="number"] {
   appearance: textfield;
@@ -218,6 +319,137 @@ button:disabled {
 .inputWithLabel input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.stackField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stackField input {
+  width: 100%;
+}
+
+.helperText {
+  font-size: 12px;
+  color: #4cd964;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-left: 2px;
+}
+
+.fileField input[type="file"] {
+  height: 42px;
+  padding: 8px 10px;
+  line-height: normal;
+}
+
+.sizeBox {
+  border: 1px solid rgba(46, 255, 123, 0.18);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 14px;
+  height: fit-content;
+}
+
+.primaryButton {
+  border-color: #2eff7b;
+  box-shadow: 0 0 10px rgba(46, 255, 123, 0.15), 3px 3px 0 #000;
+}
+
+.mutedText {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+.orderSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.summaryCard {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(0, 255, 153, 0.18);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow:
+    0 0 12px rgba(0, 255, 153, 0.08),
+    inset 0 0 10px rgba(0, 255, 153, 0.03);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 18px rgba(0, 255, 153, 0.16),
+    inset 0 0 12px rgba(0, 255, 153, 0.05);
+}
+
+.summaryLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.summaryValue {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+.goodSummary {
+  border-color: rgba(0, 255, 153, 0.35);
+  box-shadow:
+    0 0 18px rgba(0, 255, 153, 0.18),
+    inset 0 0 12px rgba(0, 255, 153, 0.04);
+}
+
+.goodSummary .summaryValue {
+  color: #00ff99;
+  text-shadow: 0 0 10px rgba(0, 255, 153, 0.22);
+}
+
+.warnSummary {
+  border-color: rgba(255, 204, 102, 0.45);
+  box-shadow:
+    0 0 18px rgba(255, 204, 102, 0.18),
+    inset 0 0 12px rgba(255, 204, 102, 0.04);
+}
+
+.warnSummary .summaryValue {
+  color: #ffcc66;
+  text-shadow: 0 0 10px rgba(255, 204, 102, 0.22);
+}
+
+.dangerSummary {
+  border-color: rgba(255, 77, 79, 0.45);
+  box-shadow:
+    0 0 18px rgba(255, 77, 79, 0.18),
+    inset 0 0 12px rgba(255, 77, 79, 0.04);
+}
+
+.dangerSummary .summaryValue {
+  color: #ff4d4f;
+  text-shadow: 0 0 10px rgba(255, 77, 79, 0.22);
+}
+
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 /* ===== SEARCH INPUTS ===== */
@@ -248,26 +480,20 @@ input[placeholder="Search orders..."] {
   width: 100%;
 }
 
-/* ===== TABLE WRAPPER ===== */
+/* ===== TABLE BASE ===== */
 .tableCard {
   width: 100%;
   max-width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px 8px;
   margin-top: 20px;
-  overflow-x: auto;
+  overflow-x: auto;   /* 🔥 allow horizontal scroll properly */
 }
 
-.tableCard table {
-  border-collapse: collapse;
-}
-
-/* ===== TABLE ===== */
 table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   border-collapse: collapse;
   margin-top: 8px;
 }
@@ -328,6 +554,89 @@ td button {
   filter: none;
 }
 
+/* ===== TABLE TYPES ===== */
+.ordersTable {
+  overflow-x: auto;
+}
+
+.ordersTable table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.ordersTable th,
+.ordersTable td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 6px;
+  font-size: 12px;
+
+  background: transparent; /* 🔥 FIX */
+}
+
+/* orders action column */
+.ordersTable th:last-child,
+.ordersTable td:last-child {
+  min-width: 680px;
+  width: 680px;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.ordersTable td:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.ordersTable td:last-child button {
+  width: 150px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0;
+  transition: 0.15s ease;
+}
+
+.ordersTable td:last-child button:hover {
+  transform: translate(-1px, -1px);
+}
+
+.ordersTable td:last-child > div {
+  position: relative;
+  z-index: 30;
+}
+
+.jobsTable {
+  overflow-x: auto;
+}
+
+.jobsTable table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+  font-size: 11px;
+}
+
+.jobsTable th,
+.jobsTable td {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ===== LOW STOCK ===== */
 .low-stock {
   background-color: rgba(255, 70, 70, 0.12);
@@ -371,8 +680,9 @@ td button {
 /* ===== STATUS BADGES ===== */
 .status-badge {
   width: 140px;
-  padding: 6px 0;
-  font-size: 12px;
+  padding: 6px 14px;
+  font-size: 11px;
+  line-height: 1;
   font-weight: 700;
   display: inline-flex;
   justify-content: center;
@@ -575,7 +885,7 @@ h3 {
 }
 
 .stageCard {
-  padding: 16px;
+  padding: 12px;
   text-align: center;
   background: #191919;
   border: 2px solid #2c2c2c;
@@ -583,14 +893,14 @@ h3 {
 }
 
 .stageTitle {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.8;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .stageCount {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   margin-top: 5px;
   text-shadow: 1px 1px 0 #000;
@@ -767,16 +1077,6 @@ h3 {
 .dueDate.dueSoon {
   color: #ffcc66;
   font-weight: 700;
-}
-
-.fadeIn {
-  opacity: 1;
-  transition: opacity 0.4s ease-in;
-}
-
-.fadeOut {
-  opacity: 0;
-  transition: opacity 0.4s ease-out;
 }
 
 /* ===== PROGRESS ===== */
@@ -985,181 +1285,6 @@ h3 {
   }
 }
 
-/* ===== ICONS ===== */
-.pixelIcon {
-  width: 16px;
-  height: 16px;
-  image-rendering: pixelated;
-  margin-right: 8px;
-  vertical-align: middle;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
-}
-
-
-/* ===== NEW CLEAN UI UPGRADE ===== */
-
-.sectionCard {
-  max-width: 1200px;
-  margin: 0 auto 32px auto;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(46, 255, 123, 0.15);
-  box-shadow: 0 0 12px rgba(46, 255, 123, 0.08);
-}
-
-.sectionTitle {
-  margin: 0 0 14px;
-  color: #2eff7b;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 0 8px rgba(46, 255, 123, 0.25);
-}
-
-.orderGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.orderGrid .fullWidth {
-  grid-column: 1 / -1;
-}
-
-.inputWithLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.inputWithLabel span {
-  font-size: 12px;
-  color: #aaa;
-}
-
-input,
-select {
-  height: 40px;
-  padding: 0 10px;
-  border-radius: 6px;
-}
-
-.sizeBox {
-  border: 1px solid rgba(46, 255, 123, 0.15);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
-  padding: 12px;
-  height: fit-content;
-}
-
-.primaryButton {
-  border-color: #2eff7b;
-  box-shadow: 0 0 10px rgba(46, 255, 123, 0.15), 3px 3px 0 #000;
-}
-
-.mutedText {
-  opacity: 0.7;
-  font-size: 12px;
-}
-
-.orderSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.summaryCard {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.04),
-    rgba(255, 255, 255, 0.02)
-  );
-  border: 1px solid rgba(0, 255, 153, 0.18);
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow:
-    0 0 12px rgba(0, 255, 153, 0.08),
-    inset 0 0 10px rgba(0, 255, 153, 0.03);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease;
-}
-
-.summaryCard:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 18px rgba(0, 255, 153, 0.16),
-    inset 0 0 12px rgba(0, 255, 153, 0.05);
-}
-
-.summaryLabel {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0.7;
-  margin-bottom: 8px;
-}
-
-.summaryValue {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
-}
-
-.goodSummary {
-  border-color: rgba(0, 255, 153, 0.35);
-  box-shadow:
-    0 0 18px rgba(0, 255, 153, 0.18),
-    inset 0 0 12px rgba(0, 255, 153, 0.04);
-}
-
-.goodSummary .summaryValue {
-  color: #00ff99;
-  text-shadow: 0 0 10px rgba(0, 255, 153, 0.22);
-}
-
-.warnSummary {
-  border-color: rgba(255, 204, 102, 0.45);
-  box-shadow:
-    0 0 18px rgba(255, 204, 102, 0.18),
-    inset 0 0 12px rgba(255, 204, 102, 0.04);
-}
-
-.warnSummary .summaryValue {
-  color: #ffcc66;
-  text-shadow: 0 0 10px rgba(255, 204, 102, 0.22);
-}
-
-.dangerSummary {
-  border-color: rgba(255, 77, 79, 0.45);
-  box-shadow:
-    0 0 18px rgba(255, 77, 79, 0.18),
-    inset 0 0 12px rgba(255, 77, 79, 0.04);
-}
-
-.dangerSummary .summaryValue {
-  color: #ff4d4f;
-  text-shadow: 0 0 10px rgba(255, 77, 79, 0.22);
-}
-
-.actionRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
-.roleScreen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(circle at center, rgba(0, 255, 153, 0.05), transparent 50%),
-    #050505;
-}
-
 @keyframes glowPulse {
   0% {
     box-shadow:
@@ -1202,81 +1327,6 @@ select {
   }
 }
 
-.roleCard {
-  background: rgba(10, 10, 10, 0.95);
-  border: 2px solid #00ff99;
-  padding: 40px 44px;
-  text-align: center;
-  animation:
-    glowPulse 3s ease-in-out infinite,
-    borderPulse 2.5s ease-in-out infinite;
-  box-shadow:
-    0 0 12px rgba(0, 255, 153, 0.2),
-    inset 0 0 8px rgba(0, 255, 153, 0.05);
-}
-
-.roleLogo {
-  width: 300px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto 16px;
-  animation: logoPulse 4s ease-in-out infinite;
-  image-rendering: pixelated;
-  background: none;
-  padding: 0;
-  box-shadow: none;
-  filter:
-    drop-shadow(0 0 6px rgba(0, 255, 153, 0.4))
-    drop-shadow(0 0 18px rgba(0, 255, 153, 0.2));
-}
-
-.roleCard p {
-  color: #bbb;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-  text-shadow: 0 0 6px rgba(0, 255, 153, 0.15);
-  letter-spacing: 0.5px;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-
-.roleButtons {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.roleButtons button {
-  padding: 12px 20px;
-  background: #111;
-  border: 1px solid #444;
-  color: #ddd;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 700;
-  box-shadow: 0 0 0 transparent;
-  transition: all 0.2s ease;
-}
-
-.roleButtons button:hover {
-  border-color: #00ff99;
-  color: #000;
-  box-shadow:
-    0 0 8px rgba(0, 255, 153, 0.4),
-    inset 0 0 6px rgba(0, 255, 153, 0.2);
-  transform: translateY(-2px);
-}
-
-p {
-  border: none !important;
-  outline: none !important;
-}
-
 @media (max-width: 1100px) {
   .orderGrid {
     grid-template-columns: 1fr;
@@ -1300,197 +1350,74 @@ p {
     font-size: 24px;
   }
 }
-/* ===== ORDERS PAGE: ADD ORDER ITEM FINAL FIX ===== */
 
-.sectionCard .orderGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
+/* ===== HORIZONTAL ACTION ROW ===== */
 
-.sectionCard .inputWithLabel {
+.ordersActionRow {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border: none;
-  background: transparent;
-  min-height: auto;
-  overflow: visible;
+  flex-direction: row;
+  gap: 10px;              /* 🔥 more spacing */
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
-.sectionCard .inputWithLabel span {
-  font-size: 12px;
-  color: #8a8a8a;
-  padding: 0;
-  border: none;
-  opacity: 1;
-  line-height: 1.2;
-}
+.ordersActionRow button {
+  height: 34px;           /* 🔥 taller */
+  min-width: 110px;       /* 🔥 IMPORTANT: gives space for text */
+  padding: 0 10px;
 
-.sectionCard .inputWithLabel input,
-.sectionCard .inputWithLabel select,
-.sectionCard input,
-.sectionCard select {
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #2a2a2a;
-  background: #111;
-  color: #fff;
-  box-sizing: border-box;
-  box-shadow: none;
-}
-
-.sectionCard .inputWithLabel input:focus,
-.sectionCard .inputWithLabel select:focus,
-.sectionCard input:focus,
-.sectionCard select:focus {
-  outline: none;
-  border-color: #2eff7b;
-}
-
-.sectionCard .sizeBox {
-  border: 1px solid rgba(46, 255, 123, 0.18);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 14px;
-  padding: 14px;
-  height: fit-content;
-}
-
-.sectionCard .orderSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-@media (max-width: 1100px) {
-  .sectionCard .orderGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .sectionCard .orderSummaryGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 700px) {
-  .sectionCard .orderSummaryGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ===== ORDERS PAGE: ADD ORDER ITEM CLEAN FIX ===== */
-
-.sectionCard .orderGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.sectionCard .inputWithLabel {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border: none;
-  background: transparent;
-  min-height: auto;
-  overflow: visible;
-}
+  align-items: center;
+  justify-content: center;
 
-.sectionCard .inputWithLabel span {
-  font-size: 12px;
-  color: #8a8a8a;
-  line-height: 1.2;
-  text-align: left;
-  padding: 0;
-  margin: 0 0 2px 2px;
-  border: none;
-  opacity: 1;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+
   white-space: nowrap;
 }
 
-.sectionCard .inputWithLabel input,
-.sectionCard .inputWithLabel select,
-.sectionCard input,
-.sectionCard select {
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #2a2a2a;
-  background: #111;
-  color: #fff;
-  box-sizing: border-box;
-  box-shadow: none;
-}
-
-.sectionCard .inputWithLabel input:focus,
-.sectionCard .inputWithLabel select:focus,
-.sectionCard input:focus,
-.sectionCard select:focus {
-  outline: none;
-  border-color: #2eff7b;
-}
-
-.sectionCard .stackField {
+/* STATUS CELL SPACING */
+.ordersTable td:nth-child(5) {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;   /* 🔥 centers it perfectly */
+  padding: 0;                /* 🔥 remove uneven side padding */
 }
 
-.sectionCard .stackField input {
-  width: 100%;
+.ordersTable td {
+  vertical-align: middle;
+  height: 50px;height: 50px;
 }
 
-.sectionCard .helperText {
-  font-size: 12px;
-  color: #4cd964;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-left: 2px;
+
+.jobsTable table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;   /* 🔥 important */
 }
 
-.sectionCard .fileField input[type="file"] {
-  height: 42px;
-  padding: 8px 10px;
-  line-height: normal;
+.jobsTable th {
+  white-space: normal;     /* 🔥 allow full words */
+  overflow: visible;
+  text-overflow: unset;
+  font-size: 11px;
 }
 
-.sectionCard .sizeBox {
-  border: 1px solid rgba(46, 255, 123, 0.18);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 14px;
-  padding: 14px;
-  height: fit-content;
+.jobsTable thead th {
+  position: sticky;
+  top: 0;
+  background: #111;
+  z-index: 5;
 }
 
-.sectionCard .orderSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
+.ordersTable tr:hover {
+  background: rgba(46, 255, 123, 0.08);
 }
 
-@media (max-width: 1100px) {
-  .sectionCard .orderGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .sectionCard .orderSummaryGrid {
-    grid-template-columns: 1fr 1fr;
-  }
+.ordersTable tr:hover td {
+  background: transparent; /* 🔥 prevents broken hover blocks */
 }
 
-@media (max-width: 700px) {
-  .sectionCard .orderSummaryGrid {
-    grid-template-columns: 1fr;
-  }
+.ordersTable tr td {
+  background: transparent !important;
 }
-.sectionCard input:focus,
-.sectionCard select:focus {
-  border-color: #2eff7b;
-  box-shadow: 0 0 8px rgba(46, 255, 123, 0.3);
-}
-

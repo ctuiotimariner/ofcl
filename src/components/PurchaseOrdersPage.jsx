@@ -126,7 +126,7 @@ function PurchaseOrdersPage() {
               Vendor PO Number
             </label>
 
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
               <input
                 type="text"
                 value={vendorOrderNumber}
@@ -138,6 +138,19 @@ function PurchaseOrdersPage() {
 
               <button type="button" onClick={saveVendorOrderNumber}>
                 Save Vendor PO
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(
+                    `${window.location.origin}?printLabel=${encodeURIComponent(selectedPO.order_group)}`,
+                    "_blank",
+                    "width=500,height=700"
+                  )
+                }}
+              >
+                Print Label
               </button>
             </div>
           </div>

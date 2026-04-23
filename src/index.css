@@ -82,3 +82,12 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff99;
+  border-radius: 6px;
+}

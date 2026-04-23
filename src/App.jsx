@@ -91,49 +91,54 @@ function App() {
   }
 
   async function fetchJobs() {
-    if (loadingJobs) return
-    setLoadingJobs(true)
+  setLoadingJobs(true)
 
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("id, orderGroup, client, status, dueDate, method, delivered")
-      .order("id", { ascending: false })
-      .limit(200)
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-    if (error) {
-      console.error("FETCH JOBS ERROR:", error)
-      setLoadingJobs(false)
-      return
-    }
-
-    setJobs(data || [])
+  if (error) {
+    console.error("FETCH JOBS ERROR:", error)
     setLoadingJobs(false)
+    return
   }
+
+  setJobs(data || [])
+  setLoadingJobs(false)
+}
 
   async function fetchOrders() {
-    if (loadingOrders) return
-    setLoadingOrders(true)
+  setLoadingOrders(true)
 
-    const { data, error } = await supabase
-      .from("orders")
-      .select("id, orderNumber, customerName, dueDate, items, status")
-      .order("id", { ascending: false })
-      .limit(200)
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, orderNumber, customerName, dueDate, items, status, paymentStatus, paidAt")
+    .order("id", { ascending: false })
+    .limit(200)
 
-    if (error) {
-      console.error("FETCH ORDERS ERROR:", error)
-      setLoadingOrders(false)
-      return
-    }
-
-    setOrders(data || [])
+  if (error) {
+    console.error("FETCH ORDERS ERROR:", error)
     setLoadingOrders(false)
+    return
   }
+
+  setOrders(data || [])
+  setLoadingOrders(false)
+}
 
   useEffect(() => {
     fetchJobs()
     fetchOrders()
   }, [])
+
+  useEffect(() => {
+  if (currentPage === "jobs") {
+    setJobSearch("")
+    fetchJobs()
+    fetchOrders()
+  }
+}, [currentPage])
 
   useEffect(() => {
     const channel = supabase
@@ -271,68 +276,27 @@ function App() {
   ).length
 
   const filteredJobs = jobs
-    .filter((job) =>
-      Object.values(job)
-        .join(" ")
-        .toLowerCase()
-        .includes(jobSearch.toLowerCase())
-    )
-    .sort((a, b) => {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const aDue = a.dueDate ? new Date(a.dueDate) : null
-      const bDue = b.dueDate ? new Date(b.dueDate) : null
-
-      if (aDue) aDue.setHours(0, 0, 0, 0)
-      if (bDue) bDue.setHours(0, 0, 0, 0)
-
-      const aDone = a.status === "Completed" || a.status === "Shipped"
-      const bDone = b.status === "Completed" || b.status === "Shipped"
-
-      if (aDone && !bDone) return 1
-      if (!aDone && bDone) return -1
-
-      const aOverdue = aDue && aDue < today && !aDone
-      const bOverdue = bDue && bDue < today && !bDone
-
-      if (aOverdue && !bOverdue) return -1
-      if (!aOverdue && bOverdue) return 1
-
-      const aDueSoon =
-        aDue &&
-        aDue >= today &&
-        (aDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
-        !aDone
-
-      const bDueSoon =
-        bDue &&
-        bDue >= today &&
-        (bDue - today) / (1000 * 60 * 60 * 24) <= 2 &&
-        !bDone
-
-      if (aDueSoon && !bDueSoon) return -1
-      if (!aDueSoon && bDueSoon) return 1
-
-      if (a.orderGroup && b.orderGroup) {
-        const groupCompare = a.orderGroup.localeCompare(b.orderGroup)
-        if (groupCompare !== 0) return groupCompare
-      }
-
-      return 0
-    })
-
-  const groupedJobs = {}
-
-  filteredJobs.forEach((job) => {
-    const group = job.orderGroup || "No Group"
-
-    if (!groupedJobs[group]) {
-      groupedJobs[group] = []
-    }
-
-    groupedJobs[group].push(job)
+  .filter((job) =>
+    Object.values(job)
+      .join(" ")
+      .toLowerCase()
+      .includes(jobSearch.toLowerCase())
+  )
+  .sort((a, b) => {
+    return new Date(b.created_at) - new Date(a.created_at)
   })
+
+const groupedJobs = {}
+
+filteredJobs.forEach((job) => {
+  const group = job.orderGroup || "No Group"
+
+  if (!groupedJobs[group]) {
+    groupedJobs[group] = []
+  }
+
+  groupedJobs[group].push(job)
+})
 
   const totalSkus = inventory.length
   const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0)
