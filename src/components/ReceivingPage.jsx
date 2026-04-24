@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "../lib/supabase"
 
 function ReceivingPage() {
@@ -6,6 +6,10 @@ function ReceivingPage() {
   const [selectedPO, setSelectedPO] = useState(null)
   const [poItems, setPOItems] = useState([])
   const [receiveInputs, setReceiveInputs] = useState({})
+  const params = new URLSearchParams(window.location.search)
+  const poFromScan = params.get("po")
+  const firstInputRef = useRef(null)
+  const inputRefs = useRef({})
 
   useEffect(() => {
     fetchOpenPOs()
@@ -24,6 +28,15 @@ function ReceivingPage() {
     }
 
     setPurchaseOrders(data || [])
+      if (poFromScan && data) {
+    const match = data.find(
+      (po) => po.order_group === poFromScan
+    )
+
+    if (match) {
+      openPO(match)
+    }
+  }
   }
 
   async function openPO(po) {
@@ -47,6 +60,10 @@ function ReceivingPage() {
       startingInputs[item.id] = ""
     })
     setReceiveInputs(startingInputs)
+
+    setTimeout(() => {
+  firstInputRef.current?.focus()
+}, 200)
   }
 
   function handleReceiveInputChange(itemId, value) {
@@ -110,15 +127,25 @@ function ReceivingPage() {
   }
 
   async function receiveItem(item) {
-    const receiveQty = Number(receiveInputs[item.id] || 0)
+    const currentReceived = Number(item.qty_received || 0)
+    const qtyOrdered = Number(item.qty_ordered || 0)
+    const remainingQty = qtyOrdered - currentReceived
+
+    const receiveQty =
+      receiveInputs[item.id] === "" || receiveInputs[item.id] === undefined
+        ? remainingQty
+        : Number(receiveInputs[item.id] || 0)
 
     if (receiveQty <= 0) {
       alert("Enter a valid received qty")
       return
     }
+    if (receiveQty > remainingQty) {
+      alert("Cannot receive more than remaining quantity")
+      return
+    }
 
-    const currentReceived = Number(item.qty_received || 0)
-    const qtyOrdered = Number(item.qty_ordered || 0)
+   
     const newQtyReceived = currentReceived + receiveQty
     const newStatus = getItemStatus(qtyOrdered, newQtyReceived)
 
@@ -249,7 +276,10 @@ function ReceivingPage() {
                       Number(item.qty_received || 0)
 
                     return (
-                      <tr key={item.id}>
+                      <tr
+                        key={item.id}
+                        className={remaining > 0 ? "needsReceivingRow" : "receivedRow"}
+                      >
                         <td>{item.garment}</td>
                         <td>{item.color || "-"}</td>
                         <td>{item.size || "-"}</td>
@@ -259,6 +289,15 @@ function ReceivingPage() {
                         <td>{item.status}</td>
                         <td>
                           <input
+                            ref={(el) => {
+                              if (el) {
+                                inputRefs.current[item.id] = el
+
+                                if (remaining > 0 && !firstInputRef.current) {
+                                  firstInputRef.current = el
+                                }
+                              }
+                            }}
                             type="number"
                             min="0"
                             value={receiveInputs[item.id] || ""}
@@ -266,7 +305,29 @@ function ReceivingPage() {
                               handleReceiveInputChange(item.id, e.target.value)
                             }
                             style={{ width: "90px" }}
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault()
+
+                                await receiveItem(item)
+
+                                const nextItem = poItems.find((poItem) => {
+                                  const remainingQty =
+                                    Number(poItem.qty_ordered || 0) -
+                                    Number(poItem.qty_received || 0)
+
+                                  return remainingQty > 0 && poItem.id !== item.id
+                                })
+
+                                if (nextItem && inputRefs.current[nextItem.id]) {
+                                  setTimeout(() => {
+                                    inputRefs.current[nextItem.id]?.focus()
+                                  }, 200)
+                                }
+                              }
+                            }}
                           />
+                          
                         </td>
                         <td>
                           <button onClick={() => receiveItem(item)}>

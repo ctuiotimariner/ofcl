@@ -62,10 +62,13 @@ function getNextStatus(status) {
 }
 
 function normalizeCode(code) {
-  return code.trim().replace(/^OFCL-/i, "")
+  return code.trim()
 }
 
-function ScanStation({ orders, jobs, setJobs }) {
+function ScanStation({ orders, jobs, setJobs, role, setCurrentPage }) {
+  const currentUserName =
+    localStorage.getItem("employee_name") || "Unknown"
+  const [adminOverride, setAdminOverride] = useState(false)
   const [scanValue, setScanValue] = useState("")
   const [scanMessage, setScanMessage] = useState("")
   const [messageType, setMessageType] = useState("idle")
@@ -74,7 +77,11 @@ function ScanStation({ orders, jobs, setJobs }) {
   const [activeStatus, setActiveStatus] = useState("")
   const [activeNextStatus, setActiveNextStatus] = useState("")
   const [isBusy, setIsBusy] = useState(false)
+  const [scanHistory, setScanHistory] = useState([])
+  const [flashType, setFlashType] = useState("")
   const inputRef = useRef(null)
+  const [scanMode, setScanMode] = useState("advance")
+  
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -89,11 +96,40 @@ function ScanStation({ orders, jobs, setJobs }) {
     return () => window.removeEventListener("click", keepFocus)
   }, [])
 
-  function clearMessageLater() {
+  function clearMessageLater(message) {
+    const delay =
+      message === "MUST RECEIVE FIRST"
+        ? 8000   // 🔥 longer for this one
+        : 2000   // normal for others
+
     setTimeout(() => {
       setScanMessage("")
       setMessageType("idle")
-    }, 2000)
+    }, delay)
+  }
+
+  async function saveScanLog({
+    orderNumber = "",
+    customerName = "",
+    action = "SCAN",
+    status = "",
+    result = "SUCCESS",
+    message = "",
+  }) {
+    const { error } = await supabase.from("scan_logs").insert({
+      order_number: orderNumber,
+      customer_name: customerName,
+      employee_name: currentUserName,
+      action,
+      status,
+      result,
+      role,
+      message,
+    })
+
+    if (error) {
+      console.error("SAVE SCAN LOG ERROR:", error)
+    }
   }
 
   async function handleScan(e) {
@@ -109,19 +145,61 @@ function ScanStation({ orders, jobs, setJobs }) {
     const cleanCode = normalizeCode(trimmedValue)
 
     const foundOrder = orders.find(
-      (order) => order.orderNumber?.toLowerCase() === cleanCode.toLowerCase()
-    )
+        (order) => order.orderNumber?.toLowerCase() === cleanCode.toLowerCase()
+      )
 
-    if (!foundOrder) {
-      playSound("alert")
-      setMessageType("error")
-      setScanMessage("ORDER NOT FOUND")
-      setScanValue("")
-      setIsBusy(false)
-      inputRef.current?.focus()
-      clearMessageLater()
-      return
-    }
+      // 🔥 1. CHECK IF ORDER EXISTS FIRST
+      if (!foundOrder) {
+        playSound("alert")
+
+        setMessageType("error")
+        setScanMessage("ORDER NOT FOUND")
+
+        setScanValue("")
+        setIsBusy(false)
+        inputRef.current?.focus()
+        clearMessageLater()
+
+        await saveScanLog({
+          orderNumber: cleanCode,
+          customerName: "",
+          action: "LOOKUP",
+          status: "",
+          result: "ERROR",
+          message: "ORDER NOT FOUND",
+        })
+
+        return
+      }
+
+      // 🔥 2. THEN CHECK PAYMENT
+      if (foundOrder.paymentStatus !== "Paid" && !(role === "admin" && adminOverride)) {
+        playSound("alert")
+
+        setActiveOrderNumber(foundOrder.orderNumber)
+        setActiveCustomer(foundOrder.customerName || "")
+        setActiveStatus("LOCKED")
+        setActiveNextStatus("")
+
+        setMessageType("error")
+        setScanMessage("PAYMENT REQUIRED")
+
+        setScanValue("")
+        setIsBusy(false)
+        inputRef.current?.focus()
+        clearMessageLater()
+
+        await saveScanLog({
+          orderNumber: foundOrder.orderNumber,
+          customerName: foundOrder.customerName || "",
+          action: "BLOCKED",
+          status: "LOCKED",
+          result: "ERROR",
+          message: "PAYMENT REQUIRED",
+        })
+
+        return
+      }
 
     const matchingJobs = jobs.filter(
       (job) => job.orderGroup === foundOrder.orderNumber
@@ -135,6 +213,27 @@ function ScanStation({ orders, jobs, setJobs }) {
       setActiveNextStatus("")
       setMessageType("error")
       setScanMessage("NO JOBS FOUND")
+      setScanValue("")
+      setIsBusy(false)
+      inputRef.current?.focus()
+      clearMessageLater()
+      return
+    }
+
+    if (scanMode === "lookup") {
+      const primaryJob = matchingJobs[0]
+      const nextStatus = getNextStatus(primaryJob.status)
+
+      playSound("scan")
+
+      setActiveOrderNumber(foundOrder.orderNumber)
+      setActiveCustomer(foundOrder.customerName || "")
+      setActiveStatus(primaryJob.status)
+      setActiveNextStatus(nextStatus === primaryJob.status ? "" : nextStatus)
+
+      setMessageType("success")
+      setScanMessage("ORDER LOADED")
+
       setScanValue("")
       setIsBusy(false)
       inputRef.current?.focus()
@@ -157,7 +256,16 @@ if (hasWaitingJobs) {
   setScanValue("")
   setIsBusy(false)
   inputRef.current?.focus()
-  clearMessageLater()
+  clearMessageLater("MUST RECEIVE FIRST")
+  await saveScanLog({
+    orderNumber: foundOrder.orderNumber,
+    customerName: foundOrder.customerName || "",
+    action: "BLOCKED",
+    status: "Waiting for Blanks",
+    result: "ERROR",
+    message: "MUST RECEIVE FIRST",
+  })
+
   return
 }
 
@@ -206,13 +314,27 @@ if (hasWaitingJobs) {
       playSound("scan")
     }
 
-    if (hasWaitingJobs) {
-      setMessageType("success")
-      setScanMessage(`RECEIVED → ${primaryJob.status.toUpperCase()}`)
-    } else {
-      setMessageType("success")
-      setScanMessage(`UPDATED TO ${primaryJob.status.toUpperCase()}`)
-    }
+   setMessageType("success")
+   setScanMessage(`UPDATED TO ${primaryJob.status.toUpperCase()}`)
+
+   setScanHistory((prev) => [
+    {
+      orderNumber: foundOrder.orderNumber,
+      customer: foundOrder.customerName || "",
+      status: primaryJob.status,
+      time: new Date().toLocaleTimeString(),
+    },
+    ...prev.slice(0, 9),
+   ])
+
+   await saveScanLog({
+    orderNumber: foundOrder.orderNumber,
+    customerName: foundOrder.customerName || "",
+    action: scanMode === "lookup" ? "LOOKUP" : "ADVANCE",
+    status: primaryJob.status,
+    result: "SUCCESS",
+    message: `UPDATED TO ${primaryJob.status.toUpperCase()}`,
+  })
 
     setScanValue("")
     setIsBusy(false)
@@ -220,9 +342,29 @@ if (hasWaitingJobs) {
     clearMessageLater()
   }
 
+  
   const activeStepIndex = PROCESS_STEPS.indexOf(activeStatus)
 
   return (
+  <>
+    {flashType && (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background:
+            flashType === "success"
+              ? "rgba(46,255,123,0.2)"
+              : "rgba(255,77,79,0.2)",
+          pointerEvents: "none",
+          zIndex: 9999,
+        }}
+      />
+    )}
+
     <div className="sectionCard" style={{ position: "relative", overflow: "hidden" }}>
       <style>{`
         .scanStationWrap {
@@ -452,6 +594,37 @@ if (hasWaitingJobs) {
         </div>
 
         <div className="scanInputCard">
+          <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+        <button
+          type="button"
+          className="scanButton"
+          onClick={() => {
+            setScanMode("lookup")
+            inputRef.current?.focus()
+          }}
+          style={{
+            background: scanMode === "lookup" ? "#2eff7b" : "#111",
+            color: scanMode === "lookup" ? "#000" : "#fff",
+          }}
+        >
+          LOOKUP
+        </button>
+
+        <button
+          type="button"
+          className="scanButton"
+          onClick={() => {
+            setScanMode("advance")
+            inputRef.current?.focus()
+          }}
+          style={{
+            background: scanMode === "advance" ? "#2eff7b" : "#111",
+            color: scanMode === "advance" ? "#000" : "#fff",
+          }}
+        >
+          ADVANCE
+        </button>
+      </div>
           <form onSubmit={handleScan}>
             <input
               ref={inputRef}
@@ -471,6 +644,21 @@ if (hasWaitingJobs) {
         {scanMessage && (
           <div className={`scanFeedback ${messageType}`}>
             {scanMessage}
+
+            {/* 🔥 NEW BUTTON */}
+            {scanMessage === "MUST RECEIVE FIRST" && (
+              <div style={{ marginTop: "10px" }}>
+                <button
+                  className="scanButton"
+                  onClick={() => {
+                    window.location.search = `?po=${activeOrderNumber}`
+                    setCurrentPage("receiving")
+                  }}
+                >
+                  GO TO RECEIVING
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -496,6 +684,22 @@ if (hasWaitingJobs) {
         </div>
 
         <div className="scanActions">
+          {role === "admin" && (
+          <button
+            type="button"
+            className="scanButton"
+            onClick={() => {
+              setAdminOverride((prev) => !prev)
+              inputRef.current?.focus()
+            }}
+            style={{
+              background: adminOverride ? "#ffcc66" : "#111",
+              color: adminOverride ? "#000" : "#fff",
+            }}
+          >
+            {adminOverride ? "ADMIN OVERRIDE ON" : "ADMIN OVERRIDE OFF"}
+          </button>
+        )}
           <button
             type="button"
             className="scanButton"
@@ -524,9 +728,42 @@ if (hasWaitingJobs) {
             Clear
           </button>
         </div>
-      </div>
+        <div className="processCard">
+          <div className="processTitle">Scan History</div>
+
+          {scanHistory.length === 0 ? (
+            <div style={{ opacity: 0.7, fontSize: "13px" }}>
+              No scans yet
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "8px" }}>
+              {scanHistory.map((scan, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    padding: "8px 10px",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.03)",
+                    fontSize: "13px",
+                  }}
+                >
+                  <span>{scan.orderNumber}</span>
+                  <span>{scan.status}</span>
+                  <span style={{ opacity: 0.7 }}>{scan.time}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+         </div>
     </div>
-  )
+  </>
+)
 }
 
 export default ScanStation

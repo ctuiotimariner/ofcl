@@ -65,15 +65,24 @@ function Sidebar({ currentPage, setCurrentPage, setRole, allowedPages }) {
       )}
 
       {allowedPages.includes("scan") && (
-        <button
-          className={currentPage === "scan" ? "activeTab" : ""}
-          onClick={() => setCurrentPage("scan")}
-        >
-          Scan Station
-        </button>
-      )}
+          <button
+            className={currentPage === "scan" ? "activeTab" : ""}
+            onClick={() => setCurrentPage("scan")}
+          >
+            Scan Station
+          </button>
+        )}
 
-      {allowedPages.includes("inventory") && (
+        {allowedPages.includes("scan-logs") && (
+          <button
+            className={currentPage === "scan-logs" ? "activeTab" : ""}
+            onClick={() => setCurrentPage("scan-logs")}
+          >
+            Scan Logs
+          </button>
+        )}
+
+        {allowedPages.includes("inventory") && (
         <button
           className={currentPage === "inventory" ? "activeTab" : ""}
           onClick={() => setCurrentPage("inventory")}

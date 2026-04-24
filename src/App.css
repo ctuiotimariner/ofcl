@@ -210,23 +210,41 @@ select:focus {
 
 button {
   padding: 10px 14px;
-  border: 2px solid #333;
+  border: 2px solid #2a2a2a;
   background: #1f1f1f;
-  color: inherit;
+  color: #fff;
   cursor: pointer;
   font-weight: 700;
   text-transform: uppercase;
-  box-shadow: 3px 3px 0 #000;
+
+  border-radius: 0;            /* 🔥 block shape */
+  box-shadow: 3px 3px 0 #000; /* 3D effect */
+  transition: 0.1s;
+}
+
+button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0 #000;
+  background: #181818;
 }
 
 button:hover {
   background: #2a2a2a;
   border-color: #2eff7b;
+  box-shadow: 3px 3px 0 #000, 0 0 6px rgba(46, 255, 123, 0.4);
 }
 
 button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.buttonActive {
+  background: #2eff7b !important;
+  color: #000 !important;
+  border-color: #2eff7b !important;
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0 #000, 0 0 10px rgba(46,255,123,0.6);
 }
 
 p {
@@ -1420,4 +1438,49 @@ h3 {
 
 .ordersTable tr td {
   background: transparent !important;
+}
+
+.needsReceivingRow td {
+  background: rgba(255, 204, 102, 0.18);
+  border-bottom: 1px solid rgba(255, 204, 102, 0.35);
+}
+
+.needsReceivingRow:hover td {
+  background: rgba(255, 204, 102, 0.28);
+}
+
+.receivedRow td {
+  background: rgba(46, 255, 123, 0.08);
+  opacity: 0.75;
+}
+
+/* ===== SCAN LOGS TABLE FIX ===== */
+
+.scanLogsTable {
+  overflow-x: auto;
+}
+
+.scanLogsTable table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.scanLogsTable th,
+.scanLogsTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #333;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: transparent;
+}
+
+.scanLogsTable tbody tr:hover {
+  background: rgba(46, 255, 123, 0.08);
+}
+
+.scanLogsTable th {
+  color: #00ff99;
 }

@@ -14,7 +14,7 @@ import { supabase } from "./lib/supabase"
 import StatsPage from "./components/StatsPage"
 import PurchaseOrdersPage from "./components/PurchaseOrdersPage"
 import LabelPrintPage from "./components/LabelPrintPage"
-
+import ScanLogsPage from "./components/ScanLogsPage"
 
 function App() {
   const [inventory, setInventory] = useState(() => {
@@ -54,6 +54,7 @@ function App() {
     "receiving",
     "production",
     "scan",
+    "scan-logs",
     "inventory",
     "settings",
     "stats",
@@ -70,11 +71,12 @@ function App() {
 
   const allowedPages = role === "admin" ? adminPages : employeePages
 
-  function handleSelectRole(selectedRole) {
-    setRole(selectedRole)
-    localStorage.setItem("role", selectedRole)
-    setCurrentPage("dashboard")
-  }
+  function handleSelectRole(selectedRole, name) {
+  setRole(selectedRole)
+
+  localStorage.setItem("role", selectedRole)
+  localStorage.setItem("employee_name", name)
+}
 
   const [jobs, setJobs] = useState([])
   const [orders, setOrders] = useState([])
@@ -576,8 +578,11 @@ filteredJobs.forEach((job) => {
             setJobs={setJobs}
             setCurrentPage={setCurrentPage}
             setSelectedOrder={setSelectedOrder}
+            role={role}
           />
         )}
+
+        {currentPage === "scan-logs" && <ScanLogsPage />}
 
         {currentPage === "production" && (
           <ProductionBoard jobs={jobs} />
