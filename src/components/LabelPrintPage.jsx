@@ -22,6 +22,9 @@ function getTotalQty(order) {
 function LabelPrintPage({ orders, selectedOrder }) {
   const [poData, setPOData] = useState(null)
 
+  const jobLabels = JSON.parse(localStorage.getItem("labelPreview") || "[]")
+  const isJobMode = jobLabels.length > 0
+
   const order = orders.find(
     (o) => o.orderNumber?.toLowerCase() === selectedOrder?.toLowerCase()
   )
@@ -51,25 +54,133 @@ function LabelPrintPage({ orders, selectedOrder }) {
   }, [selectedOrder])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      window.print()
+  if (isJobMode) return
 
-      setTimeout(() => {
-        window.close()
-      }, 500)
+  const timer = setTimeout(() => {
+    window.print()
+
+    setTimeout(() => {
+      window.close()
     }, 500)
+  }, 500)
 
-    return () => clearTimeout(timer)
-  }, [])
+  return () => clearTimeout(timer)
+}, [isJobMode])
 
-  if (!order) {
-    return <h2 style={{ padding: "20px" }}>No order found</h2>
-  }
+  if (!order && !isJobMode) {
+  return <h2 style={{ padding: "20px" }}>No order found</h2>
+}
 
   const department = getDepartment(order)
   const totalQty = getTotalQty(order)
 
+
+if (isJobMode) {
   return (
+    <>
+    <button
+        className="noPrint"
+        onClick={() => window.print()}
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          zIndex: 9999,
+          padding: "12px 18px",
+          fontWeight: "bold",
+        }}
+      >
+        Print All Labels
+      </button>
+    <style>{`
+
+            html, body {
+        margin: 0;
+        padding: 0;
+        background: #111;
+        }
+
+        .noPrint {
+        display: block;
+        }
+
+        @media print {
+        .noPrint {
+            display: none;
+        }
+        }
+        @page {
+          size: 4in 6in;
+          margin: 0;
+        }
+
+        .labelPage {
+          width: 4in;
+          height: 6in;
+          padding: 0.18in;
+          background: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          page-break-after: always;
+          break-after: page;
+        }
+      `}</style>
+
+      {jobLabels.map((job, i) => (
+        <div key={i} className="labelPage printOnly">
+          <div className="topSection">
+            <div className="labelTop">
+              <div className="brand">OFCL WORK ORDER</div>
+              <div className="department">DTF</div>
+            </div>
+
+            <div className="orderNumber">{job.customer}</div>
+
+            <div className="customerName">Aldridge</div>
+
+            <div className="infoBlock">
+              <div>
+                <strong>Garment:</strong> {job.garment}
+              </div>
+
+              <div className="qtyLine">
+                <strong>Qty:</strong> {job.qty}
+              </div>
+
+              <div style={{ marginTop: "10px", whiteSpace: "pre-line" }}>
+                <strong>Ship To:</strong>
+                <br />
+                {job.shippingAddress}
+              </div>
+            </div>
+          </div>
+
+          <div className="bottomSection">
+            <div className="qrWrap">
+              <QRCodeCanvas value={job.customer + job.qty} size={88} />
+
+              <div className="barcodeWrap">
+                <Barcode
+                    value={job.customer || "OFCL-JOB"}
+                    width={1.2}
+                    height={40}
+                    fontSize={12}
+                    margin={0}
+                    displayValue={true}
+                />
+                </div>
+
+              <div className="scanText">SCAN TO MOVE</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+  return (
+    
     <>
       <style>{`
         @page {
@@ -100,6 +211,8 @@ function LabelPrintPage({ orders, selectedOrder }) {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+          page-break-after: always;
+          break-after: page;
         }
 
         .topSection {

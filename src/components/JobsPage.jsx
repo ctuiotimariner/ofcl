@@ -331,6 +331,7 @@ function JobsPage({
                 <th>Client</th>
                 <th>Garment</th>
                 <th>Qty</th>
+                <th>Address</th>
                 <th>Due</th>
                 <th>Sizes</th>
                 <th>Placement</th>
@@ -443,6 +444,9 @@ function JobsPage({
                           <td>{job.client}</td>
                           <td>{job.garment}</td>
                           <td>{job.qty}</td>
+                          <td style={{ whiteSpace: "pre-line", fontSize: "0.8rem" }}>
+                            {job.shippingAddress}
+                          </td>
                           <td>{job.dueDate}</td>
                           <td>
                             {typeof job?.sizes === "string"

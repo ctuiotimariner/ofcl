@@ -1484,3 +1484,110 @@ h3 {
 .scanLogsTable th {
   color: #00ff99;
 }
+
+.inputError {
+  animation: shake 0.2s ease-in-out 2;
+  border-color: #ff4d4f !important;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+.labelModal {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  z-index: 9999;
+  overflow: auto;
+  padding: 20px;
+}
+
+.labelModalTop {
+  position: sticky;
+  top: 0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 10px;
+  background: #111;
+  z-index: 10000;
+}
+
+.labelPreviewArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.labelPage {
+  width: 4in;
+  height: 6in;
+  background: white;
+  color: black;
+  padding: 0.2in;
+  box-sizing: border-box;
+
+  page-break-after: always;
+  break-after: page;
+}
+
+@page {
+  size: 4in 6in;
+  margin: 0;
+}
+
+@@media print {
+  html,
+  body {
+    width: 4in;
+    height: 6in;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .labelModal,
+  .labelModal * {
+    visibility: visible;
+  }
+
+  .labelModal {
+    position: absolute;
+    inset: 0;
+    background: white;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .labelModalTop,
+  .noPrint {
+    display: none !important;
+  }
+
+  .labelPreviewArea {
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+
+  .labelPage {
+    width: 4in;
+    height: 6in;
+    padding: 0.2in;
+    box-sizing: border-box;
+    background: white;
+    color: black;
+    page-break-after: always;
+    break-after: page;
+  }
+}

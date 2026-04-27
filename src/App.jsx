@@ -15,6 +15,7 @@ import StatsPage from "./components/StatsPage"
 import PurchaseOrdersPage from "./components/PurchaseOrdersPage"
 import LabelPrintPage from "./components/LabelPrintPage"
 import ScanLogsPage from "./components/ScanLogsPage"
+import ImportExcelPage from "./components/ImportExcelPage"
 
 function App() {
   const [inventory, setInventory] = useState(() => {
@@ -48,6 +49,7 @@ function App() {
   const adminPages = [
     "dashboard",
     "orders",
+    "import",
     "purchaseOrders",
     "jobs",
     "tickets",
@@ -67,6 +69,7 @@ function App() {
     "receiving",
     "production",
     "scan",
+    "inventory",
   ]
 
   const allowedPages = role === "admin" ? adminPages : employeePages
@@ -83,6 +86,7 @@ function App() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const searchParams = new URLSearchParams(window.location.search)
   const printLabelOrder = searchParams.get("printLabel")
+  const hasJobLabels = searchParams.get("jobLabels") === "true"
   const [jobSearch, setJobSearch] = useState("")
 
   const skuInputRef = useRef(null)
@@ -452,18 +456,30 @@ filteredJobs.forEach((job) => {
     return ""
   }
 
-  if (printLabelOrder) {
-    return (
-      <LabelPrintPage
-        orders={orders}
-        selectedOrder={printLabelOrder}
-      />
-    )
-  }
+  if (printLabelOrder || hasJobLabels) {
+  return (
+    <LabelPrintPage
+      orders={orders}
+      selectedOrder={printLabelOrder}
+    />
+  )
+}
 
   if (!role) {
     return <RoleScreen onSelectRole={handleSelectRole} />
   }
+
+  if (!allowedPages.includes(currentPage)) {
+  setTimeout(() => {
+    setCurrentPage("dashboard")
+  }, 0)
+
+  return null
+}
+
+if (!allowedPages.includes(currentPage)) {
+  return <div style={{ padding: "20px" }}>Access Denied</div>
+}
 
   return (
     <div className="appLayout">
@@ -513,6 +529,10 @@ filteredJobs.forEach((job) => {
 
         {currentPage === "purchaseOrders" && (
           <PurchaseOrdersPage />
+        )}
+
+        {currentPage === "import" && (
+          <ImportExcelPage />
         )}
 
         {currentPage === "tickets" && (
